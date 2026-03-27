@@ -19,6 +19,10 @@ npm install @spaceis/sdk
 Or via CDN (browser `<script>` tag):
 
 ```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@spaceis/sdk/dist/spaceis.global.js"></script>
+
+<!-- jsdelivr -->
 <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
 ```
 
