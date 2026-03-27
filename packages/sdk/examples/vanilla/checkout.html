@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceIS SDK — Checkout</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header" id="site-header"></header>
+
+    <main>
+      <div class="container">
+        <!-- Empty cart -->
+        <div id="empty-cart-state" style="display: none">
+          <div class="empty-state">
+            <div class="icon">&#128722;</div>
+            <p>Your cart is empty.</p>
+            <br />
+            <a href="index.html" class="back-link">&#8592; Back to shop</a>
+          </div>
+        </div>
+
+        <!-- Success state -->
+        <div id="order-success-state" style="display: none">
+          <div class="order-success">
+            <div class="icon">&#10003;</div>
+            <h2>Order placed!</h2>
+            <p>Check your email for confirmation.</p>
+            <div id="order-code-display"></div>
+            <a href="index.html" class="back-link">&#8592; Back to shop</a>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="checkout-loading" style="display: none; padding: 60px 0">
+          <div class="spinner"></div>
+        </div>
+
+        <!-- Checkout layout: LEFT = summary, RIGHT = form -->
+        <div class="checkout-layout" id="checkout-layout" style="display: none">
+
+          <!-- LEFT: Order summary (items + discount + recommendations) -->
+          <div class="checkout-summary-col">
+            <h1 class="section-title">Order summary</h1>
+
+            <!-- Cart items with quantity controls -->
+            <div id="checkout-items"></div>
+
+            <!-- Discount code -->
+            <div class="checkout-card" id="discount-section">
+              <div class="checkout-card-title">Discount code</div>
+              <div id="checkout-discount-container"></div>
+            </div>
+
+            <!-- Recommendations -->
+            <div id="checkout-recommendations"></div>
+          </div>
+
+          <!-- RIGHT: Transaction details -->
+          <div class="checkout-form-col">
+            <h1 class="section-title">Transaction details</h1>
+
+            <!-- Contact -->
+            <div class="checkout-card">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="checkout-nick">Minecraft username</label>
+                  <input type="text" id="checkout-nick" placeholder="Steve" autocomplete="nickname" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="checkout-email">Email</label>
+                  <input type="email" id="checkout-email" placeholder="you@email.com" autocomplete="email" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="checkout-card">
+              <div class="checkout-card-title">Payment method</div>
+              <div class="payment-methods" id="payment-methods">
+                <div class="spinner"></div>
+              </div>
+            </div>
+
+            <!-- Agreements -->
+            <div id="agreements-card" style="display: none; margin-bottom: 16px">
+              <div class="agreements" id="agreements-list"></div>
+            </div>
+
+            <!-- Price summary -->
+            <div class="summary-totals" id="summary-totals"></div>
+
+            <button class="place-order-btn" id="place-order-btn">Place order</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="site-cart-drawer"></div>
+    <div class="toast-container" id="toast-container"></div>
+    <footer id="site-footer"></footer>
+
+    <script src="../../dist/spaceis.global.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      "use strict";
+
+      let paymentMethodsData = [];
+      let selectedMethodUuid = null;
+
+      // ── Get selected payment method commission ─────────────────
+
+      function getSelectedCommission() {
+        if (!selectedMethodUuid || !paymentMethodsData.length) return 0;
+        const method = paymentMethodsData.find(function (m) {
+          return m.uuid === selectedMethodUuid;
+        });
+        return method ? method.commission : 0;
+      }
+
+      // ── Render checkout items (left col — with quantity controls) ───
+
+      function renderCheckoutItems() {
+        var container = document.getElementById("checkout-items");
+        if (!container) return;
+
+        var html = "";
+        cartMgr.items.forEach(function (item) {
+          var imgSrc = SpaceIS.getCartItemImage(item);
+          var imgHtml = imgSrc
+            ? '<img class="checkout-item-img" src="' + esc(imgSrc) + '" alt="">'
+            : '<div class="checkout-item-img-placeholder">' + PLACEHOLDER_SVG_SM + '</div>';
+
+          var qty = SpaceIS.getItemQty(item);
+          var variantUuid = item.variant ? item.variant.uuid : "";
+          var showVariant =
+            item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
+
+          var priceHtml = '<span class="checkout-item-price">' + fp(item.final_price_value) + "</span>";
+          if (item.regular_price_value !== item.final_price_value) {
+            priceHtml +=
+              ' <span class="checkout-item-old-price">' + fp(item.regular_price_value) + "</span>";
+          }
+          if (item.cart_item_sale) {
+            priceHtml +=
+              ' <span class="checkout-item-discount">-' +
+              item.cart_item_sale.percentage_discount +
+              "%</span>";
+          }
+
+          html +=
+            '<div class="checkout-item" data-variant-uuid="' + esc(variantUuid) + '">' +
+              imgHtml +
+              '<div class="checkout-item-details">' +
+                '<div class="checkout-item-top">' +
+                  '<div class="checkout-item-info">' +
+                    '<div class="checkout-item-name">' + esc(item.shop_product ? item.shop_product.name : "") + '</div>' +
+                    (showVariant ? '<div class="checkout-item-variant">' + esc(item.variant.name) + '</div>' : '') +
+                    (item.package ? '<div class="checkout-item-package">' + esc("Package: " + item.package.name) + '</div>' : '') +
+                  '</div>' +
+                  '<button class="checkout-item-remove" data-variant="' + esc(variantUuid) + '" title="Remove" aria-label="Remove">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                  '</button>' +
+                '</div>' +
+                '<div class="checkout-item-bottom">' +
+                  '<div class="checkout-item-prices">' + priceHtml + '</div>' +
+                  '<div class="qty-stepper" data-variant="' + esc(variantUuid) + '">' +
+                    '<button class="qty-step-btn" data-action="dec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+                    '<input type="number" value="' + qty + '" min="1" class="qty-input">' +
+                    '<button class="qty-step-btn" data-action="inc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+      }
+
+      // Event delegation for checkout items — set ONCE
+      (function () {
+        var container = document.getElementById("checkout-items");
+        if (!container) return;
+
+        container.addEventListener("click", function (e) {
+          // Explicit remove button (uses data-variant, not data-action)
+          var removeBtn = e.target.closest(".checkout-item-remove");
+          if (removeBtn) {
+            var uuid = removeBtn.dataset.variant;
+            if (uuid) {
+              cartMgr.remove(uuid).catch(function (err) {
+                showToast(getErrorMessage(err), "error");
+              });
+            }
+            return;
+          }
+
+          // +/− stepper handled by shared handler (reads data-variant from .qty-stepper)
+          handleQtyStepperClick(e);
+        });
+
+        container.addEventListener("change", function (e) {
+          handleQtyInputChange(e);
+        });
+      })();
+
+      // ── Discount code (uses shared renderDiscountSection) ─────
+
+      function renderDiscountState() {
+        var container = document.getElementById("checkout-discount-container");
+        if (!container) return;
+        renderDiscountSection(container, {
+          inputId: "checkout-discount-input",
+          applyId: "checkout-discount-apply",
+          removeId: "checkout-discount-remove",
+        });
+      }
+
+      // ── Render price summary (right col, under form) ───────────
+
+      function renderOrderSummary() {
+        var totalsEl = document.getElementById("summary-totals");
+
+        var commission = getSelectedCommission();
+        var basePrice = cartMgr.finalPrice;
+        var commissionAmount = commission > 0 ? Math.round((basePrice * commission) / 100) : 0;
+        var totalWithCommission = basePrice + commissionAmount;
+
+        var html = '<div class="cart-page-summary">';
+
+        // Header
+        html += '<div class="cart-summary-header">Order summary</div>';
+
+        // Subtotal
+        html += '<div class="cart-summary-row"><span>Subtotal</span><span>' + fp(cartMgr.regularPrice) + '</span></div>';
+
+        // Discount
+        var discountAmount = cartMgr.regularPrice - cartMgr.finalPrice;
+        if (discountAmount > 0) {
+          var discountLabel = cartMgr.hasDiscount && cartMgr.discount
+            ? 'Discount (' + cartMgr.discount.percentage_discount + '%)'
+            : 'Discount';
+          html += '<div class="cart-summary-row cart-summary-discount"><span>' + discountLabel + '</span><span>-' + fp(discountAmount) + '</span></div>';
+        }
+
+        // Commission
+        if (commission > 0) {
+          var methodName = (function () {
+            var m = paymentMethodsData.find(function (m) { return m.uuid === selectedMethodUuid; });
+            return m ? m.name : "Commission";
+          })();
+          html += '<div class="cart-summary-row"><span>Fee (' + esc(methodName) + ' +' + commission + '%)</span><span>+' + fp(commissionAmount) + '</span></div>';
+        }
+
+        // Total
+        html += '<div class="cart-summary-total"><span>Total</span><span>' + fp(totalWithCommission) + '</span></div>';
+
+        html += '</div>';
+        totalsEl.innerHTML = html;
+
+        // Update button with price
+        var orderBtn = document.getElementById("place-order-btn");
+        if (orderBtn) orderBtn.textContent = "Place order " + fp(totalWithCommission);
+      }
+
+      // ── Load checkout data ────────────────────────────────────
+
+      var _checkoutInitialized = false;
+
+      function initCheckout() {
+        if (cartMgr.isLoading) return; // will be called again via onChange
+        if (_checkoutInitialized) return;
+
+        if (cartMgr.isEmpty) {
+          document.getElementById("empty-cart-state").style.display = "";
+          return;
+        }
+
+        _checkoutInitialized = true;
+        document.getElementById("checkout-loading").style.display = "";
+
+        Promise.all([
+          client.checkout.paymentMethods(),
+          client.checkout.agreements().catch(function (e) { console.warn("Agreements fetch failed:", e); return []; }),
+        ])
+          .then(function (results) {
+            paymentMethodsData = results[0];
+            var agreements = results[1];
+
+            document.getElementById("checkout-loading").style.display = "none";
+            document.getElementById("checkout-layout").style.display = "";
+
+            try {
+              renderCheckoutItems();
+              renderDiscountState();
+              renderPaymentMethods(paymentMethodsData);
+              renderAgreements(agreements);
+              renderOrderSummary();
+              loadCheckoutRecommendations();
+            } catch (renderErr) {
+              console.error("Checkout render error:", renderErr);
+            }
+            client.recaptcha.load().catch(function () {});
+          })
+          .catch(function (err) {
+            _checkoutInitialized = false;
+            document.getElementById("checkout-loading").style.display = "none";
+            console.error("Checkout init error:", err);
+            showToast(getErrorMessage(err) || "Failed to load checkout data", "error");
+          });
+      }
+
+      function renderPaymentMethods(methods) {
+        var container = document.getElementById("payment-methods");
+        if (methods.length === 0) {
+          container.innerHTML = '<p style="color:var(--txt-3);font-size:13px">No payment methods available.</p>';
+          return;
+        }
+
+        var html = "";
+        methods.forEach(function (m) {
+          var commission = m.commission ? " (+" + m.commission + "%)" : "";
+          html +=
+            '<label class="payment-method" data-uuid="' + esc(m.uuid) + '">' +
+            '<input type="radio" name="payment_method" value="' + esc(m.uuid) + '">' +
+            '<span class="payment-method-name">' + esc(m.name) + "</span>" +
+            (commission ? '<span class="payment-commission">' + esc(commission) + "</span>" : "") +
+            "</label>";
+        });
+        container.innerHTML = html;
+
+        container.addEventListener("click", function (e) {
+          var label = e.target.closest(".payment-method");
+          if (!label) return;
+          container.querySelectorAll(".payment-method").forEach(function (l) { l.classList.remove("selected"); });
+          label.classList.add("selected");
+          var radio = label.querySelector('input[type="radio"]');
+          if (radio) {
+            radio.checked = true;
+            selectedMethodUuid = radio.value;
+            renderOrderSummary();
+          }
+        });
+      }
+
+      function renderAgreements(agreements) {
+        if (!agreements || agreements.length === 0) return;
+        var card = document.getElementById("agreements-card");
+        var list = document.getElementById("agreements-list");
+        card.style.display = "";
+
+        var html = "";
+        agreements.forEach(function (a) {
+          html +=
+            '<label class="agreement-item">' +
+            '<input type="checkbox" value="' + esc(a.uuid) + '">' +
+            "<span>" + esc(a.name) + "</span>" +
+            "</label>";
+        });
+        list.innerHTML = html;
+      }
+
+      // ── Place order ─────────────────────────────────────────────
+
+      document.getElementById("place-order-btn").addEventListener("click", function () {
+        var nick = document.getElementById("checkout-nick").value.trim();
+        var email = document.getElementById("checkout-email").value.trim();
+        var paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+
+        var errors = [];
+        if (!nick) errors.push("Player nickname is required");
+        if (!email || !email.includes("@")) errors.push("Enter a valid email");
+        if (!paymentRadio) errors.push("Choose payment method");
+
+        if (errors.length > 0) {
+          errors.forEach(function (e) { showToast(e, "error"); });
+          return;
+        }
+
+        var btn = document.getElementById("place-order-btn");
+        btn.disabled = true;
+        btn.textContent = "Processing...";
+
+        var paymentMethodUuid = paymentRadio.value;
+        var agreementUuids = [];
+        document.querySelectorAll('#agreements-list input[type="checkbox"]:checked').forEach(function (cb) {
+          agreementUuids.push(cb.value);
+        });
+
+        client.recaptcha
+          .execute("checkout")
+          .then(function (recaptchaToken) {
+            return client.checkout.placeOrder({
+              email: email,
+              first_name: nick,
+              payment_method_uuid: paymentMethodUuid,
+              "g-recaptcha-response": recaptchaToken,
+              agreements: agreementUuids,
+            });
+          })
+          .then(function (result) {
+            if (result.redirect_url) {
+              window.location.href = result.redirect_url;
+            } else {
+              showOrderSuccess(result.code || "");
+            }
+          })
+          .catch(function (err) {
+            showToast(getErrorMessage(err), "error");
+            resetPlaceOrderBtn();
+          });
+      });
+
+      function resetPlaceOrderBtn() {
+        var btn = document.getElementById("place-order-btn");
+        if (btn) { btn.disabled = false; btn.textContent = "Place order"; }
+      }
+
+      function showOrderSuccess(code) {
+        cartMgr.clear();
+        if (code) {
+          window.location.href = "order-summary.html?code=" + encodeURIComponent(code);
+          return;
+        }
+        document.getElementById("checkout-layout").style.display = "none";
+        document.getElementById("order-success-state").style.display = "";
+      }
+
+      // ── Checkout recommendations ─────────────────────────
+
+      function loadCheckoutRecommendations() {
+        var container = document.getElementById("checkout-recommendations");
+        if (!container || cartMgr.isEmpty) return;
+
+        var firstItem = cartMgr.items[0];
+        if (!firstItem || !firstItem.shop_product) return;
+
+        client.products.recommendations(firstItem.shop_product.uuid)
+          .then(function (recs) {
+            if (!recs || recs.length === 0) return;
+            var sliced = recs.slice(0, 4);
+            container.innerHTML = renderRecsHtml(sliced, "Recommended products");
+            attachRecsClickHandler(container, sliced);
+          })
+          .catch(function () {});
+      }
+
+      // ── Cart change: refresh ─────────────────────────────────
+
+      cartMgr.onChange(function () {
+        renderCartBadge();
+        if (!_checkoutInitialized) {
+          initCheckout();
+          return;
+        }
+        var layout = document.getElementById("checkout-layout");
+        if (layout && layout.style.display !== "none") {
+          renderCheckoutItems();
+          renderDiscountState();
+          renderOrderSummary();
+        }
+      });
+
+      // ── Init ─────────────────────────────────────────────────
+
+      initCheckout();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "spaceis-sdk",
+  "private": true,
+  "description": "SpaceIS SDK monorepo — JavaScript SDK + React bindings",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
