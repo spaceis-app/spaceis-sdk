@@ -1,4 +1,5 @@
 import { formatPrice, escapeHtml, SpaceISError } from "@spaceis/react";
+import DOMPurify from "isomorphic-dompurify";
 
 /** Escape HTML to prevent XSS */
 export function esc(str: unknown): string {
@@ -22,6 +23,11 @@ export function getErrorMessage(err: unknown): string {
   }
   if (err instanceof Error) return err.message || "An error occurred";
   return "An error occurred";
+}
+
+/** Sanitize HTML from API to prevent XSS */
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html);
 }
 
 /** Placeholder SVG for images */

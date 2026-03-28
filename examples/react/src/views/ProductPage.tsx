@@ -9,7 +9,7 @@ import {
   snapQuantity,
   type ShowShopProductVariant,
 } from "@spaceis/react";
-import { fp, PlaceholderSVG, getErrorMessage } from "@/helpers";
+import { fp, PlaceholderSVG, getErrorMessage, sanitizeHtml } from "@/helpers";
 import { Recommendations } from "@/components/Recommendations";
 import { toast } from "sonner";
 
@@ -214,7 +214,7 @@ export function ProductPage({ slug }: { slug: string }) {
               <div className="pdp-label">Description</div>
               <div
                 className="pdp-desc-body"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
               />
             </div>
           )}

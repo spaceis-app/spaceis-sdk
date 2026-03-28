@@ -44,7 +44,7 @@ if ($slug) {
                 <h1 class="page-title"><?= e($page['title']) ?></h1>
             <?php endif; ?>
             <div class="page-body">
-                <?= $page['content'] ?? '' ?>
+                <?= sanitizeHtml($page['content'] ?? '') ?>
             </div>
             <div class="page-meta">
                 <span>Last updated: <?= formatDate($page['updated_at'] ?? '') ?></span>

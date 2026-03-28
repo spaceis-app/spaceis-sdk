@@ -1,6 +1,7 @@
 "use client";
 
 import { useStatute } from "@spaceis/react";
+import { sanitizeHtml } from "@/helpers";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pl-PL", {
@@ -39,7 +40,7 @@ export function StatutePage() {
         )}
         <div
           className="statute-body"
-          dangerouslySetInnerHTML={{ __html: statute.content || "" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(statute.content || "") }}
         />
         <div className="statute-meta">
           <span>Created: {formatDate(statute.created_at)}</span>

@@ -101,6 +101,20 @@ function isActive(string $href, array $matchPaths = []): bool
 }
 
 /**
+ * Sanitize HTML from API — allow safe tags, strip scripts and event handlers.
+ */
+function sanitizeHtml(string $html): string
+{
+    $allowed = '<p><br><b><strong><i><em><u><a><ul><ol><li><h1><h2><h3><h4><h5><h6><table><thead><tbody><tr><th><td><img><div><span><blockquote><pre><code><hr>';
+    $clean = strip_tags($html, $allowed);
+    // Remove event handlers (onclick, onerror, etc.)
+    $clean = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $clean);
+    // Remove javascript: URLs
+    $clean = preg_replace('/href\s*=\s*["\']javascript:[^"\']*["\']/i', 'href="#"', $clean);
+    return $clean;
+}
+
+/**
  * Render placeholder SVG for missing images.
  */
 function placeholderSvg(int $size = 32): string

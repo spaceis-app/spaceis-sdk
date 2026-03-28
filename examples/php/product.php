@@ -167,7 +167,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="pdp-description">
                     <div class="pdp-label">Description</div>
                     <div class="pdp-desc-body">
-                        <?= $product['description'] ?>
+                        <?= sanitizeHtml($product['description']) ?>
                     </div>
                 </div>
             <?php endif; ?>
