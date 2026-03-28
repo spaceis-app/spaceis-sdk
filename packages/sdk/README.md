@@ -288,7 +288,7 @@ import {
 
 ## Browser support
 
-Chrome 80+, Firefox 78+, Safari 15+, Edge 80+, Node.js 18+, Deno, Bun.
+Chrome 80+, Firefox 78+, Safari 15+, Edge 80+, Node.js 20+, Deno, Bun.
 
 Requires native `fetch` and `AbortSignal.timeout`.
 
