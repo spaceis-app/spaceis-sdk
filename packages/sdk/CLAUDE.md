@@ -43,32 +43,12 @@ pnpm test        # vitest run
 - **ESM/CJS**: `dist/index.js` / `dist/index.cjs` — for bundlers/Node.js
 - **IIFE**: `dist/spaceis.global.js` — browser `<script>` tag, exposes `window.SpaceIS`
 
-## Vanilla example
+## Examples
 
-`examples/vanilla/` — complete store UI using only HTML + vanilla JS + the SDK.
+Examples live in `examples/` at the monorepo root (not inside packages/sdk):
 
-Files:
-- `shared.js` — shared logic (header, cart drawer, product modal, helpers)
-- `styles.css` — all CSS
-- `index.html` — products listing
-- `packages.html` — package bundles
-- `sales.html` — active sales
-- `cart.html` — full cart page
-- `checkout.html` — checkout with payment
-- `order-summary.html` — order status
-- `voucher.html` / `daily-reward.html` — redemption forms
-- `page.html` / `statute.html` — CMS content
-
-### Shared helpers in shared.js
-
-Reusable functions to avoid duplication:
-- `sanitizeHtml(container)` — DOM-based HTML sanitizer (strips event handlers, javascript: URLs, dangerous elements)
-- `PLACEHOLDER_SVG_SM/MD/LG` — image placeholder constants
-- `getVariantLimits(uuid)` — cached product qty limits
-- `handleQtyStepperClick(e)` — unified +/- click handler
-- `handleQtyInputChange(e)` — unified qty input change (validates min/max/step)
-- `renderDiscountSection(el, opts)` — discount code UI
-- `renderCartSummary(el, opts)` — subtotal/discount/total panel
+- `examples/vanilla/` — complete store UI using only HTML + vanilla JS + the SDK
+- `examples/react/` — Next.js App Router store using `@spaceis/react` hooks + SSR
 
 ## Testing
 

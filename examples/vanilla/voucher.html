@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceIS SDK — Voucher</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header" id="site-header"></header>
+
+    <main>
+        <div class="container voucher-layout">
+          <div class="voucher-card">
+            <div class="voucher-card-title">Redeem voucher</div>
+            <div class="voucher-card-desc">
+              Enter your player nickname and voucher code to redeem it.
+            </div>
+
+            <div class="voucher-form" id="voucher-form">
+              <div class="form-field">
+                <label class="form-label" for="voucher-nick">Player nickname *</label>
+                <input type="text" id="voucher-nick" placeholder="Steve" autocomplete="off" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="voucher-code">Voucher code *</label>
+                <input
+                  type="text"
+                  id="voucher-code"
+                  placeholder="ABCD-1234-EFGH"
+                  autocomplete="off"
+                  style="letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--mono)"
+                />
+              </div>
+              <button class="voucher-submit" id="voucher-submit-btn">Redeem voucher</button>
+            </div>
+
+            <div class="result-box" id="voucher-result"></div>
+          </div>
+        </div>
+    </main>
+
+    <div id="site-cart-drawer"></div>
+    <div class="toast-container" id="toast-container"></div>
+    <footer id="site-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      "use strict";
+
+      client.recaptcha.load().catch(function () {});
+
+      document.getElementById("voucher-submit-btn").addEventListener("click", function () {
+        var nick = document.getElementById("voucher-nick").value.trim();
+        var code = document.getElementById("voucher-code").value.trim();
+
+        if (!nick) { showToast("Player nickname is required", "error"); return; }
+        if (!code) { showToast("Voucher code is required", "error"); return; }
+
+        hideResult("voucher-result");
+        var btn = document.getElementById("voucher-submit-btn");
+        btn.disabled = true;
+        btn.textContent = "Checking...";
+
+        client.recaptcha.execute("voucher")
+          .then(function (token) {
+            return client.vouchers.redeem({ nick: nick, code: code, "g-recaptcha-response": token });
+          })
+          .then(function (result) {
+            showResult("voucher-result", result.message || "Voucher redeemed!", "success");
+            showToast(result.message || "Voucher redeemed!", "success");
+            document.getElementById("voucher-code").value = "";
+            btn.disabled = false; btn.textContent = "Redeem voucher";
+          })
+          .catch(function (err) {
+            var msg = getErrorMessage(err);
+            showResult("voucher-result", msg, "error");
+            showToast(msg, "error");
+            btn.disabled = false; btn.textContent = "Redeem voucher";
+          });
+      });
+
+      document.getElementById("voucher-code").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") document.getElementById("voucher-submit-btn").click();
+      });
+
+      function showResult(id, message, type) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = "result-box show " + (type || "");
+      }
+      function hideResult(id) {
+        var el = document.getElementById(id);
+        if (el) el.className = "result-box";
+      }
+    </script>
+  </body>
+</html>

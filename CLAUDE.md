@@ -5,17 +5,19 @@
 Monorepo for the SpaceIS Minecraft shop platform SDK. Provides a JavaScript client library and React bindings for building storefronts.
 
 - **API docs**: https://docs.spaceis.app/api#/
-- **npm**: `@spaceis/sdk` (published), `@spaceis/react` (not yet published)
+- **npm**: [`@spaceis/sdk`](https://www.npmjs.com/package/@spaceis/sdk), [`@spaceis/react`](https://www.npmjs.com/package/@spaceis/react)
 
 ## Monorepo Structure
 
 ```
+├── examples/
+│   ├── vanilla/          — Complete store using HTML + vanilla JS + SDK IIFE
+│   └── react/            — Next.js App Router store using @spaceis/react hooks + SSR
 ├── packages/
 │   ├── sdk/              — Core JS SDK (zero dependencies)
 │   │   ├── src/          — TypeScript source
-│   │   ├── examples/     — Vanilla JS example store
 │   │   └── CLAUDE.md     — SDK-specific AI context
-│   └── react/            — React hooks + Provider + SSR (gitignored, not public yet)
+│   └── react/            — React hooks + Provider + SSR helpers for Next.js
 ├── .github/
 │   ├── workflows/ci.yml      — CI: typecheck + build + test (Node 18/20/22)
 │   ├── workflows/publish.yml — Publish to npm on GitHub Release
@@ -33,7 +35,7 @@ Run from root — applies to all packages:
 pnpm install     # install deps
 pnpm build       # build all packages (tsup → ESM + CJS + IIFE + types)
 pnpm typecheck   # tsc --noEmit
-pnpm test        # vitest run (sdk only, react has no tests yet)
+pnpm test        # vitest run (sdk + react)
 pnpm dev         # watch mode
 ```
 
@@ -61,9 +63,9 @@ Key classes:
 
 3 build outputs: ESM (`index.js`), CJS (`index.cjs`), IIFE (`spaceis.global.js` → `window.SpaceIS`)
 
-### `@spaceis/react` (packages/react/) — gitignored
+### `@spaceis/react` (packages/react/)
 
-React bindings using TanStack Query. Not public yet.
+React bindings using TanStack Query.
 
 - `SpaceISProvider` — context provider with built-in QueryClient
 - `useCart()` — reactive cart via `useSyncExternalStore`

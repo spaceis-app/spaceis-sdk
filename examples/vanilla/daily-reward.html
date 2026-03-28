@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceIS SDK — Daily Reward</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header" id="site-header"></header>
+
+    <main>
+        <div class="voucher-layout container">
+          <div class="voucher-card">
+            <div class="voucher-card-title">Daily reward</div>
+            <div class="voucher-card-desc">Claim a free reward — resets every 24 hours.</div>
+
+            <div class="voucher-form" id="daily-form">
+              <div class="form-field">
+                <label class="form-label" for="daily-nick">Player nickname *</label>
+                <input type="text" id="daily-nick" placeholder="Steve" autocomplete="off" />
+              </div>
+              <button class="voucher-submit success-btn" id="daily-submit-btn">Claim reward</button>
+            </div>
+
+            <div class="result-box" id="daily-result"></div>
+          </div>
+        </div>
+    </main>
+
+    <div id="site-cart-drawer"></div>
+    <div class="toast-container" id="toast-container"></div>
+    <footer id="site-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      "use strict";
+
+      client.recaptcha.load().catch(function () {});
+
+      document.getElementById("daily-submit-btn").addEventListener("click", function () {
+        var nick = document.getElementById("daily-nick").value.trim();
+        if (!nick) { showToast("Player nickname is required", "error"); return; }
+
+        hideResult("daily-result");
+        var btn = document.getElementById("daily-submit-btn");
+        btn.disabled = true;
+        btn.textContent = "Claiming...";
+
+        client.recaptcha.execute("daily_reward")
+          .then(function (token) {
+            return client.dailyRewards.claim({ nick: nick, "g-recaptcha-response": token });
+          })
+          .then(function (result) {
+            showResult("daily-result", result.message || "Daily reward claimed!", "success");
+            showToast(result.message || "Reward claimed!", "success");
+            btn.disabled = false; btn.textContent = "Claim reward";
+          })
+          .catch(function (err) {
+            var msg = getErrorMessage(err);
+            showResult("daily-result", msg, "error");
+            showToast(msg, "error");
+            btn.disabled = false; btn.textContent = "Claim reward";
+          });
+      });
+
+      document.getElementById("daily-nick").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") document.getElementById("daily-submit-btn").click();
+      });
+
+      function showResult(id, message, type) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = "result-box show " + (type || "");
+      }
+      function hideResult(id) {
+        var el = document.getElementById(id);
+        if (el) el.className = "result-box";
+      }
+    </script>
+  </body>
+</html>

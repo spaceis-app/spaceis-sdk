@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceIS SDK — Products</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header" id="site-header"></header>
+
+    <main>
+      <div class="container">
+        <section class="section">
+          <div class="categories" id="categories">
+            <button class="cat-btn active" id="cat-all">All</button>
+          </div>
+          <div class="categories subcategories" id="subcategories" style="display: none"></div>
+
+          <div id="products-container"></div>
+
+          <div class="pagination" id="pagination" style="display: none">
+            <button class="page-btn" id="prev-btn">&#8592; Previous</button>
+            <span class="page-info" id="page-info"></span>
+            <button class="page-btn" id="next-btn">Next &#8594;</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <div id="site-cart-drawer"></div>
+    <div class="toast-container" id="toast-container"></div>
+    <footer id="site-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      "use strict";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const saleFilter = urlParams.get("sale") || null;
+
+      const state = {
+        currentPage: 1,
+        currentCategory: null,
+        categoriesLoaded: false,
+      };
+
+      let allCategories = [];
+
+      // ── Categories ────────────────────────────────────────────
+
+      function loadCategories() {
+        if (state.categoriesLoaded) return;
+        state.categoriesLoaded = true;
+
+        client.categories
+          .list()
+          .then(function (categories) {
+            allCategories = categories;
+            const container = document.getElementById("categories");
+            categories.forEach(function (cat) {
+              if (!cat.is_active) return;
+              const btn = document.createElement("button");
+              btn.className = "cat-btn";
+              btn.textContent = cat.name;
+              btn.dataset.uuid = cat.uuid;
+              btn.addEventListener("click", function () {
+                selectCategory(cat, btn);
+              });
+              container.appendChild(btn);
+            });
+          })
+          .catch(function () {});
+      }
+
+      // Select a parent category — shows its children below
+      function selectCategory(cat, btn) {
+        state.currentCategory = cat.uuid;
+        state.currentPage = 1;
+
+        // Highlight active parent
+        document.querySelectorAll("#categories .cat-btn").forEach(function (b) {
+          b.classList.remove("active");
+        });
+        if (btn) btn.classList.add("active");
+
+        // Render subcategories (if any)
+        const subContainer = document.getElementById("subcategories");
+        subContainer.innerHTML = "";
+
+        const activeChildren = (cat.children || []).filter(function (c) {
+          return c.is_active;
+        });
+
+        if (activeChildren.length > 0) {
+          subContainer.style.display = "";
+
+          // "All in category" option
+          const allBtn = document.createElement("button");
+          allBtn.className = "cat-btn cat-child active";
+          allBtn.textContent = "All";
+          allBtn.addEventListener("click", function () {
+            state.currentCategory = cat.uuid;
+            state.currentPage = 1;
+            subContainer.querySelectorAll(".cat-btn").forEach(function (b) {
+              b.classList.remove("active");
+            });
+            allBtn.classList.add("active");
+            loadProducts();
+          });
+          subContainer.appendChild(allBtn);
+
+          // Child categories
+          activeChildren.forEach(function (child) {
+            const subBtn = document.createElement("button");
+            subBtn.className = "cat-btn cat-child";
+            subBtn.textContent = child.name;
+            subBtn.dataset.uuid = child.uuid;
+            subBtn.addEventListener("click", function () {
+              state.currentCategory = child.uuid;
+              state.currentPage = 1;
+              subContainer.querySelectorAll(".cat-btn").forEach(function (b) {
+                b.classList.remove("active");
+              });
+              subBtn.classList.add("active");
+              loadProducts();
+            });
+            subContainer.appendChild(subBtn);
+          });
+        } else {
+          subContainer.style.display = "none";
+        }
+
+        loadProducts();
+      }
+
+      // "All products" — reset everything
+      document.getElementById("cat-all").addEventListener("click", function () {
+        state.currentCategory = null;
+        state.currentPage = 1;
+        document.querySelectorAll(".cat-btn").forEach(function (b) {
+          b.classList.remove("active");
+        });
+        this.classList.add("active");
+        document.getElementById("subcategories").style.display = "none";
+        loadProducts();
+      });
+
+      // ── Products ─────────────────────────────────────────────
+
+      function loadProducts() {
+        renderSkeletons("products-container", 8);
+        document.getElementById("pagination").style.display = "none";
+
+        const params = { page: state.currentPage };
+        if (state.currentCategory) params.category_uuid = state.currentCategory;
+        if (saleFilter) params.sale_slug = saleFilter;
+
+        client.products
+          .list(params)
+          .then(function (result) {
+            renderProductGrid(result.data);
+            renderPagination(result.meta);
+          })
+          .catch(function () {
+            document.getElementById("products-container").innerHTML =
+              '<div class="empty-state"><p>Failed to load products.</p></div>';
+          });
+      }
+
+      function renderProductGrid(products) {
+        const container = document.getElementById("products-container");
+        if (products.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state"><p>No products in this category.</p></div>';
+          return;
+        }
+        const grid = document.createElement("div");
+        grid.className = "products-grid";
+        products.forEach(function (product, idx) {
+          const card = buildProductCard(product);
+          card.style.animationDelay = idx * 0.04 + "s";
+          grid.appendChild(card);
+        });
+        container.innerHTML = "";
+        container.appendChild(grid);
+      }
+
+      function buildProductCard(product) {
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.dataset.slug = product.slug;
+
+        const imgHtml = product.image
+          ? '<img class="product-img" src="' +
+            esc(product.image) +
+            '" alt="' +
+            esc(product.name) +
+            '" loading="lazy">'
+          : '<div class="product-img-placeholder">' + PLACEHOLDER_SVG_LG + '</div>';
+
+        const discountHtml = product.percentage_discount
+          ? '<div class="product-discount-badge">-' + esc(product.percentage_discount) + "%</div>"
+          : "";
+
+        const priceField =
+          product.minimal_price != null ? product.minimal_price : product.base_price;
+        const basePriceField =
+          product.minimal_base_price != null ? product.minimal_base_price : null;
+        const oldPriceHtml =
+          basePriceField && basePriceField !== priceField
+            ? '<span class="product-price-old">' + fp(basePriceField) + "</span>"
+            : "";
+
+        card.innerHTML =
+          '<div class="product-img-wrap">' +
+          imgHtml +
+          discountHtml +
+          "</div>" +
+          '<div class="product-body">' +
+          '<div class="product-name">' +
+          esc(product.name) +
+          "</div>" +
+          '<div class="product-footer">' +
+          "<div>" +
+          '<span class="product-price">' +
+          fp(priceField) +
+          "</span>" +
+          (oldPriceHtml ? "<br>" + oldPriceHtml : "") +
+          "</div>" +
+          '<button class="view-btn">View</button>' +
+          "</div>" +
+          "</div>";
+
+        card.addEventListener("click", function () {
+          openProductModal(product.slug);
+        });
+
+        return card;
+      }
+
+      // ── Pagination ───────────────────────────────────────────
+
+      function renderPagination(meta) {
+        const pag = document.getElementById("pagination");
+        if (!meta || meta.last_page <= 1) {
+          pag.style.display = "none";
+          return;
+        }
+        pag.style.display = "flex";
+        document.getElementById("page-info").textContent =
+          meta.current_page + " / " + meta.last_page;
+        document.getElementById("prev-btn").disabled = meta.current_page <= 1;
+        document.getElementById("next-btn").disabled = meta.current_page >= meta.last_page;
+      }
+
+      document.getElementById("prev-btn").addEventListener("click", function () {
+        changePage(-1);
+      });
+      document.getElementById("next-btn").addEventListener("click", function () {
+        changePage(1);
+      });
+
+      function changePage(delta) {
+        state.currentPage += delta;
+        loadProducts();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // ── Init ─────────────────────────────────────────────────
+
+      renderSkeletons("products-container", 8);
+      loadCategories();
+      loadProducts();
+    </script>
+  </body>
+</html>

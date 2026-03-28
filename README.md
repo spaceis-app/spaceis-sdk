@@ -7,7 +7,7 @@ Official JavaScript SDK for the **SpaceIS** Minecraft shop platform.
 | Package | Description | npm |
 |---|---|---|
 | [`@spaceis/sdk`](./packages/sdk) | Core SDK — zero dependencies, works everywhere | `npm i @spaceis/sdk` |
-| `@spaceis/react` | React hooks, Context Provider, Next.js SSR helpers | *Coming soon* |
+| [`@spaceis/react`](./packages/react) | React hooks, Context Provider, Next.js SSR helpers | `npm i @spaceis/react` |
 
 ## Documentation
 

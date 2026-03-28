@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceIS SDK — Page</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header" id="site-header"></header>
+
+    <main id="main-content">
+      <div style="text-align: center; padding: 60px 0; color: var(--txt-3); font-size: 14px">
+        Loading...
+      </div>
+    </main>
+
+    <div id="site-cart-drawer"></div>
+    <div class="toast-container" id="toast-container"></div>
+    <footer id="site-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      "use strict";
+
+      const mainEl = document.getElementById("main-content");
+
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("slug");
+
+      if (slug) {
+        loadPage(slug);
+      } else {
+        loadPagesList();
+      }
+
+      function loadPage(slug) {
+        client.content
+          .page(slug)
+          .then(function (page) {
+            document.title = (page.title || "Page") + " — SpaceIS SDK";
+
+            var tempDiv = document.createElement("div");
+            tempDiv.innerHTML = page.content || "";
+            sanitizeHtml(tempDiv);
+            var safeContent = tempDiv.innerHTML;
+
+            mainEl.innerHTML =
+              '<div class="page-content">' +
+              '<div class="page-content-panel">' +
+              '<div class="page-body">' +
+              "<h1>" +
+              esc(page.title) +
+              "</h1>" +
+              safeContent +
+              "</div>" +
+              (page.updated_at
+                ? '<div class="page-meta">' +
+                  "<span>Last updated: " +
+                  new Date(page.updated_at).toLocaleDateString("en") +
+                  "</span>" +
+                  "</div>"
+                : "") +
+              "</div>" +
+              "</div>";
+          })
+          .catch(function (err) {
+            if (err && err.isNotFound) {
+              mainEl.innerHTML =
+                '<div class="page-not-found">' +
+                '<div class="icon">&#128269;</div>' +
+                "<h2>404 — Not found</h2>" +
+                '<p>Page "' +
+                esc(slug) +
+                '" does not exist.</p>' +
+                '<a href="page.html">&#8592; All pages</a>' +
+                "</div>";
+            } else {
+              mainEl.innerHTML =
+                '<div class="page-not-found">' +
+                '<div class="icon">&#9888;</div>' +
+                "<h2>Error</h2>" +
+                "<p>" +
+                esc(getErrorMessage(err)) +
+                "</p>" +
+                "</div>";
+            }
+          });
+      }
+
+      function loadPagesList() {
+        document.title = "Pages — SpaceIS SDK";
+
+        client.content
+          .pages({ visible: true })
+          .then(function (pages) {
+            if (pages.length === 0) {
+              mainEl.innerHTML =
+                '<div class="page-not-found">' +
+                '<div class="icon">&#128196;</div>' +
+                "<p>No pages to display.</p>" +
+                "</div>";
+              return;
+            }
+
+            let html = '<div class="page-content">';
+
+            pages.forEach(function (p) {
+              html +=
+                '<a class="pages-list-item" href="page.html?slug=' +
+                encodeURIComponent(p.slug) +
+                '">' +
+                '<span class="pages-list-item-slug">' +
+                esc(p.slug) +
+                "</span>" +
+                "<span>" +
+                esc(p.title) +
+                "</span>" +
+                "</a>";
+            });
+
+            html += "</div>";
+            mainEl.innerHTML = html;
+          })
+          .catch(function (err) {
+            mainEl.innerHTML =
+              '<div class="page-not-found">' +
+              '<div class="icon">&#9888;</div>' +
+              "<p>" +
+              esc(getErrorMessage(err)) +
+              "</p>" +
+              "</div>";
+          });
+      }
+    </script>
+  </body>
+</html>
