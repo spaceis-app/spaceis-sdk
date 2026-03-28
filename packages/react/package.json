@@ -76,6 +76,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/spaceis-app/spaceis-sdk-js.git"
+    "url": "https://github.com/spaceis-app/spaceis-sdk.git"
   }
 }

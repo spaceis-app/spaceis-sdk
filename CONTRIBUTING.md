@@ -7,8 +7,8 @@ Thanks for your interest in contributing to the SpaceIS SDK!
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/<your-username>/spaceis-sdk-js.git
-   cd spaceis-sdk-js
+   git clone https://github.com/<your-username>/spaceis-sdk.git
+   cd spaceis-sdk
    ```
 3. Install dependencies:
    ```bash
@@ -67,11 +67,11 @@ packages/
 
 ## Reporting bugs
 
-Use [GitHub Issues](https://github.com/spaceis-app/spaceis-sdk-js/issues) with the bug report template.
+Use [GitHub Issues](https://github.com/spaceis-app/spaceis-sdk/issues) with the bug report template.
 
 ## Suggesting features
 
-Use [GitHub Issues](https://github.com/spaceis-app/spaceis-sdk-js/issues) with the feature request template.
+Use [GitHub Issues](https://github.com/spaceis-app/spaceis-sdk/issues) with the feature request template.
 
 ## License
 

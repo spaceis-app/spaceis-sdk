@@ -1,7 +1,7 @@
 {
   "name": "@spaceis/sdk",
-  "version": "0.1.1",
-  "description": "Official JavaScript SDK for SpaceIS Minecraft shop platform. Zero dependencies, works everywhere.",
+  "version": "0.1.2",
+  "description": "Official JavaScript SDK for SpaceIS shop platform. Zero dependencies, works everywhere.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -56,6 +56,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/spaceis-app/spaceis-sdk-js.git"
+    "url": "https://github.com/spaceis-app/spaceis-sdk.git"
   }
 }

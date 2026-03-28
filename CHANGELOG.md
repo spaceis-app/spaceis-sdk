@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CartManager tests to `@spaceis/sdk` (63 new test cases)
 - Updated all packages to TypeScript 6, React 19, Next.js 16
 
+## [@spaceis/sdk 0.1.2] - 2026-03-28
+
+### Added
+- CartManager test suite (63 test cases)
+
+### Changed
+- Upgraded to TypeScript 6
+- Require Node.js >= 20 (dropped Node 18)
+- Updated repository URL to `spaceis-app/spaceis-sdk`
+
+### Fixed
+- Node.js version in README browser support section
+
 ## [0.1.1] - 2025-03-27
 
 ### Fixed
