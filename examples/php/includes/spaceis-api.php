@@ -169,9 +169,16 @@ class SpaceISApi
             ],
         ]);
 
-        $response = @file_get_contents($url, false, $context);
+        // Retry up to 2 times on failure
+        $response = false;
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            $response = @file_get_contents($url, false, $context);
+            if ($response !== false) break;
+            if ($attempt < 2) usleep(200_000); // 200ms backoff
+        }
 
         if ($response === false) {
+            error_log("SpaceIS API failed: GET $endpoint");
             return [];
         }
 

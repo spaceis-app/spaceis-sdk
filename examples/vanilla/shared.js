@@ -23,16 +23,6 @@ var SHOP_CONFIG = {
 var client = SpaceIS.createSpaceIS(SHOP_CONFIG);
 var cartMgr = client.createCartManager();
 
-// Polyfill snapQuantity if SDK version doesn't have it yet
-if (typeof SpaceIS.snapQuantity !== "function") {
-  SpaceIS.snapQuantity = function(qty, limits) {
-    if (qty < limits.min) return limits.min;
-    if (qty > limits.max) return limits.max;
-    var snapped = Math.round((qty - limits.min) / limits.step) * limits.step + limits.min;
-    return Math.max(limits.min, Math.min(limits.max, snapped));
-  };
-}
-
 // ══════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════
