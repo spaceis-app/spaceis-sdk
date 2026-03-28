@@ -12,8 +12,14 @@ Official JavaScript SDK for the **SpaceIS** Minecraft shop platform.
 ## Documentation
 
 - [SDK README](./packages/sdk/README.md) — full API reference and usage examples
+- [React README](./packages/react/README.md) — hooks, provider, SSR helpers
 - [API Documentation](https://docs.spaceis.app/api#/) — SpaceIS REST API reference
 - [Changelog](./CHANGELOG.md) — version history
+
+## Examples
+
+- [`examples/vanilla/`](./examples/vanilla/) — complete store using HTML + vanilla JS + SDK IIFE
+- [`examples/react/`](./examples/react/) — Next.js App Router store with SSR, SEO, and all hooks
 
 ## Development
 

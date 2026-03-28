@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@spaceis/react 0.1.0] - 2026-03-28
+
+### Added
+
+- `SpaceISProvider` — root React context with built-in TanStack QueryClient
+- 19 data hooks: `useProducts`, `useProduct`, `useProductRecommendations`, `useCategories`, `usePackages`, `useSales`, `useGoals`, `useTopCustomers`, `useLatestOrders`, `useShopConfig`, `usePaymentMethods`, `useAgreements`, `usePlaceOrder`, `useCheckout`, `useRecaptcha`, `usePages`, `usePage`, `useStatute`
+- `useCart()` — reactive cart via `useSyncExternalStore` with full cart operations
+- SSR prefetch helpers (`@spaceis/react/server`) — `createServerClient`, `prefetchProducts`, `prefetchCategories`, and 9 more for Next.js Server Components
+- Dual entry points: `@spaceis/react` (client, `"use client"` banner) and `@spaceis/react/server` (SSR)
+- Next.js App Router example with SSR, SEO metadata, sitemap, robots.txt, product detail pages, community section
+- 47 tests (provider, hooks, server helpers, exports)
+
+### Changed
+
+- Moved examples from `packages/sdk/examples/` to root `examples/`
+- Vanilla example now uses CDN imports (jsdelivr)
+- Added CartManager tests to `@spaceis/sdk` (63 new test cases)
+- Updated all packages to TypeScript 6, React 19, Next.js 16
+
 ## [0.1.1] - 2025-03-27
 
 ### Fixed
