@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Packages",
-  description: "Bundle deals for your Minecraft server.",
+  description: "Bundle deals in our store.",
 };
 
 export default async function Page() {

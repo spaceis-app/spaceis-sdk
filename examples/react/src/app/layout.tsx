@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
     const title = config.meta?.title || "SpaceIS Store";
     const description =
-      config.meta?.description || "Minecraft shop powered by SpaceIS SDK";
+      config.meta?.description || "Shop powered by SpaceIS SDK";
 
     return {
       title: {
@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
         default: "SpaceIS Store",
         template: "%s — SpaceIS Store",
       },
-      description: "Minecraft shop powered by SpaceIS SDK",
+      description: "Shop powered by SpaceIS SDK",
     };
   }
 }

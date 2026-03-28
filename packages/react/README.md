@@ -1,6 +1,6 @@
 # @spaceis/react
 
-React hooks, Context Provider, and Next.js SSR helpers for the [SpaceIS SDK](../sdk).
+React hooks, Context Provider, and Next.js SSR helpers for the [SpaceIS SDK](https://www.npmjs.com/package/@spaceis/sdk).
 
 Wraps `@spaceis/sdk` with a thin React layer — no logic is duplicated.
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Monorepo for the SpaceIS Minecraft shop platform SDK. Provides a JavaScript client library and React bindings for building storefronts.
+Monorepo for the SpaceIS shop platform SDK. Provides a JavaScript client library and React bindings for building storefronts.
 
 - **API docs**: https://docs.spaceis.app/api#/
 - **npm**: [`@spaceis/sdk`](https://www.npmjs.com/package/@spaceis/sdk), [`@spaceis/react`](https://www.npmjs.com/package/@spaceis/react)
@@ -44,7 +44,7 @@ pnpm dev         # watch mode
 - **Prices** are always in **cents** (grosze). 1299 = 12.99 PLN
 - **Quantities** use **thousandths** in API. 1000 = 1 item, 2500 = 2.5 items
 - **Cart token** — UUID stored in localStorage, identifies a cart session
-- **Shop UUID** — identifies which Minecraft shop the SDK connects to
+- **Shop UUID** — identifies which shop the SDK connects to
 
 ## Package Details
 

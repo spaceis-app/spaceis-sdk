@@ -1,6 +1,6 @@
 # SpaceIS SDK
 
-Official JavaScript SDK for the **SpaceIS** Minecraft shop platform.
+Official JavaScript SDK for the **SpaceIS** shop platform.
 
 ## Packages
 

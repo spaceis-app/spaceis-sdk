@@ -2,7 +2,7 @@
 
 ## Overview
 
-JavaScript SDK for the SpaceIS Minecraft shop platform. Zero runtime dependencies, works in browsers and Node.js.
+JavaScript SDK for the SpaceIS shop platform. Zero runtime dependencies, works in browsers and Node.js.
 
 ## Architecture
 

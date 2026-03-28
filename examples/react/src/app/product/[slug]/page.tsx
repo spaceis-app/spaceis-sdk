@@ -24,7 +24,7 @@ export async function generateMetadata({
 
     const description = product.description
       ? product.description.replace(/<[^>]*>/g, "").slice(0, 160)
-      : `Buy ${product.name} on our Minecraft store.`;
+      : `Buy ${product.name} in our store.`;
 
     return {
       title: product.name,

@@ -10,7 +10,7 @@ import type { TemplateConfiguration } from "../types";
  * @example
  * ```ts
  * const config = await client.shop.config();
- * console.log(config.app_name);       // "My Minecraft Shop"
+ * console.log(config.app_name);       // "My Shop"
  * console.log(config.meta.accent_color); // "#7c3aed"
  * ```
  */

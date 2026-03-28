@@ -1,6 +1,6 @@
 # @spaceis/sdk
 
-Official JavaScript SDK for the **SpaceIS** Minecraft shop platform.
+Official JavaScript SDK for the **SpaceIS** shop platform.
 
 - Zero runtime dependencies
 - Works in browsers, Node.js, Deno, Bun
