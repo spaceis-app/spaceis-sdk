@@ -1,6 +1,6 @@
 {
   "name": "@spaceis/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React hooks, Context Provider, and Next.js SSR helpers for the SpaceIS SDK.",
   "type": "module",
   "main": "./dist/index.cjs",
