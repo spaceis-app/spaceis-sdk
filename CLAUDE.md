@@ -19,7 +19,7 @@ Monorepo for the SpaceIS Minecraft shop platform SDK. Provides a JavaScript clie
 │   │   └── CLAUDE.md     — SDK-specific AI context
 │   └── react/            — React hooks + Provider + SSR helpers for Next.js
 ├── .github/
-│   ├── workflows/ci.yml      — CI: typecheck + build + test (Node 18/20/22)
+│   ├── workflows/ci.yml      — CI: build + typecheck + test (Node 20/22)
 │   ├── workflows/publish.yml — Publish to npm on GitHub Release
 │   └── ISSUE_TEMPLATE/       — Bug report + feature request forms
 ├── CHANGELOG.md
