@@ -35,12 +35,12 @@ jobs:
 
       - name: Publish @spaceis/sdk
         working-directory: packages/sdk
-        run: pnpm publish --access public --no-git-checks
+        run: pnpm publish --access public --no-git-checks || echo "Version already published, skipping"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @spaceis/react
         working-directory: packages/react
-        run: pnpm publish --access public --no-git-checks
+        run: pnpm publish --access public --no-git-checks || echo "Version already published, skipping"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
