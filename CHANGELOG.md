@@ -9,12 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `snapQuantity(qty, limits)` — utility to snap a quantity to the nearest valid value respecting min, max, and step
+- PHP SSR example (`examples/php/`) — complete storefront with server-side rendering
+
+### Changed
+- Examples now use published npm packages instead of workspace links
+- Pin CDN links to specific SDK version in vanilla and PHP examples
 
 ## [@spaceis/react 0.1.2] - 2026-03-28
 
 ### Added
 - Re-export `snapQuantity` from `@spaceis/sdk`
-- `QtyInput` component in example — editable quantity inputs in cart, drawer, checkout with auto-snap to product limits
+- Editable quantity inputs in cart, drawer, checkout with auto-snap to product limits (`QtyInput` component)
+- Product detail page (`/product/[slug]`) with SSR, SEO metadata, and OG image
+- Sitemap (`/sitemap.xml`) and robots.txt
+- Custom 404 page
+
+### Changed
+- Standardized all imports to `@/` path alias
+- Examples use npm packages instead of workspace links
+
+## [@spaceis/react 0.1.1] - 2026-03-28
+
+### Changed
+- Updated repository URL
 
 ## [@spaceis/react 0.1.0] - 2026-03-28
 

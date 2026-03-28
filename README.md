@@ -20,6 +20,7 @@ Official JavaScript SDK for the **SpaceIS** shop platform.
 
 - [`examples/vanilla/`](./examples/vanilla/) — complete store using HTML + vanilla JS + SDK IIFE
 - [`examples/react/`](./examples/react/) — Next.js App Router store with SSR, SEO, and all hooks
+- [`examples/php/`](./examples/php/) — PHP SSR store with client-side SDK for cart and interactivity
 
 ## Development
 

@@ -12,7 +12,8 @@ Monorepo for the SpaceIS shop platform SDK. Provides a JavaScript client library
 ```
 ├── examples/
 │   ├── vanilla/          — Complete store using HTML + vanilla JS + SDK IIFE
-│   └── react/            — Next.js App Router store using @spaceis/react hooks + SSR
+│   ├── react/            — Next.js App Router store using @spaceis/react hooks + SSR
+│   └── php/              — PHP SSR store with client-side SDK for cart
 ├── packages/
 │   ├── sdk/              — Core JS SDK (zero dependencies)
 │   │   ├── src/          — TypeScript source
