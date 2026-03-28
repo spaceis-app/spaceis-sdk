@@ -10,7 +10,7 @@
  */
 var SHOP_CONFIG = {
   baseUrl: "https://storefront-api.spaceis.app",
-  shopUuid: "xxx",
+  shopUuid: "2f6f558d-b7cb-42b2-bc02-116d740b2f97",
   lang: "pl",
 };
 
@@ -22,6 +22,16 @@ var SHOP_CONFIG = {
 
 var client = SpaceIS.createSpaceIS(SHOP_CONFIG);
 var cartMgr = client.createCartManager();
+
+// Polyfill snapQuantity if SDK version doesn't have it yet
+if (typeof SpaceIS.snapQuantity !== "function") {
+  SpaceIS.snapQuantity = function(qty, limits) {
+    if (qty < limits.min) return limits.min;
+    if (qty > limits.max) return limits.max;
+    var snapped = Math.round((qty - limits.min) / limits.step) * limits.step + limits.min;
+    return Math.max(limits.min, Math.min(limits.max, snapped));
+  };
+}
 
 // ══════════════════════════════════════════════════════════
 //  STATE
@@ -381,10 +391,7 @@ function handleQtyInputChange(e) {
   }
   input.disabled = true;
   getVariantLimits(uuid).then(function (limits) {
-    var newQty = rawQty;
-    if (newQty < limits.min) newQty = limits.min;
-    if (newQty > limits.max) newQty = limits.max;
-    if (limits.step > 1) newQty = Math.round((newQty - limits.min) / limits.step) * limits.step + limits.min;
+    var newQty = SpaceIS.snapQuantity(rawQty, limits);
 
     if (newQty < limits.min) {
       return cartMgr.remove(uuid)
@@ -696,7 +703,7 @@ function renderCartItems() {
     qtyEl.innerHTML =
       '<div class="qty-stepper">' +
         '<button class="qty-step-btn" data-action="minus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-        '<input class="qty-input" type="number" min="1" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
+        '<input class="qty-input" type="text" inputmode="numeric" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
         '<button class="qty-step-btn" data-action="plus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
       '</div>';
 

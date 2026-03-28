@@ -16,6 +16,7 @@ export {
   getItemQty,
   getProductLimits,
   getCartItemImage,
+  snapQuantity,
   centsToAmount,
   escapeHtml,
 } from "@spaceis/sdk";

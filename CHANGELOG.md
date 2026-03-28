@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@spaceis/sdk 0.1.3] - 2026-03-28
+
+### Added
+- `snapQuantity(qty, limits)` — utility to snap a quantity to the nearest valid value respecting min, max, and step
+
+## [@spaceis/react 0.1.2] - 2026-03-28
+
+### Added
+- Re-export `snapQuantity` from `@spaceis/sdk`
+- `QtyInput` component in example — editable quantity inputs in cart, drawer, checkout with auto-snap to product limits
+
 ## [@spaceis/react 0.1.0] - 2026-03-28
 
 ### Added

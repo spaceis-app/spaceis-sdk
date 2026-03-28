@@ -9,7 +9,8 @@ import {
   getItemQty,
   getCartItemImage,
 } from "@spaceis/react";
-import { fp, PlaceholderSVG, getErrorMessage } from "../helpers";
+import { fp, PlaceholderSVG, getErrorMessage } from "@/helpers";
+import { QtyInput } from "@/components/QtyInput";
 import { toast } from "sonner";
 
 export function CheckoutPage() {
@@ -25,6 +26,7 @@ export function CheckoutPage() {
     increment,
     decrement,
     remove,
+    setQuantity,
     applyDiscount,
     removeDiscount,
   } = useCart();
@@ -212,12 +214,14 @@ export function CheckoutPage() {
                             <line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
                         </button>
-                        <input
-                          className="qty-input"
-                          type="number"
-                          min="1"
+                        <QtyInput
                           value={qty}
-                          readOnly
+                          slug={item.shop_product?.slug || item.shop_product?.uuid || ""}
+                          onSet={(q) => {
+                            setQuantity(variantUuid, q).catch((err) =>
+                              toast.error(getErrorMessage(err))
+                            );
+                          }}
                         />
                         <button
                           className="qty-step-btn"

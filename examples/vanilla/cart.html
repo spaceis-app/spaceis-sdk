@@ -61,7 +61,7 @@
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.3/dist/spaceis.global.js"></script>
     <script src="shared.js"></script>
     <script>
       "use strict";
@@ -139,7 +139,7 @@
                 '<div class="cp-item-bottom">' +
                   '<div class="qty-stepper">' +
                     '<button class="qty-step-btn" data-action="minus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-                    '<input class="qty-input" type="number" min="1" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
+                    '<input class="qty-input" type="text" inputmode="numeric" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
                     '<button class="qty-step-btn" data-action="plus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
                   '</div>' +
                 '</div>' +

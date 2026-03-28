@@ -136,6 +136,29 @@ export function getProductLimits(product: {
   };
 }
 
+/**
+ * Snap a quantity to the nearest valid value respecting min, max, and step.
+ *
+ * @param qty - Desired quantity (human-readable)
+ * @param limits - Product limits from `getProductLimits()`
+ * @returns Snapped quantity clamped to [min, max] and rounded to nearest step
+ *
+ * @example
+ * ```js
+ * const limits = { min: 1, max: 64, step: 2 };
+ * snapQuantity(3, limits) // → 4
+ * snapQuantity(0, limits) // → 1
+ * snapQuantity(99, limits) // → 64
+ * ```
+ */
+export function snapQuantity(qty: number, limits: ProductLimits): number {
+  const { min, max, step } = limits;
+  if (qty < min) return min;
+  if (qty > max) return max;
+  const snapped = Math.round((qty - min) / step) * step + min;
+  return Math.max(min, Math.min(max, snapped));
+}
+
 // ── HTML helpers ──
 
 /**

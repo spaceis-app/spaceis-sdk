@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSpaceIS, fromApiQty } from "@spaceis/react";
-import { fp, getErrorMessage } from "../helpers";
+import { fp, getErrorMessage } from "@/helpers";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {

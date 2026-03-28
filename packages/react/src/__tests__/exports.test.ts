@@ -51,6 +51,7 @@ describe("@spaceis/react exports", () => {
     expect(typeof ReactExports.getCartItemImage).toBe("function");
     expect(typeof ReactExports.centsToAmount).toBe("function");
     expect(typeof ReactExports.escapeHtml).toBe("function");
+    expect(typeof ReactExports.snapQuantity).toBe("function");
   });
 
   it("re-exports SpaceISError class", () => {

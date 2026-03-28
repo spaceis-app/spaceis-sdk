@@ -4,7 +4,6 @@
   "description": "SpaceIS SDK monorepo — JavaScript SDK + React bindings",
   "scripts": {
     "build": "pnpm --filter @spaceis/sdk build && pnpm --filter @spaceis/react build",
-    "build:all": "pnpm build && pnpm --filter spaceis-react-example build",
     "dev": "pnpm -r --parallel dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

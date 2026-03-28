@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSpaceIS, useRecaptcha } from "@spaceis/react";
-import { getErrorMessage } from "../helpers";
+import { getErrorMessage } from "@/helpers";
 import { toast } from "sonner";
 
 export function VoucherPage() {

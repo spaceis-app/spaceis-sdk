@@ -6,6 +6,7 @@ import {
   useProduct,
   useCart,
   getProductLimits,
+  snapQuantity,
   type ShowShopProductVariant,
 } from "@spaceis/react";
 import { fp, PlaceholderSVG, getErrorMessage } from "@/helpers";
@@ -19,14 +20,16 @@ export function ProductPage({ slug }: { slug: string }) {
   const [selectedVariant, setSelectedVariant] =
     useState<ShowShopProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [qtyInput, setQtyInput] = useState("1");
   const [adding, setAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
 
   useEffect(() => {
     if (product && product.variants && product.variants.length > 0) {
       setSelectedVariant(product.variants[0]);
-      const limits = getProductLimits(product);
-      setQuantity(limits.min);
+      const lim = getProductLimits(product);
+      setQuantity(lim.min);
+      setQtyInput(String(lim.min));
     }
     setAddSuccess(false);
   }, [product]);
@@ -132,6 +135,7 @@ export function ProductPage({ slug }: { slug: string }) {
                     onClick={() => {
                       setSelectedVariant(v);
                       setQuantity(limits.min);
+                      setQtyInput(String(limits.min));
                     }}
                   >
                     {v.name}
@@ -148,19 +152,39 @@ export function ProductPage({ slug }: { slug: string }) {
                 <button
                   className="qty-step-btn"
                   disabled={quantity <= limits.min}
-                  onClick={() =>
-                    setQuantity((q) => Math.max(limits.min, q - limits.step))
-                  }
+                  onClick={() => {
+                    const q = Math.max(limits.min, quantity - limits.step);
+                    setQuantity(q);
+                    setQtyInput(String(q));
+                  }}
                 >
                   -
                 </button>
-                <span className="qty-step-val">{quantity}</span>
+                <input
+                  className="pdp-qty-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={qtyInput}
+                  onChange={(e) => setQtyInput(e.target.value)}
+                  onBlur={() => {
+                    let n = parseInt(qtyInput, 10);
+                    if (isNaN(n)) n = quantity;
+                    n = snapQuantity(n, limits);
+                    setQuantity(n);
+                    setQtyInput(String(n));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.currentTarget.blur();
+                  }}
+                />
                 <button
                   className="qty-step-btn"
                   disabled={quantity >= limits.max}
-                  onClick={() =>
-                    setQuantity((q) => Math.min(limits.max, q + limits.step))
-                  }
+                  onClick={() => {
+                    const q = Math.min(limits.max, quantity + limits.step);
+                    setQuantity(q);
+                    setQtyInput(String(q));
+                  }}
                 >
                   +
                 </button>

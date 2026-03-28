@@ -9,6 +9,7 @@ export {
   getCartItemImage,
   getItemQty,
   getProductLimits,
+  snapQuantity,
   escapeHtml,
   type ProductLimits,
 } from "./utils";

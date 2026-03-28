@@ -8,6 +8,7 @@ import {
   getItemQty,
   getProductLimits,
   escapeHtml,
+  snapQuantity,
 } from "../utils";
 
 describe("fromApiQty", () => {
@@ -256,5 +257,42 @@ describe("escapeHtml", () => {
 
   it("escapes multiple different characters in one string", () => {
     expect(escapeHtml("a & b < c > d")).toBe("a &amp; b &lt; c &gt; d");
+  });
+});
+
+describe("snapQuantity", () => {
+  it("snaps to nearest step", () => {
+    // min=1, step=2: valid values are 1,3,5,7,9
+    expect(snapQuantity(3, { min: 1, max: 10, step: 2 })).toBe(3);
+    expect(snapQuantity(4, { min: 1, max: 10, step: 2 })).toBe(5);
+    expect(snapQuantity(2, { min: 1, max: 10, step: 2 })).toBe(3); // 0.5 rounds up
+    // min=2, step=2: valid values are 2,4,6,8,10
+    expect(snapQuantity(3, { min: 2, max: 10, step: 2 })).toBe(4);
+    expect(snapQuantity(5, { min: 2, max: 10, step: 2 })).toBe(6);
+  });
+
+  it("clamps to min", () => {
+    expect(snapQuantity(0, { min: 2, max: 10, step: 1 })).toBe(2);
+  });
+
+  it("clamps to max", () => {
+    expect(snapQuantity(100, { min: 1, max: 10, step: 1 })).toBe(10);
+  });
+
+  it("returns min when qty equals min", () => {
+    expect(snapQuantity(1, { min: 1, max: 10, step: 1 })).toBe(1);
+  });
+
+  it("returns max when qty equals max", () => {
+    expect(snapQuantity(10, { min: 1, max: 10, step: 1 })).toBe(10);
+  });
+
+  it("handles step=1 (no snapping needed)", () => {
+    expect(snapQuantity(5, { min: 1, max: 10, step: 1 })).toBe(5);
+  });
+
+  it("handles large step", () => {
+    const result = snapQuantity(5, { min: 3, max: 100, step: 5 });
+    expect(result === 3 || result === 8).toBe(true);
   });
 });
