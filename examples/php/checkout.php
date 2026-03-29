@@ -51,7 +51,7 @@ require __DIR__ . '/includes/header.php';
         var isLoading = cart.isLoading;
         var discountAmount = regularPrice - finalPrice;
 
-        if (isLoading) {
+        if (isLoading && !cart.cart) {
             root.innerHTML = '<div style="display:flex;justify-content:center;padding:60px 0"><div class="spinner"></div></div>';
             return;
         }

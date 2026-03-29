@@ -37,8 +37,13 @@ export function useRecaptcha(): UseRecaptchaReturn {
   const execute = useCallback(
     async (action: string): Promise<string> => {
       if (!loadedRef.current) {
-        await client.recaptcha.load();
-        loadedRef.current = true;
+        try {
+          await client.recaptcha.load();
+          loadedRef.current = true;
+        } catch (error) {
+          loadedRef.current = false;
+          throw error;
+        }
       }
       return client.recaptcha.execute(action);
     },

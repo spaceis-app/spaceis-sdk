@@ -1,12 +1,12 @@
     <footer class="site-footer">
         <div class="container">
             <span class="footer-text">
-                Powered by <strong>SpaceIS SDK</strong> v0.1.1
+                Powered by <strong>SpaceIS SDK</strong> v0.1.4
             </span>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.3/dist/spaceis.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js"></script>
     <script>
     /**
      * SpaceIS PHP Example — Client-side interactivity.
@@ -121,7 +121,7 @@
 
             // Body
             html += '<div class="drawer-body">';
-            if (isLoading) {
+            if (isLoading && !cart.cart) {
                 html += '<div class="spinner"></div>';
             } else if (isEmpty) {
                 html += '<div class="empty-state">';
@@ -183,7 +183,7 @@
             html += '</div>';
 
             // Footer
-            if (!isEmpty && !isLoading) {
+            if (!isEmpty) {
                 html += '<div class="drawer-footer">';
 
                 // Discount section

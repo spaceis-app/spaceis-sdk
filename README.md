@@ -8,11 +8,13 @@ Official JavaScript SDK for the **SpaceIS** shop platform.
 |---|---|---|
 | [`@spaceis/sdk`](./packages/sdk) | Core SDK — zero dependencies, works everywhere | `npm i @spaceis/sdk` |
 | [`@spaceis/react`](./packages/react) | React hooks, Context Provider, Next.js SSR helpers | `npm i @spaceis/react` |
+| [`@spaceis/vue`](./packages/vue) | Vue 3 composables, Plugin, Nuxt SSR helpers | `npm i @spaceis/vue` |
 
 ## Documentation
 
 - [SDK README](./packages/sdk/README.md) — full API reference and usage examples
 - [React README](./packages/react/README.md) — hooks, provider, SSR helpers
+- [Vue README](./packages/vue/README.md) — composables, plugin, Nuxt SSR helpers
 - [API Documentation](https://docs.spaceis.app/api#/) — SpaceIS REST API reference
 - [Changelog](./CHANGELOG.md) — version history
 
@@ -20,6 +22,7 @@ Official JavaScript SDK for the **SpaceIS** shop platform.
 
 - [`examples/vanilla/`](./examples/vanilla/) — complete store using HTML + vanilla JS + SDK IIFE
 - [`examples/react/`](./examples/react/) — Next.js App Router store with SSR, SEO, and all hooks
+- [`examples/vue/`](./examples/vue/) — Nuxt 4 store with SSR, SEO, and Vue composables
 - [`examples/php/`](./examples/php/) — PHP SSR store with client-side SDK for cart and interactivity
 
 ## Development

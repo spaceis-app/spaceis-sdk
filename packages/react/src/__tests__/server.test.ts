@@ -12,6 +12,10 @@ import {
   prefetchPages,
   prefetchPage,
   prefetchStatute,
+  prefetchTopCustomers,
+  prefetchLatestOrders,
+  prefetchPaymentMethods,
+  prefetchAgreements,
 } from "../server/index";
 
 const mockFetch = vi.fn();
@@ -182,5 +186,53 @@ describe("prefetch helpers", () => {
 
     const cached = qc.getQueryData(["spaceis", "statute"]);
     expect(cached).toEqual(statute);
+  });
+
+  // rankings.top() unwraps res.data
+  it("prefetchTopCustomers populates query cache", async () => {
+    const customers = [{ first_name: "Steve" }];
+    mockApiResponse({ data: customers });
+
+    const qc = new QueryClient();
+    await prefetchTopCustomers(qc, client, { limit: 10 });
+
+    const cached = qc.getQueryData(["spaceis", "rankings", "top", { limit: 10 }]);
+    expect(cached).toEqual(customers);
+  });
+
+  // rankings.latest() unwraps res.data
+  it("prefetchLatestOrders populates query cache", async () => {
+    const orders = [{ first_name: "Alex" }];
+    mockApiResponse({ data: orders });
+
+    const qc = new QueryClient();
+    await prefetchLatestOrders(qc, client, { limit: 5 });
+
+    const cached = qc.getQueryData(["spaceis", "rankings", "latest", { limit: 5 }]);
+    expect(cached).toEqual(orders);
+  });
+
+  // checkout.paymentMethods() unwraps res.data
+  it("prefetchPaymentMethods populates query cache", async () => {
+    const methods = [{ uuid: "1", name: "PayPal" }];
+    mockApiResponse({ data: methods });
+
+    const qc = new QueryClient();
+    await prefetchPaymentMethods(qc, client);
+
+    const cached = qc.getQueryData(["spaceis", "payment-methods"]);
+    expect(cached).toEqual(methods);
+  });
+
+  // checkout.agreements() unwraps res.data
+  it("prefetchAgreements populates query cache", async () => {
+    const agreements = [{ uuid: "1", name: "Terms" }];
+    mockApiResponse({ data: agreements });
+
+    const qc = new QueryClient();
+    await prefetchAgreements(qc, client);
+
+    const cached = qc.getQueryData(["spaceis", "agreements"]);
+    expect(cached).toEqual(agreements);
   });
 });

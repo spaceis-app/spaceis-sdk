@@ -3,7 +3,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container">
         <span className="footer-text">
-          Powered by <strong>SpaceIS SDK</strong> v0.1.0
+          Powered by <strong>SpaceIS SDK</strong> v0.1.4
         </span>
       </div>
     </footer>

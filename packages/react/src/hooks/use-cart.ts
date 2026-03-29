@@ -105,8 +105,9 @@ export function useCart(): UseCartReturn {
   useSyncExternalStore(
     // subscribe — CartManager.onChange returns the unsubscribe function directly
     useCallback(
-      (onStoreChange: () => void) =>
-        cartManager.onChange(onStoreChange as Parameters<typeof cartManager.onChange>[0]),
+      (onStoreChange: () => void) => {
+        return cartManager.onChange(() => onStoreChange());
+      },
       [cartManager]
     ),
     // getSnapshot — called synchronously by React to read current state

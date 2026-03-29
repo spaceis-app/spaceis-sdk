@@ -4,8 +4,8 @@ import { toApiQty, fromApiQty } from "./utils";
 
 type Listener = (cart: Cart | null) => void;
 
-/** API quantity multiplier (1 item = 1000 in API) */
-const QTY_MULTIPLIER = 1000;
+/** Default step size in API units (1 item = 1000) */
+const DEFAULT_STEP = 1000;
 
 /** Generate a UUID v4 cart token */
 function generateToken(): string {
@@ -75,6 +75,7 @@ export class CartManager {
     }
 
     if (options.autoLoad) {
+      // Intentionally silent: initial load failure is non-fatal
       this.load().catch(() => {});
     }
   }
@@ -325,7 +326,7 @@ export class CartManager {
     this._loading = true;
     this.notify();
     try {
-      const rawStep = this._steps.get(variantUuid) ?? QTY_MULTIPLIER;
+      const rawStep = this._steps.get(variantUuid) ?? DEFAULT_STEP;
       const res = await this.client.cart.addItem({
         variant_uuid: variantUuid,
         quantity: rawStep,

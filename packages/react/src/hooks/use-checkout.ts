@@ -13,6 +13,7 @@ export function usePaymentMethods() {
   return useQuery({
     queryKey: ["spaceis", "payment-methods"] as const,
     queryFn: () => client.checkout.paymentMethods(),
+    staleTime: 10 * 60_000,
   });
 }
 
@@ -25,6 +26,7 @@ export function useAgreements() {
   return useQuery({
     queryKey: ["spaceis", "agreements"] as const,
     queryFn: () => client.checkout.agreements(),
+    staleTime: 10 * 60_000,
   });
 }
 

@@ -1,8 +1,25 @@
 # @spaceis/react
 
+[![npm](https://img.shields.io/npm/v/@spaceis/react)](https://www.npmjs.com/package/@spaceis/react)
+[![license](https://img.shields.io/npm/l/@spaceis/react)](./LICENSE)
+
 React hooks, Context Provider, and Next.js SSR helpers for the [SpaceIS SDK](https://www.npmjs.com/package/@spaceis/sdk).
 
 Wraps `@spaceis/sdk` with a thin React layer — no logic is duplicated.
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Hook Examples](#hook-examples)
+- [Available Hooks](#available-hooks)
+- [Server Helpers](#server-helpers-spaceisreactserver)
+- [Utilities](#utilities)
+- [Query Key Structure](#query-key-structure)
+- [Related Packages](#related-packages)
+- [License](#license)
 
 ---
 
@@ -326,9 +343,26 @@ export function Recommendations({ slug }: { slug: string }) {
 | `prefetchPages(qc, client, params?)`               | Prefetch CMS pages                                    |
 | `prefetchPage(qc, client, slug)`                   | Prefetch single CMS page                              |
 | `prefetchStatute(qc, client)`                      | Prefetch statute                                      |
+| `prefetchTopCustomers(qc, client, params?)`        | Prefetch top customers ranking                        |
+| `prefetchLatestOrders(qc, client, params?)`        | Prefetch latest orders ranking                        |
+| `prefetchPaymentMethods(qc, client)`               | Prefetch payment methods                              |
+| `prefetchAgreements(qc, client)`                   | Prefetch checkout agreements                          |
 | `dehydrate`                                        | Re-exported from `@tanstack/react-query`              |
 | `QueryClient`                                      | Re-exported from `@tanstack/react-query`              |
 | `HydrationBoundary`                                | Re-exported from `@tanstack/react-query`              |
+
+---
+
+## Utilities
+
+The following utility functions are re-exported from `@spaceis/sdk` for convenience:
+
+- **`formatPrice(cents)`** — Format a price in cents (grosze) to a display string (e.g., `1299` becomes `"12.99 PLN"`).
+- **`snapQuantity(value)`** — Snap a raw quantity input to the nearest valid thousandths value used by the API (e.g., `1000` = 1 item, `2500` = 2.5 items).
+
+```tsx
+import { formatPrice, snapQuantity } from "@spaceis/react";
+```
 
 ---
 
@@ -340,6 +374,15 @@ To invalidate all SpaceIS queries at once:
 ```ts
 queryClient.invalidateQueries({ queryKey: ["spaceis"] });
 ```
+
+---
+
+## Related Packages
+
+| Package | Description |
+|---|---|
+| [`@spaceis/sdk`](../sdk) | Core SDK (zero dependencies) |
+| [`@spaceis/vue`](../vue) | Vue 3 composables + Nuxt SSR helpers |
 
 ---
 

@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@spaceis/sdk 0.1.4] - 2026-03-29
+
+### Changed
+- DRY: extract duplicate `QTY_MULTIPLIER` constant in CartManager
+- Add clarifying comments on HTTP response type assertion and autoLoad
+
+### Fixed
+- Improved README: table of contents, CartManager options, low-level API, snapQuantity examples, lifecycle hooks, related packages
+
+## [@spaceis/react 0.1.3] - 2026-03-29
+
+### Fixed
+- Remove unsafe type assertion in `useCart` subscribe callback
+- `useRecaptcha` now retries on load failure (resets loaded flag)
+
+### Added
+- 4 new SSR prefetch helpers: `prefetchTopCustomers`, `prefetchLatestOrders`, `prefetchPaymentMethods`, `prefetchAgreements`
+- Explicit `staleTime: 10min` on `usePaymentMethods` and `useAgreements`
+- Improved README: badges, table of contents, complete server helpers table, utilities section, related packages
+
+## [@spaceis/vue 0.1.0] - 2026-03-29
+
+### Added
+- `SpaceISPlugin` — Vue 3 plugin with provide/inject + TanStack Vue Query
+- 18 composables: `useProducts`, `useProduct`, `useProductRecommendations`, `useCategories`, `usePackages`, `useSales`, `useGoals`, `useTopCustomers`, `useLatestOrders`, `useShopConfig`, `usePaymentMethods`, `useAgreements`, `usePlaceOrder`, `useCheckout`, `useRecaptcha`, `usePages`, `usePage`, `useStatute`
+- `useCart()` — reactive cart via Vue refs + `CartManager.onChange`, SSR-safe fallback
+- `useRecaptcha()` — lazy-loaded reCAPTCHA with SSR guard and retry on failure
+- 14 SSR prefetch helpers (`@spaceis/vue/server`) for Nuxt
+- Nuxt 4 example (`examples/vue/`) with SSR, SEO, DOMPurify, editable qty inputs
+- 57 tests (plugin, exports, composables, server prefetch helpers)
+
 ## [@spaceis/sdk 0.1.3] - 2026-03-28
 
 ### Added
