@@ -20,6 +20,10 @@ export function QtyInput({ value, slug, onSet }: QtyInputProps) {
   }, [value]);
 
   const commit = useCallback(() => {
+    if (!product) {
+      setInputVal(String(value));
+      return;
+    }
     let n = parseInt(inputVal, 10);
     if (isNaN(n)) n = value;
     n = snapQuantity(n, limits);
@@ -27,7 +31,7 @@ export function QtyInput({ value, slug, onSet }: QtyInputProps) {
     if (n !== value) {
       onSet(n);
     }
-  }, [inputVal, value, limits, onSet]);
+  }, [inputVal, value, limits, onSet, product]);
 
   return (
     <input

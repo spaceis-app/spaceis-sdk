@@ -13,12 +13,14 @@ Monorepo for the SpaceIS shop platform SDK. Provides a JavaScript client library
 ├── examples/
 │   ├── vanilla/          — Complete store using HTML + vanilla JS + SDK IIFE
 │   ├── react/            — Next.js App Router store using @spaceis/react hooks + SSR
+│   ├── vue/              — Nuxt 4 store using @spaceis/vue composables + SSR
 │   └── php/              — PHP SSR store with client-side SDK for cart
 ├── packages/
 │   ├── sdk/              — Core JS SDK (zero dependencies)
 │   │   ├── src/          — TypeScript source
 │   │   └── CLAUDE.md     — SDK-specific AI context
-│   └── react/            — React hooks + Provider + SSR helpers for Next.js
+│   ├── react/            — React hooks + Provider + SSR helpers for Next.js
+│   └── vue/              — Vue 3 composables + Plugin + SSR helpers for Nuxt
 ├── .github/
 │   ├── workflows/ci.yml      — CI: build + typecheck + test (Node 20/22)
 │   ├── workflows/publish.yml — Publish to npm on GitHub Release
@@ -72,6 +74,15 @@ React bindings using TanStack Query.
 - `useCart()` — reactive cart via `useSyncExternalStore`
 - Data hooks: `useProducts`, `useProduct`, `useCategories`, `useCheckout`, etc.
 - `@spaceis/react/server` — SSR prefetch helpers for Next.js
+
+### `@spaceis/vue` (packages/vue/)
+
+Vue 3 bindings using TanStack Vue Query.
+
+- `SpaceISPlugin` — Vue plugin with provide/inject
+- `useCart()` — reactive cart via `shallowRef` + `CartManager.onChange`
+- Data composables: `useProducts`, `useProduct`, `useCategories`, `useCheckout`, etc.
+- `@spaceis/vue/server` — SSR prefetch helpers for Nuxt
 
 ## Publishing
 

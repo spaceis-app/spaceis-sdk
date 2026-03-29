@@ -34,6 +34,7 @@ pnpm test        # Run all tests
 packages/
   sdk/     — Core JavaScript SDK (zero dependencies)
   react/   — React hooks + Context Provider + SSR helpers
+  vue/     — Vue 3 composables + Plugin + Nuxt SSR helpers
 ```
 
 ## Making changes

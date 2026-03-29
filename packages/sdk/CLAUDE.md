@@ -49,6 +49,7 @@ Examples live in `examples/` at the monorepo root (not inside packages/sdk):
 
 - `examples/vanilla/` — complete store UI using only HTML + vanilla JS + the SDK
 - `examples/react/` — Next.js App Router store using `@spaceis/react` hooks + SSR
+- `examples/vue/` — Nuxt 4 store using `@spaceis/vue` composables + SSR
 - `examples/php/` — PHP SSR store with client-side SDK for cart and interactivity
 
 ## Testing

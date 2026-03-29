@@ -1,5 +1,8 @@
 # @spaceis/sdk
 
+[![npm](https://img.shields.io/npm/v/@spaceis/sdk)](https://www.npmjs.com/package/@spaceis/sdk)
+[![license](https://img.shields.io/npm/l/@spaceis/sdk)](./LICENSE)
+
 Official JavaScript SDK for the **SpaceIS** shop platform.
 
 - Zero runtime dependencies
@@ -7,6 +10,30 @@ Official JavaScript SDK for the **SpaceIS** shop platform.
 - Full TypeScript support
 - Reactive cart with auto-persistence
 - reCAPTCHA v3 built-in
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+  - [Products](#products)
+  - [Categories](#categories)
+  - [Cart (CartManager)](#cart-reactive)
+  - [Low-level Cart API](#low-level-cart-api)
+  - [Checkout & reCAPTCHA](#checkout)
+  - [Orders](#orders)
+  - [Vouchers & Daily Rewards](#vouchers--daily-rewards)
+  - [Sales, Goals, Packages](#sales-goals-packages)
+  - [Rankings](#rankings)
+  - [Content (CMS)](#content-cms)
+  - [Shop Config](#shop-config)
+- [Prices & Quantities](#prices--quantities)
+- [Error Handling](#error-handling)
+- [Configuration Options](#configuration-options)
+- [TypeScript](#typescript)
+- [Browser Support](#browser-support)
+- [Related Packages](#related-packages)
+- [License](#license)
 
 ---
 
@@ -124,6 +151,33 @@ unsubscribe();
 
 > Cart token is auto-generated on first mutation and persisted in `localStorage`.
 
+#### CartManager Options
+
+Pass options to `createCartManager()` to customize behavior:
+
+```js
+const cart = client.createCartManager({
+  autoLoad: true,
+  storagePrefix: "my_app_cart_",
+});
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `autoLoad` | `boolean` | `false` | Auto-load cart from server on creation |
+| `storagePrefix` | `string` | `"spaceis_cart_"` | localStorage key prefix |
+
+#### Low-level Cart API
+
+For direct API calls without reactive state, use `client.cart` directly:
+
+```js
+const cart = await client.cart.get();
+await client.cart.addItem({ variant_uuid: "...", quantity: 1000 });
+```
+
+> Note: quantities in the low-level API use **thousandths** (1 item = 1000). `CartManager` handles this conversion automatically.
+
 ### Checkout
 
 ```js
@@ -218,8 +272,22 @@ All prices are in **cents** (grosze). All API quantities are in **thousandths** 
 | `toApiQty(qty)` | `toApiQty(2)` | `2000` |
 | `getItemQty(item)` | `getItemQty(cartItem)` | `2` |
 | `getProductLimits(product)` | `getProductLimits(p)` | `{ min: 1, max: 64, step: 1 }` |
+| `snapQuantity(qty, limits)` | `snapQuantity(5, { min: 1, max: 64, step: 2 })` | `5` |
 | `getCartItemImage(item)` | `getCartItemImage(i)` | `"https://..." \| null` |
 | `escapeHtml(str)` | `escapeHtml("<b>")` | `"&lt;b&gt;"` |
+
+### Quantity snapping
+
+When users input custom quantities, use `snapQuantity` to round to the nearest valid step. This is especially useful for products that must be purchased in fixed increments:
+
+```js
+import { getProductLimits, snapQuantity } from "@spaceis/sdk";
+
+const limits = getProductLimits(product); // { min: 3, max: 99, step: 3 }
+snapQuantity(5, limits); // 6 (nearest valid: 3, 6, 9...)
+snapQuantity(1, limits); // 3 (clamped to min)
+snapQuantity(100, limits); // 99 (clamped to max)
+```
 
 ---
 
@@ -265,6 +333,26 @@ client.setLang("en");
 client.setCartToken("new-token");
 ```
 
+### Lifecycle hooks
+
+Use lifecycle hooks to add logging, analytics, or custom error handling:
+
+```js
+createSpaceIS({
+  baseUrl: "https://storefront-api.spaceis.app",
+  shopUuid: "your-uuid",
+  onRequest: (url, init) => {
+    console.log(`[SpaceIS] ${init.method} ${url}`);
+  },
+  onResponse: (response) => {
+    console.log(`[SpaceIS] ${response.status} ${response.url}`);
+  },
+  onError: (error) => {
+    console.error(`[SpaceIS] ${error.status}: ${error.message}`);
+  },
+});
+```
+
 ---
 
 ## TypeScript
@@ -297,6 +385,13 @@ Requires native `fetch` and `AbortSignal.timeout`.
 ## API Documentation
 
 For the full SpaceIS REST API reference, see [docs.spaceis.app/api](https://docs.spaceis.app/api#/).
+
+## Related Packages
+
+| Package | Description |
+|---|---|
+| [`@spaceis/react`](../react) | React hooks + Next.js SSR helpers |
+| [`@spaceis/vue`](../vue) | Vue 3 composables + Nuxt SSR helpers |
 
 ## License
 

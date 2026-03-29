@@ -114,6 +114,7 @@ export function createHttpClient(getConfig: () => HttpConfig) {
 
     if (response.status === 204) return undefined as T;
 
+    // Response structure matches T by API contract; runtime validation is the caller's responsibility.
     return response.json() as Promise<T>;
   };
 }

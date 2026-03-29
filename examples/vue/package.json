@@ -1,0 +1,26 @@
+{
+  "name": "spaceis-vue-example",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@spaceis/sdk": "workspace:*",
+    "@spaceis/vue": "workspace:*",
+    "@tanstack/vue-query": "^5.0.0",
+    "nuxt": "^4.4.0",
+    "vue": "^3.5.0",
+    "isomorphic-dompurify": "^2.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.0.0",
+    "happy-dom": "^15.0.0",
+    "typescript": "^6.0.0",
+    "vitest": "^2.0.0"
+  }
+}

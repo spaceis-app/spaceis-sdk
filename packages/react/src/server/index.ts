@@ -9,6 +9,8 @@ import {
   type GetSalesParams,
   type GetGoalsParams,
   type GetPagesParams,
+  type GetTopCustomersParams,
+  type GetLatestOrdersParams,
 } from "@spaceis/sdk";
 
 // ── Server client factory ─────────────────────────────────────────────────────
@@ -198,6 +200,88 @@ export async function prefetchStatute(qc: QueryClient, client: SpaceISClient): P
   await qc.prefetchQuery({
     queryKey: ["spaceis", "statute"] as const,
     queryFn: () => client.content.statute(),
+  });
+}
+
+/**
+ * Prefetch top customers ranking for SSR hydration.
+ * Query key matches `useTopCustomers(params)` hook.
+ *
+ * @example
+ * ```tsx
+ * const qc = new QueryClient();
+ * await prefetchTopCustomers(qc, client, { limit: 10 });
+ * ```
+ */
+export async function prefetchTopCustomers(
+  qc: QueryClient,
+  client: SpaceISClient,
+  params?: GetTopCustomersParams
+): Promise<void> {
+  await qc.prefetchQuery({
+    queryKey: ["spaceis", "rankings", "top", params] as const,
+    queryFn: () => client.rankings.top(params),
+  });
+}
+
+/**
+ * Prefetch latest orders ranking for SSR hydration.
+ * Query key matches `useLatestOrders(params)` hook.
+ *
+ * @example
+ * ```tsx
+ * const qc = new QueryClient();
+ * await prefetchLatestOrders(qc, client, { limit: 10 });
+ * ```
+ */
+export async function prefetchLatestOrders(
+  qc: QueryClient,
+  client: SpaceISClient,
+  params?: GetLatestOrdersParams
+): Promise<void> {
+  await qc.prefetchQuery({
+    queryKey: ["spaceis", "rankings", "latest", params] as const,
+    queryFn: () => client.rankings.latest(params),
+  });
+}
+
+/**
+ * Prefetch payment methods for SSR hydration.
+ * Query key matches `usePaymentMethods()` hook.
+ *
+ * @example
+ * ```tsx
+ * const qc = new QueryClient();
+ * await prefetchPaymentMethods(qc, client);
+ * ```
+ */
+export async function prefetchPaymentMethods(
+  qc: QueryClient,
+  client: SpaceISClient
+): Promise<void> {
+  await qc.prefetchQuery({
+    queryKey: ["spaceis", "payment-methods"] as const,
+    queryFn: () => client.checkout.paymentMethods(),
+  });
+}
+
+/**
+ * Prefetch checkout agreements for SSR hydration.
+ * Query key matches `useAgreements()` hook.
+ *
+ * @example
+ * ```tsx
+ * const qc = new QueryClient();
+ * await prefetchAgreements(qc, client);
+ * ```
+ */
+export async function prefetchAgreements(
+  qc: QueryClient,
+  client: SpaceISClient
+): Promise<void> {
+  await qc.prefetchQuery({
+    queryKey: ["spaceis", "agreements"] as const,
+    queryFn: () => client.checkout.agreements(),
   });
 }
 

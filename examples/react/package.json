@@ -8,8 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@spaceis/react": "^0.1.2",
-    "@spaceis/sdk": "^0.1.3",
+    "@spaceis/react": "^0.1.3",
+    "@spaceis/sdk": "^0.1.4",
     "@tanstack/react-store": "^0.7.0",
     "next": "^16.2.0",
     "react": "^19.2.0",

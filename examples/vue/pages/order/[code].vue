@@ -1,0 +1,10 @@
+<script setup lang="ts">
+useHead({ title: 'Order Summary' });
+
+const route = useRoute();
+const codeFromUrl = computed(() => route.params.code as string);
+</script>
+
+<template>
+  <OrderContent :code-from-url="codeFromUrl" />
+</template>

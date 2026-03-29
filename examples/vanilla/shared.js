@@ -10,7 +10,7 @@
  */
 var SHOP_CONFIG = {
   baseUrl: "https://storefront-api.spaceis.app",
-  shopUuid: "2f6f558d-b7cb-42b2-bc02-116d740b2f97",
+  shopUuid: "xxx",
   lang: "pl",
 };
 
@@ -262,7 +262,7 @@ function renderFooter() {
   footerEl.className = "site-footer";
   footerEl.innerHTML =
     '<div class="container">' +
-      '<span class="footer-text">Powered by <strong>SpaceIS SDK</strong> v0.1.0</span>' +
+      '<span class="footer-text">Powered by <strong>SpaceIS SDK</strong> v0.1.4</span>' +
     '</div>';
 }
 
