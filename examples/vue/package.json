@@ -9,15 +9,15 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@spaceis/sdk": "workspace:*",
-    "@spaceis/vue": "workspace:*",
+    "@spaceis/sdk": "^0.1.4",
+    "@spaceis/vue": "^0.1.0",
     "@tanstack/vue-query": "^5.0.0",
     "nuxt": "^4.4.0",
     "vue": "^3.5.0",
     "isomorphic-dompurify": "^2.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.0.0",
     "happy-dom": "^15.0.0",
     "typescript": "^6.0.0",
