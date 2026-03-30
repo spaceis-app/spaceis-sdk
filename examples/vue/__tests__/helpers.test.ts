@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fp, esc, getErrorMessage, sanitizeHtml } from "../utils/helpers";
+import { fp, esc, getErrorMessage } from "../utils/helpers";
 import { SpaceISError } from "@spaceis/sdk";
 
 describe("fp() — format price from cents", () => {
@@ -67,16 +67,5 @@ describe("getErrorMessage()", () => {
 
   it("returns default for non-error objects", () => {
     expect(getErrorMessage({ foo: "bar" })).toBe("An error occurred");
-  });
-});
-
-describe("sanitizeHtml()", () => {
-  it("returns a string", () => {
-    const result = sanitizeHtml("<p>Hello</p>");
-    expect(typeof result).toBe("string");
-  });
-
-  it("returns empty string for empty input", () => {
-    expect(sanitizeHtml("")).toBe("");
   });
 });

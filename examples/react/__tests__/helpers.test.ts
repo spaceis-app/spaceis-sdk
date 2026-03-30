@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fp, esc, getErrorMessage, sanitizeHtml } from "@/helpers";
+import { fp, esc, getErrorMessage } from "@/helpers";
 import { SpaceISError } from "@spaceis/react";
 
 describe("fp() — format price from cents", () => {
@@ -70,17 +70,3 @@ describe("getErrorMessage()", () => {
   });
 });
 
-describe("sanitizeHtml()", () => {
-  it("returns a string", () => {
-    expect(typeof sanitizeHtml("<p>Hello</p>")).toBe("string");
-  });
-
-  it("returns empty string for empty input", () => {
-    expect(sanitizeHtml("")).toBe("");
-  });
-
-  it("strips script tags", () => {
-    const result = sanitizeHtml('<p>Safe</p><script>alert("xss")</script>');
-    expect(result).not.toContain("<script");
-  });
-});

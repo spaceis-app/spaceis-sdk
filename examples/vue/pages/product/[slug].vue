@@ -6,7 +6,7 @@ import {
   snapQuantity,
   type ShowShopProductVariant,
 } from '@spaceis/vue';
-import { fp, getErrorMessage, sanitizeHtml } from '~/utils/helpers';
+import { fp, getErrorMessage } from '~/utils/helpers';
 
 const route = useRoute();
 const slug = computed(() => route.params.slug as string);
@@ -211,7 +211,7 @@ function commitQty() {
           <div v-if="product.description" class="pdp-description">
             <div class="pdp-label">Description</div>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="pdp-desc-body" v-html="sanitizeHtml(product.description)" />
+            <div class="pdp-desc-body" v-html="product.description" />
           </div>
         </div>
       </div>

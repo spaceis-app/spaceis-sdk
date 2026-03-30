@@ -76,27 +76,27 @@ require __DIR__ . '/includes/header.php';
 
 <script>
 // Sale countdown timers
-(function() {
-    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+(() => {
+    const pad = (n) => n < 10 ? `0${n}` : `${n}`;
 
-    function updateTimers() {
-        document.querySelectorAll('.sale-timer[data-ends]').forEach(function(el) {
-            var ends = el.getAttribute('data-ends');
-            var diff = new Date(ends).getTime() - Date.now();
+    const updateTimers = () => {
+        document.querySelectorAll('.sale-timer[data-ends]').forEach((el) => {
+            const ends = el.getAttribute('data-ends');
+            const diff = new Date(ends).getTime() - Date.now();
             if (diff <= 0) {
                 el.textContent = 'Ended';
                 return;
             }
-            var d = Math.floor(diff / 86400000);
-            var h = Math.floor((diff % 86400000) / 3600000);
-            var m = Math.floor((diff % 3600000) / 60000);
-            var s = Math.floor((diff % 60000) / 1000);
-            var parts = [];
-            if (d > 0) parts.push(d + 'd');
-            parts.push(pad(h) + ':' + pad(m) + ':' + pad(s));
-            el.textContent = parts.join(' ') + ' left';
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            const parts = [];
+            if (d > 0) parts.push(`${d}d`);
+            parts.push(`${pad(h)}:${pad(m)}:${pad(s)}`);
+            el.textContent = `${parts.join(' ')} left`;
         });
-    }
+    };
     updateTimers();
     setInterval(updateTimers, 1000);
 })();

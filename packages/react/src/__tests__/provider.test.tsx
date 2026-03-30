@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { QueryClient } from "@tanstack/react-query";
 import { SpaceISProvider, useSpaceIS } from "../provider";
 import type { ReactNode } from "react";
 
@@ -70,7 +71,6 @@ describe("SpaceISProvider", () => {
   });
 
   it("accepts a custom QueryClient", () => {
-    const { QueryClient } = require("@tanstack/react-query");
     const customQc = new QueryClient();
 
     function Wrapper({ children }: { children: ReactNode }) {

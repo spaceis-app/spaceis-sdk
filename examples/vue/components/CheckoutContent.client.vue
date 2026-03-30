@@ -85,15 +85,16 @@ async function handlePlaceOrder() {
   }
 }
 
-function handleApplyDiscount() {
+async function handleApplyDiscount() {
   const code = discountCode.value.trim();
   if (!code) return;
-  applyDiscount(code)
-    .then(() => {
-      toastSuccess('Discount applied!');
-      discountCode.value = '';
-    })
-    .catch((err) => toastError(getErrorMessage(err)));
+  try {
+    await applyDiscount(code);
+    toastSuccess('Discount applied!');
+    discountCode.value = '';
+  } catch (err) {
+    toastError(getErrorMessage(err));
+  }
 }
 
 function toggleAgreement(uuid: string, checked: boolean) {

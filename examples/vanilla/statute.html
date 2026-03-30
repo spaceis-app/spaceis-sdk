@@ -36,10 +36,7 @@
           const title = statute.title || "Terms";
           document.title = `${title} — SpaceIS SDK`;
 
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = statute.content || "";
-          sanitizeHtml(tempDiv);
-          const safeContent = tempDiv.innerHTML;
+          const safeContent = statute.content || "";
 
           let metaHtml = "";
           if (statute.created_at || statute.updated_at) {

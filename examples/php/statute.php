@@ -27,7 +27,7 @@ require __DIR__ . '/includes/header.php';
                 <h1 class="statute-title"><?= e($statute['title']) ?></h1>
             <?php endif; ?>
             <div class="statute-body">
-                <?= sanitizeHtml($statute['content'] ?? '') ?>
+                <?= $statute['content'] ?? '' ?>
             </div>
             <div class="statute-meta">
                 <span>Created: <?= formatDate($statute['created_at'] ?? '') ?></span>

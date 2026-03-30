@@ -37,38 +37,44 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-function claimReward() {
-    var nickInput = document.getElementById('daily-nick');
-    var btn = document.getElementById('daily-btn');
-    var resultBox = document.getElementById('daily-result');
+async function claimReward() {
+    const nickInput = document.getElementById('daily-nick');
+    const btn = document.getElementById('daily-btn');
+    const resultBox = document.getElementById('daily-result');
 
-    var nick = nickInput.value.trim();
+    const nick = nickInput.value.trim();
     if (!nick) { SpaceISApp.showToast('Player nickname is required','error'); return; }
 
     resultBox.className = 'result-box';
     btn.disabled = true;
     btn.textContent = 'Claiming...';
 
-    var client = SpaceISApp.client;
-    client.recaptcha.execute('daily_reward').catch(function() {
-        return '';
-    }).then(function(token) {
-        return client.dailyRewards.claim({
-            nick: nick,
+    const client = SpaceISApp.client;
+
+    try {
+        let token = '';
+        try {
+            token = await client.recaptcha.execute('daily_reward');
+        } catch {
+            // fallback if recaptcha fails
+        }
+
+        const res = await client.dailyRewards.claim({
+            nick,
             'g-recaptcha-response': token || '',
         });
-    }).then(function(res) {
-        var msg = res.message || 'Daily reward claimed!';
+
+        const msg = res.message || 'Daily reward claimed!';
         resultBox.textContent = msg;
         resultBox.className = 'result-box show success';
-    }).catch(function(err) {
-        var msg = SpaceISApp.getErrorMessage(err);
+    } catch (err) {
+        const msg = SpaceISApp.getErrorMessage(err);
         resultBox.textContent = msg;
         resultBox.className = 'result-box show error';
-    }).finally(function() {
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Claim reward';
-    });
+    }
 }
 </script>
 

@@ -221,34 +221,32 @@ export function CartPage() {
                 placeholder="Discount code"
                 value={discountCode}
                 onChange={(e) => setDiscountCode(e.target.value)}
-                onKeyDown={(e) => {
+                onKeyDown={async (e) => {
                   if (e.key === "Enter") {
                     const code = discountCode.trim();
                     if (!code) return;
-                    applyDiscount(code)
-                      .then(() => {
-                        toast.success("Discount applied!");
-                        setDiscountCode("");
-                      })
-                      .catch((err) =>
-                        toast.error(getErrorMessage(err))
-                      );
+                    try {
+                      await applyDiscount(code);
+                      toast.success("Discount applied!");
+                      setDiscountCode("");
+                    } catch (err) {
+                      toast.error(getErrorMessage(err));
+                    }
                   }
                 }}
               />
               <button
                 className="discount-apply"
-                onClick={() => {
+                onClick={async () => {
                   const code = discountCode.trim();
                   if (!code) return;
-                  applyDiscount(code)
-                    .then(() => {
-                      toast.success("Discount applied!");
-                      setDiscountCode("");
-                    })
-                    .catch((err) =>
-                      toast.error(getErrorMessage(err))
-                    );
+                  try {
+                    await applyDiscount(code);
+                    toast.success("Discount applied!");
+                    setDiscountCode("");
+                  } catch (err) {
+                    toast.error(getErrorMessage(err));
+                  }
                 }}
               >
                 Apply

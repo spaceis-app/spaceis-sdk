@@ -51,7 +51,7 @@ examples/vue/
 ├── server/
 │   └── utils/spaceis.ts        — Server-side SpaceIS client factory
 ├── utils/
-│   └── helpers.ts              — fp(), esc(), getErrorMessage(), sanitizeHtml()
+│   └── helpers.ts              — fp(), esc(), getErrorMessage()
 ├── assets/
 │   └── styles.css              — All styles (shared with React example)
 ├── error.vue                   — Custom error/404 page
@@ -132,7 +132,7 @@ error('Something went wrong');
 
 - `useHead({ title })` for page titles
 - `useSeoMeta()` for Open Graph / description (product detail page)
-- `sanitizeHtml()` via `isomorphic-dompurify` for API HTML content
+- API HTML content rendered directly via `v-html` (backend sanitizes before saving)
 
 ### Error Handling
 

@@ -245,12 +245,12 @@ Mobile menu and other overlays use `<Teleport to="body">` to escape header stack
 </Teleport>
 ```
 
-### HTML sanitization
+### HTML content
 
-All HTML content from the API uses `sanitizeHtml()` with DOMPurify:
+API HTML content is rendered directly via `v-html` (the backend sanitizes HTML before saving):
 
 ```vue
-<div v-html="sanitizeHtml(product.description)" />
+<div v-html="product.description" />
 ```
 
 ### Prices and quantities

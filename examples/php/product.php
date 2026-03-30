@@ -154,7 +154,7 @@ require __DIR__ . '/includes/header.php';
                                 </div>
                                 <button class="rec-add-btn"
                                         <?= !$recVarUuid ? 'disabled' : '' ?>
-                                        onclick="SpaceISApp.addToCart('<?= e($recVarUuid) ?>', <?= $recMinQty ?>).then(function(){this.textContent='\u2713';var b=this;setTimeout(function(){b.textContent='+'},1500)}.bind(this))"
+                                        onclick="SpaceISApp.addToCart('<?= e($recVarUuid) ?>', <?= $recMinQty ?>).then(()=>{this.textContent='\u2713';setTimeout(()=>{this.textContent='+'},1500)})"
                                         title="Add to cart" aria-label="Add to cart">+</button>
                             </div>
                         <?php endforeach; ?>
@@ -167,7 +167,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="pdp-description">
                     <div class="pdp-label">Description</div>
                     <div class="pdp-desc-body">
-                        <?= sanitizeHtml($product['description']) ?>
+                        <?= $product['description'] ?? '' ?>
                     </div>
                 </div>
             <?php endif; ?>
@@ -176,32 +176,29 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-(function() {
-    var variants = <?= json_encode($variants, JSON_UNESCAPED_UNICODE) ?>;
-    var selectedVariantUuid = <?= $firstVariant ? json_encode($firstVariant['uuid']) : 'null' ?>;
-    var quantity = <?= (int) $minQty ?>;
-    var minQty = <?= (int) $minQty ?>;
-    var maxQty = <?= (int) $maxQty ?>;
-    var stepQty = <?= (int) $stepQty ?>;
+(() => {
+    const variants = <?= json_encode($variants, JSON_UNESCAPED_UNICODE) ?>;
+    let selectedVariantUuid = <?= $firstVariant ? json_encode($firstVariant['uuid']) : 'null' ?>;
+    let quantity = <?= (int) $minQty ?>;
+    const minQty = <?= (int) $minQty ?>;
+    const maxQty = <?= (int) $maxQty ?>;
+    const stepQty = <?= (int) $stepQty ?>;
 
-    function getSelectedVariant() {
-        for (var i = 0; i < variants.length; i++) {
-            if (variants[i].uuid === selectedVariantUuid) return variants[i];
-        }
-        return variants[0] || null;
-    }
+    const getSelectedVariant = () => {
+        return variants.find((v) => v.uuid === selectedVariantUuid) ?? variants[0] ?? null;
+    };
 
-    function updateDisplay() {
-        var v = getSelectedVariant();
+    const updateDisplay = () => {
+        const v = getSelectedVariant();
         if (!v) return;
-        var fp = (typeof SpaceISApp !== 'undefined') ? SpaceISApp.fp : SpaceIS.formatPrice;
+        const fp = (typeof SpaceISApp !== 'undefined') ? SpaceISApp.fp : SpaceIS.formatPrice;
 
-        var price = v.price * quantity;
-        var basePrice = v.base_price * quantity;
-        var hasDiscount = basePrice > price;
+        const price = v.price * quantity;
+        const basePrice = v.base_price * quantity;
+        const hasDiscount = basePrice > price;
 
         document.getElementById('pdp-price').textContent = fp(price);
-        var oldEl = document.getElementById('pdp-price-old');
+        const oldEl = document.getElementById('pdp-price-old');
         if (hasDiscount) {
             oldEl.textContent = fp(basePrice);
             oldEl.style.display = '';
@@ -209,54 +206,55 @@ require __DIR__ . '/includes/header.php';
             oldEl.style.display = 'none';
         }
         document.getElementById('pdp-unit-price').textContent =
-            '(' + fp(v.price) + '/' + (stepQty > 1 ? stepQty + ' pcs.' : '1 pcs.') + ')';
+            `(${fp(v.price)}/${stepQty > 1 ? `${stepQty} pcs.` : '1 pcs.'})`;
         document.getElementById('qty-val').value = quantity;
         document.getElementById('qty-dec').disabled = quantity <= minQty;
         document.getElementById('qty-inc').disabled = quantity >= maxQty;
-    }
+    };
 
-    window.selectVariant = function(btn) {
+    window.selectVariant = (btn) => {
         selectedVariantUuid = btn.getAttribute('data-uuid');
         quantity = minQty;
         // Update active class
-        var btns = document.querySelectorAll('#variants-grid .variant-btn');
-        btns.forEach(function(b) { b.classList.remove('active'); });
+        const btns = document.querySelectorAll('#variants-grid .variant-btn');
+        btns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         updateDisplay();
     };
 
-    window.changeQty = function(dir) {
-        var newQty = quantity + (dir * stepQty);
+    window.changeQty = (dir) => {
+        let newQty = quantity + (dir * stepQty);
         if (newQty < minQty) newQty = minQty;
         if (newQty > maxQty) newQty = maxQty;
         quantity = newQty;
         updateDisplay();
     };
 
-    window.setQtyFromInput = function(val) {
-        var n = parseInt(val, 10);
+    window.setQtyFromInput = (val) => {
+        let n = parseInt(val, 10);
         if (isNaN(n)) n = quantity;
         quantity = SpaceIS.snapQuantity(n, { min: minQty, max: maxQty, step: stepQty });
         updateDisplay();
     };
 
-    window.addProductToCart = function() {
+    window.addProductToCart = async () => {
         if (!selectedVariantUuid) return;
-        var btn = document.getElementById('pdp-add-btn');
+        const btn = document.getElementById('pdp-add-btn');
         btn.disabled = true;
         btn.textContent = 'Adding...';
-        SpaceISApp.addToCart(selectedVariantUuid, quantity).then(function() {
+        try {
+            await SpaceISApp.addToCart(selectedVariantUuid, quantity);
             btn.textContent = 'Added!';
             btn.classList.add('success');
-            setTimeout(function() {
+            setTimeout(() => {
                 btn.textContent = 'Add to cart';
                 btn.classList.remove('success');
                 btn.disabled = false;
             }, 1500);
-        }).catch(function(err) {
+        } catch (err) {
             btn.textContent = 'Add to cart';
             btn.disabled = false;
-        });
+        }
     };
 
     updateDisplay();

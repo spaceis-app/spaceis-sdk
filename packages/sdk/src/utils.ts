@@ -119,8 +119,8 @@ export interface ProductLimits {
  *
  * @example
  * ```js
- * var product = await client.products.get('vip');
- * var limits = SpaceIS.getProductLimits(product);
+ * const product = await client.products.get('vip');
+ * const limits = SpaceIS.getProductLimits(product);
  * // { min: 1, max: 64, step: 1 }
  * ```
  */

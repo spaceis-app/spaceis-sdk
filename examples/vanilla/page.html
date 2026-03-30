@@ -44,10 +44,7 @@
           const page = await client.content.page(slug);
           document.title = `${page.title || "Page"} — SpaceIS SDK`;
 
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = page.content || "";
-          sanitizeHtml(tempDiv);
-          const safeContent = tempDiv.innerHTML;
+          const safeContent = page.content || "";
 
           mainEl.innerHTML =
             '<div class="page-content">' +

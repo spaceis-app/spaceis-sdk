@@ -23,15 +23,16 @@ const { success: toastSuccess, error: toastError } = useToast();
 const discountCode = ref('');
 const discountAmount = computed(() => regularPrice.value - finalPrice.value);
 
-function handleApplyDiscount() {
+async function handleApplyDiscount() {
   const code = discountCode.value.trim();
   if (!code) return;
-  applyDiscount(code)
-    .then(() => {
-      toastSuccess('Discount applied!');
-      discountCode.value = '';
-    })
-    .catch((err) => toastError(getErrorMessage(err)));
+  try {
+    await applyDiscount(code);
+    toastSuccess('Discount applied!');
+    discountCode.value = '';
+  } catch (err) {
+    toastError(getErrorMessage(err));
+  }
 }
 </script>
 
@@ -133,7 +134,7 @@ function handleApplyDiscount() {
           <div v-if="hasDiscount && discount" class="discount-active">
             <span>Code: <strong>{{ discount.code }}</strong></span>
             <span class="discount-active-pct">-{{ discount.percentage_discount }}%</span>
-            <button class="discount-remove" @click="removeDiscount().then(() => toastSuccess('Discount removed')).catch((err) => toastError(getErrorMessage(err)))">Remove</button>
+            <button class="discount-remove" @click="async () => { try { await removeDiscount(); toastSuccess('Discount removed'); } catch (err) { toastError(getErrorMessage(err)); } }">Remove</button>
           </div>
           <div v-else class="discount-row">
             <input

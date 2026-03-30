@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePages, usePage } from "@spaceis/react";
-import { sanitizeHtml } from "@/helpers";
+
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pl-PL", {
@@ -86,7 +86,7 @@ export function SinglePageContent({ slug }: { slug: string }) {
         )}
         <div
           className="page-body"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content || "") }}
+          dangerouslySetInnerHTML={{ __html: page.content || "" }}
         />
         <div className="page-meta">
           <span>Last updated: {formatDate(page.updated_at)}</span>

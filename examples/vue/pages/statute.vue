@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useStatute } from '@spaceis/vue';
-import { sanitizeHtml } from '~/utils/helpers';
 
 useHead({ title: 'Terms' });
 
@@ -26,7 +25,7 @@ function formatDate(iso: string): string {
     <div v-else class="statute-content-panel">
       <h1 v-if="statute.title" class="statute-title">{{ statute.title }}</h1>
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <div class="statute-body" v-html="sanitizeHtml(statute.content || '')" />
+      <div class="statute-body" v-html="statute.content || ''" />
       <div class="statute-meta">
         <span>Created: {{ formatDate(statute.created_at) }}</span>
         <span>Last updated: {{ formatDate(statute.updated_at) }}</span>

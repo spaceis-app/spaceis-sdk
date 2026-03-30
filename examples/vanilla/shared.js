@@ -10,7 +10,7 @@
  */
 const SHOP_CONFIG = {
   baseUrl: "https://storefront-api.spaceis.app",
-  shopUuid: "xxx",
+  shopUuid: "2f6f558d-b7cb-42b2-bc02-116d740b2f97",
   lang: "pl",
 };
 
@@ -57,36 +57,6 @@ function getErrorMessage(err) {
   return err.message || "An error occurred";
 }
 
-/**
- * Sanitize an HTML container — removes dangerous elements and attributes.
- * Strips scripts, styles, iframes, and all inline event handlers / javascript: URLs.
- */
-function sanitizeHtml(container) {
-  container.querySelectorAll("script, style, iframe, object, embed, form").forEach((el) => {
-    el.remove();
-  });
-  container.querySelectorAll("*").forEach((el) => {
-    const attrs = el.attributes;
-    for (let i = attrs.length - 1; i >= 0; i--) {
-      const name = attrs[i].name.toLowerCase();
-      if (name.startsWith("on")) {
-        el.removeAttribute(attrs[i].name);
-      }
-    }
-    if (el.hasAttribute("href")) {
-      const href = (el.getAttribute("href") || "").trim().toLowerCase();
-      if (href.startsWith("javascript:")) {
-        el.removeAttribute("href");
-      }
-    }
-    if (el.hasAttribute("src")) {
-      const src = (el.getAttribute("src") || "").trim().toLowerCase();
-      if (src.startsWith("javascript:")) {
-        el.removeAttribute("src");
-      }
-    }
-  });
-}
 
 // ══════════════════════════════════════════════════════════
 //  TOAST
@@ -962,13 +932,9 @@ function renderModalContent(product) {
     ? `<img class="modal-img" src="${esc(product.image)}" alt="${esc(product.name)}">`
     : `<div class="modal-img-placeholder">${PLACEHOLDER_SVG_SM}</div>`;
 
-  let descHtml = "";
-  if (product.description) {
-    const temp = document.createElement("div");
-    temp.innerHTML = product.description;
-    sanitizeHtml(temp);
-    descHtml = `<div class="modal-desc">${temp.innerHTML}</div>`;
-  }
+  const descHtml = product.description
+    ? `<div class="modal-desc">${product.description}</div>`
+    : "";
 
   const selectedVariant = getSelectedVariant(product);
   const currentPrice = selectedVariant?.price

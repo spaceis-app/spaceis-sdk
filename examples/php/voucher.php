@@ -42,14 +42,14 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-function redeemVoucher() {
-    var nickInput = document.getElementById('voucher-nick');
-    var codeInput = document.getElementById('voucher-code');
-    var btn = document.getElementById('voucher-btn');
-    var resultBox = document.getElementById('voucher-result');
+async function redeemVoucher() {
+    const nickInput = document.getElementById('voucher-nick');
+    const codeInput = document.getElementById('voucher-code');
+    const btn = document.getElementById('voucher-btn');
+    const resultBox = document.getElementById('voucher-result');
 
-    var nick = nickInput.value.trim();
-    var code = codeInput.value.trim();
+    const nick = nickInput.value.trim();
+    const code = codeInput.value.trim();
 
     if (!nick) { SpaceISApp.showToast('Player nickname is required','error'); return; }
     if (!code) { SpaceISApp.showToast('Voucher code is required','error'); return; }
@@ -58,30 +58,35 @@ function redeemVoucher() {
     btn.disabled = true;
     btn.textContent = 'Checking...';
 
-    var client = SpaceISApp.client;
+    const client = SpaceISApp.client;
 
-    // execute() handles load() internally
-    client.recaptcha.execute('voucher').catch(function() {
-        return ''; // fallback if recaptcha fails
-    }).then(function(token) {
-        return client.vouchers.redeem({
-            nick: nick,
-            code: code,
+    try {
+        // execute() handles load() internally
+        let token = '';
+        try {
+            token = await client.recaptcha.execute('voucher');
+        } catch {
+            // fallback if recaptcha fails
+        }
+
+        const res = await client.vouchers.redeem({
+            nick,
+            code,
             'g-recaptcha-response': token || '',
         });
-    }).then(function(res) {
-        var msg = res.message || 'Voucher redeemed!';
+
+        const msg = res.message || 'Voucher redeemed!';
         resultBox.textContent = msg;
         resultBox.className = 'result-box show success';
         codeInput.value = '';
-    }).catch(function(err) {
-        var msg = SpaceISApp.getErrorMessage(err);
+    } catch (err) {
+        const msg = SpaceISApp.getErrorMessage(err);
         resultBox.textContent = msg;
         resultBox.className = 'result-box show error';
-    }).finally(function() {
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Redeem voucher';
-    });
+    }
 }
 </script>
 

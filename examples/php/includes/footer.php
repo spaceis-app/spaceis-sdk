@@ -12,16 +12,16 @@
      * SpaceIS PHP Example — Client-side interactivity.
      * Uses the SDK IIFE (window.SpaceIS) for cart, quantity steppers, etc.
      */
-    (function() {
+    (() => {
         'use strict';
 
         // ── Initialize SDK ──
-        var client = SpaceIS.createSpaceIS({
+        const client = SpaceIS.createSpaceIS({
             baseUrl: '<?= e($api->getBaseUrl()) ?>',
             shopUuid: '<?= e($api->getShopUuid()) ?>',
         });
 
-        var cart = client.createCartManager({ autoLoad: true });
+        const cart = client.createCartManager({ autoLoad: true });
 
         // ── Helper: format price ──
         function fp(cents) {
@@ -30,7 +30,7 @@
 
         // ── Helper: placeholder SVG ──
         function placeholderSvg(size) {
-            return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+            return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
         }
 
         // ── Helper: get error message ──
@@ -38,7 +38,7 @@
             if (!err) return 'An error occurred';
             if (err instanceof SpaceIS.SpaceISError) {
                 if (err.isValidation) {
-                    var all = err.allFieldErrors ? err.allFieldErrors() : [];
+                    const all = err.allFieldErrors?.() ?? [];
                     if (all.length > 0) return all[0];
                 }
                 return err.message || 'An error occurred';
@@ -49,16 +49,16 @@
 
         // ── Helper: escape HTML ──
         function esc(str) {
-            var div = document.createElement('div');
+            const div = document.createElement('div');
             div.textContent = str || '';
             return div.innerHTML;
         }
 
-        // ── Cart badge update ���─
+        // ── Cart badge update ──
         function updateBadge() {
-            var badge = document.getElementById('cart-badge');
+            const badge = document.getElementById('cart-badge');
             if (!badge) return;
-            var qty = cart.totalQuantity;
+            const qty = cart.totalQuantity;
             if (qty > 0) {
                 badge.textContent = qty;
                 badge.className = 'cart-badge-dot visible';
@@ -79,11 +79,11 @@
         };
 
         // Track previous state for incremental update (must be before onChange)
-        var prevDrawerUuids = [];
-        var prevDrawerDiscount = null;
+        let prevDrawerUuids = [];
+        let prevDrawerDiscount = null;
 
         // Subscribe to cart changes
-        cart.onChange(function() {
+        cart.onChange(() => {
             updateBadge();
             renderDrawer();
             // Also update cart page if visible
@@ -99,59 +99,59 @@
         updateBadge();
 
         // ── Cart Drawer ──
-        var drawerOpen = false;
+        let drawerOpen = false;
 
         function renderDrawer() {
-            var drawer = document.getElementById('cart-drawer');
+            const drawer = document.getElementById('cart-drawer');
             if (!drawer) return;
 
-            var items = cart.items || [];
-            var totalQuantity = cart.totalQuantity || 0;
-            var finalPrice = cart.finalPrice || 0;
-            var regularPrice = cart.regularPrice || 0;
-            var hasDiscount = cart.hasDiscount || false;
-            var discount = cart.discount || null;
-            var isEmpty = cart.isEmpty;
-            var isLoading = cart.isLoading;
-            var discountAmount = regularPrice - finalPrice;
+            const items = cart.items || [];
+            const totalQuantity = cart.totalQuantity || 0;
+            const finalPrice = cart.finalPrice || 0;
+            const regularPrice = cart.regularPrice || 0;
+            const hasDiscount = cart.hasDiscount || false;
+            const discount = cart.discount || null;
+            const isEmpty = cart.isEmpty;
+            const isLoading = cart.isLoading;
+            const discountAmount = regularPrice - finalPrice;
 
-            var currentUuids = items.map(function(i) { return i.variant ? i.variant.uuid : ''; });
-            var discountCode = discount ? discount.code : null;
-            var sameItems = currentUuids.length === prevDrawerUuids.length &&
-                currentUuids.every(function(uuid, i) { return uuid === prevDrawerUuids[i]; });
-            var sameDiscount = discountCode === prevDrawerDiscount;
+            const currentUuids = items.map((i) => i.variant?.uuid ?? '');
+            const discountCode = discount ? discount.code : null;
+            const sameItems = currentUuids.length === prevDrawerUuids.length &&
+                currentUuids.every((uuid, i) => uuid === prevDrawerUuids[i]);
+            const sameDiscount = discountCode === prevDrawerDiscount;
 
             // Incremental update — same items AND same discount, just patch qty/prices
             if (sameItems && sameDiscount && currentUuids.length > 0 && drawer.querySelector('.cart-items-list')) {
                 // Patch title
-                var titleEl = drawer.querySelector('.drawer-title');
-                if (titleEl) titleEl.textContent = 'CART' + (totalQuantity > 0 ? ' (' + totalQuantity + ')' : '');
+                const titleEl = drawer.querySelector('.drawer-title');
+                if (titleEl) titleEl.textContent = `CART${totalQuantity > 0 ? ` (${totalQuantity})` : ''}`;
 
                 // Patch item qty + prices
-                var itemEls = drawer.querySelectorAll('.cart-item');
-                items.forEach(function(item, i) {
+                const itemEls = drawer.querySelectorAll('.cart-item');
+                items.forEach((item, i) => {
                     if (!itemEls[i]) return;
-                    var displayQty = SpaceIS.getItemQty(item);
-                    var qtyInput = itemEls[i].querySelector('.qty-input');
+                    const displayQty = SpaceIS.getItemQty(item);
+                    const qtyInput = itemEls[i].querySelector('.qty-input');
                     if (qtyInput && document.activeElement !== qtyInput) {
                         qtyInput.value = displayQty;
                     }
-                    var pricesEl = itemEls[i].querySelector('.cart-item-prices');
+                    const pricesEl = itemEls[i].querySelector('.cart-item-prices');
                     if (pricesEl) {
-                        var ph = '<span class="cart-item-price-current">' + fp(item.final_price_value) + '</span>';
+                        let ph = `<span class="cart-item-price-current">${fp(item.final_price_value)}</span>`;
                         if (item.regular_price_value !== item.final_price_value) {
-                            ph += '<span class="cart-item-price-old">' + fp(item.regular_price_value) + '</span>';
+                            ph += `<span class="cart-item-price-old">${fp(item.regular_price_value)}</span>`;
                         }
                         pricesEl.innerHTML = ph;
                     }
                 });
 
                 // Patch summary
-                var summaryHeader = drawer.querySelector('.cart-summary-header');
-                if (summaryHeader) summaryHeader.textContent = 'Subtotal (' + totalQuantity + ')';
-                var summaryTotal = drawer.querySelector('.cart-summary-total span:last-child');
+                const summaryHeader = drawer.querySelector('.cart-summary-header');
+                if (summaryHeader) summaryHeader.textContent = `Subtotal (${totalQuantity})`;
+                const summaryTotal = drawer.querySelector('.cart-summary-total span:last-child');
                 if (summaryTotal) summaryTotal.textContent = fp(finalPrice);
-                var summarySubtotal = drawer.querySelector('.cart-summary-row:not(.cart-summary-discount) span:last-child');
+                const summarySubtotal = drawer.querySelector('.cart-summary-row:not(.cart-summary-discount) span:last-child');
                 if (summarySubtotal) summarySubtotal.textContent = fp(regularPrice);
 
                 return;
@@ -160,11 +160,11 @@
             // Full rebuild
             prevDrawerUuids = currentUuids;
             prevDrawerDiscount = discountCode;
-            var html = '';
+            let html = '';
 
             // Header
             html += '<div class="drawer-header">';
-            html += '<span class="drawer-title">CART' + (totalQuantity > 0 ? ' (' + totalQuantity + ')' : '') + '</span>';
+            html += `<span class="drawer-title">CART${totalQuantity > 0 ? ` (${totalQuantity})` : ''}</span>`;
             html += '<button class="close-btn" onclick="SpaceISApp.closeDrawer()" aria-label="Close">&#10005;</button>';
             html += '</div>';
 
@@ -180,48 +180,48 @@
                 html += '</div>';
             } else {
                 html += '<ul class="cart-items-list">';
-                items.forEach(function(item) {
-                    var variantUuid = item.variant ? item.variant.uuid : '';
-                    var imgSrc = SpaceIS.getCartItemImage(item);
-                    var displayQty = SpaceIS.getItemQty(item);
-                    var showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
+                items.forEach((item) => {
+                    const variantUuid = item.variant?.uuid ?? '';
+                    const imgSrc = SpaceIS.getCartItemImage(item);
+                    const displayQty = SpaceIS.getItemQty(item);
+                    const showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
 
                     html += '<li class="cart-item">';
                     html += '<div class="cart-item-img-wrap">';
                     if (imgSrc) {
-                        html += '<img class="cart-item-img" src="' + esc(imgSrc) + '" alt="">';
+                        html += `<img class="cart-item-img" src="${esc(imgSrc)}" alt="">`;
                     } else {
-                        html += '<div class="cart-item-img-placeholder">' + placeholderSvg(24) + '</div>';
+                        html += `<div class="cart-item-img-placeholder">${placeholderSvg(24)}</div>`;
                     }
                     html += '</div>';
 
                     html += '<div class="cart-item-details">';
                     html += '<div class="cart-item-top">';
                     html += '<div class="cart-item-info">';
-                    html += '<div class="cart-item-name">' + esc(item.shop_product ? item.shop_product.name : '') + '</div>';
+                    html += `<div class="cart-item-name">${esc(item.shop_product?.name ?? '')}</div>`;
                     if (showVariant) {
-                        html += '<div class="cart-item-variant">' + esc(item.variant.name) + '</div>';
+                        html += `<div class="cart-item-variant">${esc(item.variant.name)}</div>`;
                     }
                     if (item.package) {
-                        html += '<div class="cart-item-package">Package: ' + esc(item.package.name) + '</div>';
+                        html += `<div class="cart-item-package">Package: ${esc(item.package.name)}</div>`;
                     }
                     html += '</div>';
-                    html += '<button class="cart-item-remove" aria-label="Remove" onclick="SpaceISApp.removeItem(\'' + esc(variantUuid) + '\')">';
+                    html += `<button class="cart-item-remove" aria-label="Remove" onclick="SpaceISApp.removeItem('${esc(variantUuid)}')">`;
                     html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
                     html += '</button>';
                     html += '</div>';
 
                     html += '<div class="cart-item-bottom">';
                     html += '<div class="cart-item-prices">';
-                    html += '<span class="cart-item-price-current">' + fp(item.final_price_value) + '</span>';
+                    html += `<span class="cart-item-price-current">${fp(item.final_price_value)}</span>`;
                     if (item.regular_price_value !== item.final_price_value) {
-                        html += '<span class="cart-item-price-old">' + fp(item.regular_price_value) + '</span>';
+                        html += `<span class="cart-item-price-old">${fp(item.regular_price_value)}</span>`;
                     }
                     html += '</div>';
                     html += '<div class="qty-stepper">';
-                    html += '<button class="qty-step-btn" onclick="SpaceISApp.decrementItem(\'' + esc(variantUuid) + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>';
-                    html += '<input class="qty-input" type="text" inputmode="numeric" value="' + displayQty + '" onblur="SpaceISApp.setItemQty(\'' + esc(variantUuid) + '\',this.value,this)" onkeydown="if(event.key===\'Enter\')this.blur()">';
-                    html += '<button class="qty-step-btn" onclick="SpaceISApp.incrementItem(\'' + esc(variantUuid) + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>';
+                    html += `<button class="qty-step-btn" onclick="SpaceISApp.decrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
+                    html += `<input class="qty-input" type="text" inputmode="numeric" value="${displayQty}" onblur="SpaceISApp.setItemQty('${esc(variantUuid)}',this.value,this)" onkeydown="if(event.key==='Enter')this.blur()">`;
+                    html += `<button class="qty-step-btn" onclick="SpaceISApp.incrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
                     html += '</div>';
                     html += '</div>';
                     html += '</div>';
@@ -237,8 +237,8 @@
 
                 if (hasDiscount && discount) {
                     html += '<div class="discount-active">';
-                    html += '<span>Code: <strong>' + esc(discount.code) + '</strong></span>';
-                    html += '<span class="discount-active-pct">-' + discount.percentage_discount + '%</span>';
+                    html += `<span>Code: <strong>${esc(discount.code)}</strong></span>`;
+                    html += `<span class="discount-active-pct">-${discount.percentage_discount}%</span>`;
                     html += '<button class="discount-remove" onclick="SpaceISApp.removeDiscount()">Remove</button>';
                     html += '</div>';
                 } else {
@@ -249,14 +249,14 @@
                 }
 
                 html += '<div class="cart-summary-panel">';
-                html += '<div class="cart-summary-header">Subtotal (' + totalQuantity + ')</div>';
-                html += '<div class="cart-summary-row"><span>Subtotal</span><span>' + fp(regularPrice) + '</span></div>';
+                html += `<div class="cart-summary-header">Subtotal (${totalQuantity})</div>`;
+                html += `<div class="cart-summary-row"><span>Subtotal</span><span>${fp(regularPrice)}</span></div>`;
                 if (discountAmount > 0) {
                     html += '<div class="cart-summary-row cart-summary-discount"><span>Discount';
-                    if (hasDiscount && discount) html += ' (' + discount.percentage_discount + '%)';
-                    html += '</span><span>-' + fp(discountAmount) + '</span></div>';
+                    if (hasDiscount && discount) html += ` (${discount.percentage_discount}%)`;
+                    html += `</span><span>-${fp(discountAmount)}</span></div>`;
                 }
-                html += '<div class="cart-summary-total"><span>Total</span><span>' + fp(finalPrice) + '</span></div>';
+                html += `<div class="cart-summary-total"><span>Total</span><span>${fp(finalPrice)}</span></div>`;
                 html += '</div>';
 
                 html += '<div class="cart-actions">';
@@ -289,13 +289,13 @@
         }
 
         // ── Mobile menu ──
-        var mobileMenuOpen = false;
+        let mobileMenuOpen = false;
 
         function toggleMobileMenu() {
             mobileMenuOpen = !mobileMenuOpen;
-            var btn = document.getElementById('mobile-menu-btn');
-            var overlay = document.getElementById('mobile-menu-overlay');
-            var menu = document.getElementById('mobile-menu');
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            const menu = document.getElementById('mobile-menu');
             if (mobileMenuOpen) {
                 btn.classList.add('active');
                 overlay.classList.add('open');
@@ -319,111 +319,124 @@
         }
 
         // ── Toast notifications ──
-        var toastContainer = document.createElement('div');
+        const toastContainer = document.createElement('div');
         toastContainer.className = 'toast-container';
         toastContainer.id = 'toast-container';
         document.body.appendChild(toastContainer);
 
         function showToast(message, type) {
-            var toast = document.createElement('div');
+            const toast = document.createElement('div');
             toast.className = 'toast' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
             toast.textContent = message;
             toastContainer.appendChild(toast);
-            requestAnimationFrame(function() { toast.classList.add('show'); });
-            setTimeout(function() {
+            requestAnimationFrame(() => { toast.classList.add('show'); });
+            setTimeout(() => {
                 toast.classList.remove('show');
-                setTimeout(function() { toast.remove(); }, 300);
+                setTimeout(() => { toast.remove(); }, 300);
             }, 3500);
         }
 
         // ── Cart operations (exposed globally) ──
 
-        function addToCart(variantUuid, quantity) {
-            return cart.add(variantUuid, quantity || 1).catch(function(err) {
+        async function addToCart(variantUuid, quantity) {
+            try {
+                return await cart.add(variantUuid, quantity || 1);
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
-            });
+            }
         }
 
-        function removeItem(variantUuid) {
-            cart.remove(variantUuid).catch(function(err) {
+        async function removeItem(variantUuid) {
+            try {
+                await cart.remove(variantUuid);
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
-            });
+            }
         }
 
-        function incrementItem(variantUuid) {
-            cart.increment(variantUuid).catch(function(err) {
+        async function incrementItem(variantUuid) {
+            try {
+                await cart.increment(variantUuid);
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
-            });
+            }
         }
 
-        function decrementItem(variantUuid) {
-            cart.decrement(variantUuid).catch(function(err) {
+        async function decrementItem(variantUuid) {
+            try {
+                await cart.decrement(variantUuid);
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
-            });
+            }
         }
 
-        function applyDrawerDiscount() {
-            var input = document.getElementById('drawer-discount-input');
+        async function applyDrawerDiscount() {
+            const input = document.getElementById('drawer-discount-input');
             if (!input) return;
-            var code = input.value.trim();
+            const code = input.value.trim();
             if (!code) return;
-            cart.applyDiscount(code).then(function() {
+            try {
+                await cart.applyDiscount(code);
                 input.value = '';
-            }).catch(function(err) {
+            } catch (err) {
                 showToast(getErrorMessage(err) || 'Invalid code', 'error');
-            });
+            }
         }
 
         // Cache product limits per slug
-        var limitsCache = {};
+        const limitsCache = {};
 
-        function fetchProductLimits(slug) {
-            if (limitsCache[slug]) return Promise.resolve(limitsCache[slug]);
-            return client.products.get(slug).then(function(product) {
-                var limits = SpaceIS.getProductLimits(product);
+        async function fetchProductLimits(slug) {
+            if (limitsCache[slug]) return limitsCache[slug];
+            try {
+                const product = await client.products.get(slug);
+                const limits = SpaceIS.getProductLimits(product);
                 limitsCache[slug] = limits;
                 return limits;
-            }).catch(function() {
+            } catch {
                 return { min: 1, max: 99, step: 1 };
-            });
+            }
         }
 
-        function setItemQty(variantUuid, val, inputEl) {
-            var n = parseInt(val, 10);
-            var item = cart.findItem(variantUuid);
+        async function setItemQty(variantUuid, val, inputEl) {
+            const n = parseInt(val, 10);
+            const item = cart.findItem(variantUuid);
             if (!item) return;
-            var currentQty = SpaceIS.fromApiQty(item.quantity);
+            const currentQty = SpaceIS.fromApiQty(item.quantity);
             if (isNaN(n)) { if (inputEl) inputEl.value = currentQty; return; }
             if (n === currentQty) return;
 
-            var slug = item.shop_product ? (item.shop_product.slug || item.shop_product.uuid) : null;
+            const slug = item.shop_product ? (item.shop_product.slug || item.shop_product.uuid) : null;
             if (!slug) {
-                cart.setQuantity(variantUuid, Math.max(1, n)).then(function() {
+                try {
+                    await cart.setQuantity(variantUuid, Math.max(1, n));
                     showToast('Quantity updated', 'success');
-                }).catch(function(err) {
+                } catch (err) {
                     showToast(getErrorMessage(err), 'error');
                     if (inputEl) inputEl.value = currentQty;
-                });
+                }
                 return;
             }
 
-            fetchProductLimits(slug).then(function(limits) {
-                var snapped = SpaceIS.snapQuantity(n, limits);
+            try {
+                const limits = await fetchProductLimits(slug);
+                const snapped = SpaceIS.snapQuantity(n, limits);
                 if (inputEl) inputEl.value = snapped;
                 if (snapped === currentQty) return;
-                return cart.setQuantity(variantUuid, snapped).then(function() {
-                    showToast('Quantity updated', 'success');
-                });
-            }).catch(function(err) {
+                await cart.setQuantity(variantUuid, snapped);
+                showToast('Quantity updated', 'success');
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
                 if (inputEl) inputEl.value = currentQty;
-            });
+            }
         }
 
-        function removeDiscount() {
-            cart.removeDiscount().catch(function(err) {
+        async function removeDiscount() {
+            try {
+                await cart.removeDiscount();
+            } catch (err) {
                 showToast(getErrorMessage(err), 'error');
-            });
+            }
         }
 
         // ── Expose global API ──
