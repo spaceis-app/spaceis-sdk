@@ -53,50 +53,48 @@
     <script>
       "use strict";
 
-      client.recaptcha.load().catch(function () {});
+      client.recaptcha.load().catch(() => {});
 
-      document.getElementById("voucher-submit-btn").addEventListener("click", function () {
-        var nick = document.getElementById("voucher-nick").value.trim();
-        var code = document.getElementById("voucher-code").value.trim();
+      document.getElementById("voucher-submit-btn").addEventListener("click", async () => {
+        const nick = document.getElementById("voucher-nick").value.trim();
+        const code = document.getElementById("voucher-code").value.trim();
 
         if (!nick) { showToast("Player nickname is required", "error"); return; }
         if (!code) { showToast("Voucher code is required", "error"); return; }
 
         hideResult("voucher-result");
-        var btn = document.getElementById("voucher-submit-btn");
+        const btn = document.getElementById("voucher-submit-btn");
         btn.disabled = true;
         btn.textContent = "Checking...";
 
-        client.recaptcha.execute("voucher")
-          .then(function (token) {
-            return client.vouchers.redeem({ nick: nick, code: code, "g-recaptcha-response": token });
-          })
-          .then(function (result) {
-            showResult("voucher-result", result.message || "Voucher redeemed!", "success");
-            showToast(result.message || "Voucher redeemed!", "success");
-            document.getElementById("voucher-code").value = "";
-            btn.disabled = false; btn.textContent = "Redeem voucher";
-          })
-          .catch(function (err) {
-            var msg = getErrorMessage(err);
-            showResult("voucher-result", msg, "error");
-            showToast(msg, "error");
-            btn.disabled = false; btn.textContent = "Redeem voucher";
-          });
+        try {
+          const token = await client.recaptcha.execute("voucher");
+          const result = await client.vouchers.redeem({ nick, code, "g-recaptcha-response": token });
+          showResult("voucher-result", result.message || "Voucher redeemed!", "success");
+          showToast(result.message || "Voucher redeemed!", "success");
+          document.getElementById("voucher-code").value = "";
+        } catch (err) {
+          const msg = getErrorMessage(err);
+          showResult("voucher-result", msg, "error");
+          showToast(msg, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Redeem voucher";
+        }
       });
 
-      document.getElementById("voucher-code").addEventListener("keydown", function (e) {
+      document.getElementById("voucher-code").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("voucher-submit-btn").click();
       });
 
       function showResult(id, message, type) {
-        var el = document.getElementById(id);
+        const el = document.getElementById(id);
         if (!el) return;
         el.textContent = message;
-        el.className = "result-box show " + (type || "");
+        el.className = `result-box show ${type || ""}`;
       }
       function hideResult(id) {
-        var el = document.getElementById(id);
+        const el = document.getElementById(id);
         if (el) el.className = "result-box";
       }
     </script>

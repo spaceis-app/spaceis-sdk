@@ -117,61 +117,55 @@
 
       function getSelectedCommission() {
         if (!selectedMethodUuid || !paymentMethodsData.length) return 0;
-        const method = paymentMethodsData.find(function (m) {
-          return m.uuid === selectedMethodUuid;
-        });
+        const method = paymentMethodsData.find((m) => m.uuid === selectedMethodUuid);
         return method ? method.commission : 0;
       }
 
       // ── Render checkout items (left col — with quantity controls) ───
 
       function renderCheckoutItems() {
-        var container = document.getElementById("checkout-items");
+        const container = document.getElementById("checkout-items");
         if (!container) return;
 
-        var html = "";
-        cartMgr.items.forEach(function (item) {
-          var imgSrc = SpaceIS.getCartItemImage(item);
-          var imgHtml = imgSrc
-            ? '<img class="checkout-item-img" src="' + esc(imgSrc) + '" alt="">'
-            : '<div class="checkout-item-img-placeholder">' + PLACEHOLDER_SVG_SM + '</div>';
+        let html = "";
+        cartMgr.items.forEach((item) => {
+          const imgSrc = SpaceIS.getCartItemImage(item);
+          const imgHtml = imgSrc
+            ? `<img class="checkout-item-img" src="${esc(imgSrc)}" alt="">`
+            : `<div class="checkout-item-img-placeholder">${PLACEHOLDER_SVG_SM}</div>`;
 
-          var qty = SpaceIS.getItemQty(item);
-          var variantUuid = item.variant ? item.variant.uuid : "";
-          var showVariant =
-            item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
+          const qty = SpaceIS.getItemQty(item);
+          const variantUuid = item.variant?.uuid ?? "";
+          const showVariant =
+            item.variant && item.shop_product && item.variant.name !== item.shop_product?.name;
 
-          var priceHtml = '<span class="checkout-item-price">' + fp(item.final_price_value) + "</span>";
+          let priceHtml = `<span class="checkout-item-price">${fp(item.final_price_value)}</span>`;
           if (item.regular_price_value !== item.final_price_value) {
-            priceHtml +=
-              ' <span class="checkout-item-old-price">' + fp(item.regular_price_value) + "</span>";
+            priceHtml += ` <span class="checkout-item-old-price">${fp(item.regular_price_value)}</span>`;
           }
           if (item.cart_item_sale) {
-            priceHtml +=
-              ' <span class="checkout-item-discount">-' +
-              item.cart_item_sale.percentage_discount +
-              "%</span>";
+            priceHtml += ` <span class="checkout-item-discount">-${item.cart_item_sale.percentage_discount}%</span>`;
           }
 
           html +=
-            '<div class="checkout-item" data-variant-uuid="' + esc(variantUuid) + '">' +
+            `<div class="checkout-item" data-variant-uuid="${esc(variantUuid)}">` +
               imgHtml +
               '<div class="checkout-item-details">' +
                 '<div class="checkout-item-top">' +
                   '<div class="checkout-item-info">' +
-                    '<div class="checkout-item-name">' + esc(item.shop_product ? item.shop_product.name : "") + '</div>' +
-                    (showVariant ? '<div class="checkout-item-variant">' + esc(item.variant.name) + '</div>' : '') +
-                    (item.package ? '<div class="checkout-item-package">' + esc("Package: " + item.package.name) + '</div>' : '') +
+                    `<div class="checkout-item-name">${esc(item.shop_product?.name ?? "")}</div>` +
+                    (showVariant ? `<div class="checkout-item-variant">${esc(item.variant.name)}</div>` : '') +
+                    (item.package ? `<div class="checkout-item-package">${esc(`Package: ${item.package.name}`)}</div>` : '') +
                   '</div>' +
-                  '<button class="checkout-item-remove" data-variant="' + esc(variantUuid) + '" title="Remove" aria-label="Remove">' +
+                  `<button class="checkout-item-remove" data-variant="${esc(variantUuid)}" title="Remove" aria-label="Remove">` +
                     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
                   '</button>' +
                 '</div>' +
                 '<div class="checkout-item-bottom">' +
-                  '<div class="checkout-item-prices">' + priceHtml + '</div>' +
-                  '<div class="qty-stepper" data-variant="' + esc(variantUuid) + '">' +
+                  `<div class="checkout-item-prices">${priceHtml}</div>` +
+                  `<div class="qty-stepper" data-variant="${esc(variantUuid)}">` +
                     '<button class="qty-step-btn" data-action="dec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-                    '<input type="text" inputmode="numeric" value="' + qty + '" class="qty-input">' +
+                    `<input type="text" inputmode="numeric" value="${qty}" class="qty-input">` +
                     '<button class="qty-step-btn" data-action="inc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
                   '</div>' +
                 '</div>' +
@@ -182,17 +176,17 @@
       }
 
       // Event delegation for checkout items — set ONCE
-      (function () {
-        var container = document.getElementById("checkout-items");
+      (() => {
+        const container = document.getElementById("checkout-items");
         if (!container) return;
 
-        container.addEventListener("click", function (e) {
+        container.addEventListener("click", (e) => {
           // Explicit remove button (uses data-variant, not data-action)
-          var removeBtn = e.target.closest(".checkout-item-remove");
+          const removeBtn = e.target.closest(".checkout-item-remove");
           if (removeBtn) {
-            var uuid = removeBtn.dataset.variant;
+            const uuid = removeBtn.dataset.variant;
             if (uuid) {
-              cartMgr.remove(uuid).catch(function (err) {
+              cartMgr.remove(uuid).catch((err) => {
                 showToast(getErrorMessage(err), "error");
               });
             }
@@ -203,10 +197,10 @@
           handleQtyStepperClick(e);
         });
 
-        container.addEventListener("change", function (e) {
+        container.addEventListener("change", (e) => {
           handleQtyInputChange(e);
         });
-        container.addEventListener("keydown", function (e) {
+        container.addEventListener("keydown", (e) => {
           if (e.key === "Enter" && e.target.classList.contains("qty-input")) {
             e.preventDefault();
             e.target.blur();
@@ -217,7 +211,7 @@
       // ── Discount code (uses shared renderDiscountSection) ─────
 
       function renderDiscountState() {
-        var container = document.getElementById("checkout-discount-container");
+        const container = document.getElementById("checkout-discount-container");
         if (!container) return;
         renderDiscountSection(container, {
           inputId: "checkout-discount-input",
@@ -229,55 +223,55 @@
       // ── Render price summary (right col, under form) ───────────
 
       function renderOrderSummary() {
-        var totalsEl = document.getElementById("summary-totals");
+        const totalsEl = document.getElementById("summary-totals");
 
-        var commission = getSelectedCommission();
-        var basePrice = cartMgr.finalPrice;
-        var commissionAmount = commission > 0 ? Math.round((basePrice * commission) / 100) : 0;
-        var totalWithCommission = basePrice + commissionAmount;
+        const commission = getSelectedCommission();
+        const basePrice = cartMgr.finalPrice;
+        const commissionAmount = commission > 0 ? Math.round((basePrice * commission) / 100) : 0;
+        const totalWithCommission = basePrice + commissionAmount;
 
-        var html = '<div class="cart-page-summary">';
+        let html = '<div class="cart-page-summary">';
 
         // Header
         html += '<div class="cart-summary-header">Order summary</div>';
 
         // Subtotal
-        html += '<div class="cart-summary-row"><span>Subtotal</span><span>' + fp(cartMgr.regularPrice) + '</span></div>';
+        html += `<div class="cart-summary-row"><span>Subtotal</span><span>${fp(cartMgr.regularPrice)}</span></div>`;
 
         // Discount
-        var discountAmount = cartMgr.regularPrice - cartMgr.finalPrice;
+        const discountAmount = cartMgr.regularPrice - cartMgr.finalPrice;
         if (discountAmount > 0) {
-          var discountLabel = cartMgr.hasDiscount && cartMgr.discount
-            ? 'Discount (' + cartMgr.discount.percentage_discount + '%)'
+          const discountLabel = cartMgr.hasDiscount && cartMgr.discount
+            ? `Discount (${cartMgr.discount.percentage_discount}%)`
             : 'Discount';
-          html += '<div class="cart-summary-row cart-summary-discount"><span>' + discountLabel + '</span><span>-' + fp(discountAmount) + '</span></div>';
+          html += `<div class="cart-summary-row cart-summary-discount"><span>${discountLabel}</span><span>-${fp(discountAmount)}</span></div>`;
         }
 
         // Commission
         if (commission > 0) {
-          var methodName = (function () {
-            var m = paymentMethodsData.find(function (m) { return m.uuid === selectedMethodUuid; });
+          const methodName = (() => {
+            const m = paymentMethodsData.find((m) => m.uuid === selectedMethodUuid);
             return m ? m.name : "Commission";
           })();
-          html += '<div class="cart-summary-row"><span>Fee (' + esc(methodName) + ' +' + commission + '%)</span><span>+' + fp(commissionAmount) + '</span></div>';
+          html += `<div class="cart-summary-row"><span>Fee (${esc(methodName)} +${commission}%)</span><span>+${fp(commissionAmount)}</span></div>`;
         }
 
         // Total
-        html += '<div class="cart-summary-total"><span>Total</span><span>' + fp(totalWithCommission) + '</span></div>';
+        html += `<div class="cart-summary-total"><span>Total</span><span>${fp(totalWithCommission)}</span></div>`;
 
         html += '</div>';
         totalsEl.innerHTML = html;
 
         // Update button with price
-        var orderBtn = document.getElementById("place-order-btn");
-        if (orderBtn) orderBtn.textContent = "Place order " + fp(totalWithCommission);
+        const orderBtn = document.getElementById("place-order-btn");
+        if (orderBtn) orderBtn.textContent = `Place order ${fp(totalWithCommission)}`;
       }
 
       // ── Load checkout data ────────────────────────────────────
 
-      var _checkoutInitialized = false;
+      let _checkoutInitialized = false;
 
-      function initCheckout() {
+      async function initCheckout() {
         if (cartMgr.isLoading) return; // will be called again via onChange
         if (_checkoutInitialized) return;
 
@@ -289,61 +283,55 @@
         _checkoutInitialized = true;
         document.getElementById("checkout-loading").style.display = "";
 
-        Promise.all([
-          client.checkout.paymentMethods(),
-          client.checkout.agreements().catch(function () { return []; }),
-        ])
-          .then(function (results) {
-            paymentMethodsData = results[0];
-            var agreements = results[1];
+        try {
+          const [methods, agreements] = await Promise.all([
+            client.checkout.paymentMethods(),
+            client.checkout.agreements().catch(() => []),
+          ]);
+          paymentMethodsData = methods;
 
-            document.getElementById("checkout-loading").style.display = "none";
-            document.getElementById("checkout-layout").style.display = "";
+          document.getElementById("checkout-loading").style.display = "none";
+          document.getElementById("checkout-layout").style.display = "";
 
-            try {
-              renderCheckoutItems();
-              renderDiscountState();
-              renderPaymentMethods(paymentMethodsData);
-              renderAgreements(agreements);
-              renderOrderSummary();
-              loadCheckoutRecommendations();
-            } catch (renderErr) {
-              showToast("Render error: " + getErrorMessage(renderErr), "error");
-            }
-            client.recaptcha.load().catch(function () {});
-          })
-          .catch(function (err) {
-            _checkoutInitialized = false;
-            document.getElementById("checkout-loading").style.display = "none";
-            showToast(getErrorMessage(err) || "Failed to load checkout data", "error");
-          });
+          renderCheckoutItems();
+          renderDiscountState();
+          renderPaymentMethods(paymentMethodsData);
+          renderAgreements(agreements);
+          renderOrderSummary();
+          loadCheckoutRecommendations();
+          client.recaptcha.load().catch(() => {});
+        } catch (err) {
+          _checkoutInitialized = false;
+          document.getElementById("checkout-loading").style.display = "none";
+          showToast(getErrorMessage(err) || "Failed to load checkout data", "error");
+        }
       }
 
       function renderPaymentMethods(methods) {
-        var container = document.getElementById("payment-methods");
+        const container = document.getElementById("payment-methods");
         if (methods.length === 0) {
           container.innerHTML = '<p style="color:var(--txt-3);font-size:13px">No payment methods available.</p>';
           return;
         }
 
-        var html = "";
-        methods.forEach(function (m) {
-          var commission = m.commission ? " (+" + m.commission + "%)" : "";
+        let html = "";
+        methods.forEach((m) => {
+          const commissionText = m.commission ? ` (+${m.commission}%)` : "";
           html +=
-            '<label class="payment-method" data-uuid="' + esc(m.uuid) + '">' +
-            '<input type="radio" name="payment_method" value="' + esc(m.uuid) + '">' +
-            '<span class="payment-method-name">' + esc(m.name) + "</span>" +
-            (commission ? '<span class="payment-commission">' + esc(commission) + "</span>" : "") +
+            `<label class="payment-method" data-uuid="${esc(m.uuid)}">` +
+            `<input type="radio" name="payment_method" value="${esc(m.uuid)}">` +
+            `<span class="payment-method-name">${esc(m.name)}</span>` +
+            (commissionText ? `<span class="payment-commission">${esc(commissionText)}</span>` : "") +
             "</label>";
         });
         container.innerHTML = html;
 
-        container.addEventListener("click", function (e) {
-          var label = e.target.closest(".payment-method");
+        container.addEventListener("click", (e) => {
+          const label = e.target.closest(".payment-method");
           if (!label) return;
-          container.querySelectorAll(".payment-method").forEach(function (l) { l.classList.remove("selected"); });
+          container.querySelectorAll(".payment-method").forEach((l) => { l.classList.remove("selected"); });
           label.classList.add("selected");
-          var radio = label.querySelector('input[type="radio"]');
+          const radio = label.querySelector('input[type="radio"]');
           if (radio) {
             radio.checked = true;
             selectedMethodUuid = radio.value;
@@ -354,16 +342,16 @@
 
       function renderAgreements(agreements) {
         if (!agreements || agreements.length === 0) return;
-        var card = document.getElementById("agreements-card");
-        var list = document.getElementById("agreements-list");
+        const card = document.getElementById("agreements-card");
+        const list = document.getElementById("agreements-list");
         card.style.display = "";
 
-        var html = "";
-        agreements.forEach(function (a) {
+        let html = "";
+        agreements.forEach((a) => {
           html +=
             '<label class="agreement-item">' +
-            '<input type="checkbox" value="' + esc(a.uuid) + '">' +
-            "<span>" + esc(a.name) + "</span>" +
+            `<input type="checkbox" value="${esc(a.uuid)}">` +
+            `<span>${esc(a.name)}</span>` +
             "</label>";
         });
         list.innerHTML = html;
@@ -371,64 +359,60 @@
 
       // ── Place order ─────────────────────────────────────────────
 
-      document.getElementById("place-order-btn").addEventListener("click", function () {
-        var nick = document.getElementById("checkout-nick").value.trim();
-        var email = document.getElementById("checkout-email").value.trim();
-        var paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+      document.getElementById("place-order-btn").addEventListener("click", async () => {
+        const nick = document.getElementById("checkout-nick").value.trim();
+        const email = document.getElementById("checkout-email").value.trim();
+        const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
 
-        var errors = [];
+        const errors = [];
         if (!nick) errors.push("Player nickname is required");
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Enter a valid email");
         if (!paymentRadio) errors.push("Choose payment method");
 
         if (errors.length > 0) {
-          errors.forEach(function (e) { showToast(e, "error"); });
+          errors.forEach((e) => { showToast(e, "error"); });
           return;
         }
 
-        var btn = document.getElementById("place-order-btn");
+        const btn = document.getElementById("place-order-btn");
         btn.disabled = true;
         btn.textContent = "Processing...";
 
-        var paymentMethodUuid = paymentRadio.value;
-        var agreementUuids = [];
-        document.querySelectorAll('#agreements-list input[type="checkbox"]:checked').forEach(function (cb) {
-          agreementUuids.push(cb.value);
-        });
+        const paymentMethodUuid = paymentRadio.value;
+        const agreementUuids = Array.from(
+          document.querySelectorAll('#agreements-list input[type="checkbox"]:checked'),
+          (cb) => cb.value
+        );
 
-        client.recaptcha
-          .execute("checkout")
-          .then(function (recaptchaToken) {
-            return client.checkout.placeOrder({
-              email: email,
-              first_name: nick,
-              payment_method_uuid: paymentMethodUuid,
-              "g-recaptcha-response": recaptchaToken,
-              agreements: agreementUuids,
-            });
-          })
-          .then(function (result) {
-            if (result.redirect_url) {
-              window.location.href = result.redirect_url;
-            } else {
-              showOrderSuccess(result.code || "");
-            }
-          })
-          .catch(function (err) {
-            showToast(getErrorMessage(err), "error");
-            resetPlaceOrderBtn();
+        try {
+          const recaptchaToken = await client.recaptcha.execute("checkout");
+          const result = await client.checkout.placeOrder({
+            email,
+            first_name: nick,
+            payment_method_uuid: paymentMethodUuid,
+            "g-recaptcha-response": recaptchaToken,
+            agreements: agreementUuids,
           });
+          if (result.redirect_url) {
+            window.location.href = result.redirect_url;
+          } else {
+            showOrderSuccess(result.code || "");
+          }
+        } catch (err) {
+          showToast(getErrorMessage(err), "error");
+          resetPlaceOrderBtn();
+        }
       });
 
       function resetPlaceOrderBtn() {
-        var btn = document.getElementById("place-order-btn");
+        const btn = document.getElementById("place-order-btn");
         if (btn) { btn.disabled = false; btn.textContent = "Place order"; }
       }
 
       function showOrderSuccess(code) {
         cartMgr.clear();
         if (code) {
-          window.location.href = "order-summary.html?code=" + encodeURIComponent(code);
+          window.location.href = `order-summary.html?code=${encodeURIComponent(code)}`;
           return;
         }
         document.getElementById("checkout-layout").style.display = "none";
@@ -437,32 +421,31 @@
 
       // ── Checkout recommendations ─────────────────────────
 
-      function loadCheckoutRecommendations() {
-        var container = document.getElementById("checkout-recommendations");
+      async function loadCheckoutRecommendations() {
+        const container = document.getElementById("checkout-recommendations");
         if (!container || cartMgr.isEmpty) return;
 
-        var firstItem = cartMgr.items[0];
-        if (!firstItem || !firstItem.shop_product) return;
+        const firstItem = cartMgr.items[0];
+        if (!firstItem?.shop_product) return;
 
-        client.products.recommendations(firstItem.shop_product.uuid)
-          .then(function (recs) {
-            if (!recs || recs.length === 0) return;
-            var sliced = recs.slice(0, 4);
-            container.innerHTML = renderRecsHtml(sliced, "Recommended products");
-            attachRecsClickHandler(container, sliced);
-          })
-          .catch(function () {});
+        try {
+          const recs = await client.products.recommendations(firstItem.shop_product.uuid);
+          if (!recs?.length) return;
+          const sliced = recs.slice(0, 4);
+          container.innerHTML = renderRecsHtml(sliced, "Recommended products");
+          attachRecsClickHandler(container, sliced);
+        } catch { /* ignore */ }
       }
 
       // ── Cart change: refresh ─────────────────────────────────
 
-      cartMgr.onChange(function () {
+      cartMgr.onChange(() => {
         renderCartBadge();
         if (!_checkoutInitialized) {
           initCheckout();
           return;
         }
-        var layout = document.getElementById("checkout-layout");
+        const layout = document.getElementById("checkout-layout");
         if (layout && layout.style.display !== "none") {
           renderCheckoutItems();
           renderDiscountState();

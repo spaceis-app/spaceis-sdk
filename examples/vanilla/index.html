@@ -55,28 +55,26 @@
 
       // ── Categories ────────────────────────────────────────────
 
-      function loadCategories() {
+      async function loadCategories() {
         if (state.categoriesLoaded) return;
         state.categoriesLoaded = true;
 
-        client.categories
-          .list()
-          .then(function (categories) {
-            allCategories = categories;
-            const container = document.getElementById("categories");
-            categories.forEach(function (cat) {
-              if (!cat.is_active) return;
-              const btn = document.createElement("button");
-              btn.className = "cat-btn";
-              btn.textContent = cat.name;
-              btn.dataset.uuid = cat.uuid;
-              btn.addEventListener("click", function () {
-                selectCategory(cat, btn);
-              });
-              container.appendChild(btn);
+        try {
+          const categories = await client.categories.list();
+          allCategories = categories;
+          const container = document.getElementById("categories");
+          categories.forEach((cat) => {
+            if (!cat.is_active) return;
+            const btn = document.createElement("button");
+            btn.className = "cat-btn";
+            btn.textContent = cat.name;
+            btn.dataset.uuid = cat.uuid;
+            btn.addEventListener("click", () => {
+              selectCategory(cat, btn);
             });
-          })
-          .catch(function () {});
+            container.appendChild(btn);
+          });
+        } catch { /* ignore */ }
       }
 
       // Select a parent category — shows its children below
@@ -85,7 +83,7 @@
         state.currentPage = 1;
 
         // Highlight active parent
-        document.querySelectorAll("#categories .cat-btn").forEach(function (b) {
+        document.querySelectorAll("#categories .cat-btn").forEach((b) => {
           b.classList.remove("active");
         });
         if (btn) btn.classList.add("active");
@@ -94,9 +92,7 @@
         const subContainer = document.getElementById("subcategories");
         subContainer.innerHTML = "";
 
-        const activeChildren = (cat.children || []).filter(function (c) {
-          return c.is_active;
-        });
+        const activeChildren = (cat.children || []).filter((c) => c.is_active);
 
         if (activeChildren.length > 0) {
           subContainer.style.display = "";
@@ -105,10 +101,10 @@
           const allBtn = document.createElement("button");
           allBtn.className = "cat-btn cat-child active";
           allBtn.textContent = "All";
-          allBtn.addEventListener("click", function () {
+          allBtn.addEventListener("click", () => {
             state.currentCategory = cat.uuid;
             state.currentPage = 1;
-            subContainer.querySelectorAll(".cat-btn").forEach(function (b) {
+            subContainer.querySelectorAll(".cat-btn").forEach((b) => {
               b.classList.remove("active");
             });
             allBtn.classList.add("active");
@@ -117,15 +113,15 @@
           subContainer.appendChild(allBtn);
 
           // Child categories
-          activeChildren.forEach(function (child) {
+          activeChildren.forEach((child) => {
             const subBtn = document.createElement("button");
             subBtn.className = "cat-btn cat-child";
             subBtn.textContent = child.name;
             subBtn.dataset.uuid = child.uuid;
-            subBtn.addEventListener("click", function () {
+            subBtn.addEventListener("click", () => {
               state.currentCategory = child.uuid;
               state.currentPage = 1;
-              subContainer.querySelectorAll(".cat-btn").forEach(function (b) {
+              subContainer.querySelectorAll(".cat-btn").forEach((b) => {
                 b.classList.remove("active");
               });
               subBtn.classList.add("active");
@@ -144,7 +140,7 @@
       document.getElementById("cat-all").addEventListener("click", function () {
         state.currentCategory = null;
         state.currentPage = 1;
-        document.querySelectorAll(".cat-btn").forEach(function (b) {
+        document.querySelectorAll(".cat-btn").forEach((b) => {
           b.classList.remove("active");
         });
         this.classList.add("active");
@@ -154,7 +150,7 @@
 
       // ── Products ─────────────────────────────────────────────
 
-      function loadProducts() {
+      async function loadProducts() {
         renderSkeletons("products-container", 8);
         document.getElementById("pagination").style.display = "none";
 
@@ -162,16 +158,14 @@
         if (state.currentCategory) params.category_uuid = state.currentCategory;
         if (saleFilter) params.sale_slug = saleFilter;
 
-        client.products
-          .list(params)
-          .then(function (result) {
-            renderProductGrid(result.data);
-            renderPagination(result.meta);
-          })
-          .catch(function () {
-            document.getElementById("products-container").innerHTML =
-              '<div class="empty-state"><p>Failed to load products.</p></div>';
-          });
+        try {
+          const result = await client.products.list(params);
+          renderProductGrid(result.data);
+          renderPagination(result.meta);
+        } catch {
+          document.getElementById("products-container").innerHTML =
+            '<div class="empty-state"><p>Failed to load products.</p></div>';
+        }
       }
 
       function renderProductGrid(products) {
@@ -183,9 +177,9 @@
         }
         const grid = document.createElement("div");
         grid.className = "products-grid";
-        products.forEach(function (product, idx) {
+        products.forEach((product, idx) => {
           const card = buildProductCard(product);
-          card.style.animationDelay = idx * 0.04 + "s";
+          card.style.animationDelay = `${idx * 0.04}s`;
           grid.appendChild(card);
         });
         container.innerHTML = "";
@@ -198,15 +192,11 @@
         card.dataset.slug = product.slug;
 
         const imgHtml = product.image
-          ? '<img class="product-img" src="' +
-            esc(product.image) +
-            '" alt="' +
-            esc(product.name) +
-            '" loading="lazy">'
-          : '<div class="product-img-placeholder">' + PLACEHOLDER_SVG_LG + '</div>';
+          ? `<img class="product-img" src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy">`
+          : `<div class="product-img-placeholder">${PLACEHOLDER_SVG_LG}</div>`;
 
         const discountHtml = product.percentage_discount
-          ? '<div class="product-discount-badge">-' + esc(product.percentage_discount) + "%</div>"
+          ? `<div class="product-discount-badge">-${esc(product.percentage_discount)}%</div>`
           : "";
 
         const priceField =
@@ -215,30 +205,22 @@
           product.minimal_base_price != null ? product.minimal_base_price : null;
         const oldPriceHtml =
           basePriceField && basePriceField !== priceField
-            ? '<span class="product-price-old">' + fp(basePriceField) + "</span>"
+            ? `<span class="product-price-old">${fp(basePriceField)}</span>`
             : "";
 
         card.innerHTML =
-          '<div class="product-img-wrap">' +
-          imgHtml +
-          discountHtml +
-          "</div>" +
+          `<div class="product-img-wrap">${imgHtml}${discountHtml}</div>` +
           '<div class="product-body">' +
-          '<div class="product-name">' +
-          esc(product.name) +
-          "</div>" +
+          `<div class="product-name">${esc(product.name)}</div>` +
           '<div class="product-footer">' +
-          "<div>" +
-          '<span class="product-price">' +
-          fp(priceField) +
-          "</span>" +
-          (oldPriceHtml ? "<br>" + oldPriceHtml : "") +
+          `<div><span class="product-price">${fp(priceField)}</span>` +
+          (oldPriceHtml ? `<br>${oldPriceHtml}` : "") +
           "</div>" +
           '<button class="view-btn">View</button>' +
           "</div>" +
           "</div>";
 
-        card.addEventListener("click", function () {
+        card.addEventListener("click", () => {
           openProductModal(product.slug);
         });
 
@@ -255,15 +237,15 @@
         }
         pag.style.display = "flex";
         document.getElementById("page-info").textContent =
-          meta.current_page + " / " + meta.last_page;
+          `${meta.current_page} / ${meta.last_page}`;
         document.getElementById("prev-btn").disabled = meta.current_page <= 1;
         document.getElementById("next-btn").disabled = meta.current_page >= meta.last_page;
       }
 
-      document.getElementById("prev-btn").addEventListener("click", function () {
+      document.getElementById("prev-btn").addEventListener("click", () => {
         changePage(-1);
       });
-      document.getElementById("next-btn").addEventListener("click", function () {
+      document.getElementById("next-btn").addEventListener("click", () => {
         changePage(1);
       });
 

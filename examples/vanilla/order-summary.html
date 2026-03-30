@@ -66,7 +66,7 @@
         loadOrder(codeFromUrl);
       }
 
-      document.getElementById("check-order-btn").addEventListener("click", function () {
+      document.getElementById("check-order-btn").addEventListener("click", () => {
         const code = document.getElementById("order-code-input").value.trim();
         if (!code) {
           showToast("Enter order code", "error");
@@ -75,29 +75,25 @@
         loadOrder(code);
       });
 
-      document.getElementById("order-code-input").addEventListener("keydown", function (e) {
+      document.getElementById("order-code-input").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("check-order-btn").click();
       });
 
-      function loadOrder(code) {
+      async function loadOrder(code) {
         const btn = document.getElementById("check-order-btn");
         btn.disabled = true;
         btn.textContent = "...";
 
-        client.orders
-          .summary(code)
-          .then(function (order) {
-            renderOrder(order);
-            const newUrl = "order-summary.html?code=" + encodeURIComponent(code);
-            window.history.replaceState(null, "", newUrl);
-          })
-          .catch(function (err) {
-            showToast(getErrorMessage(err), "error");
-          })
-          .finally(function () {
-            btn.disabled = false;
-            btn.textContent = "Check";
-          });
+        try {
+          const order = await client.orders.summary(code);
+          renderOrder(order);
+          window.history.replaceState(null, "", `order-summary.html?code=${encodeURIComponent(code)}`);
+        } catch (err) {
+          showToast(getErrorMessage(err), "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Check";
+        }
       }
 
       function renderOrder(order) {
@@ -112,88 +108,70 @@
 
         // Status alert + code
         let html =
-          '<div class="order-alert order-alert-' + esc(status) + '">' +
+          `<div class="order-alert order-alert-${esc(status)}">` +
             '<div class="order-alert-top">' +
-              '<span class="order-alert-label">' + esc(statusLabel) + '</span>' +
-              (order.code ? '<span class="order-alert-code">' + esc(order.code) + '</span>' : '') +
+              `<span class="order-alert-label">${esc(statusLabel)}</span>` +
+              (order.code ? `<span class="order-alert-code">${esc(order.code)}</span>` : '') +
             '</div>' +
           '</div>';
 
         // Items
-        html += '<div class="order-card">' + '<div class="order-card-title">Order items</div>';
+        html += '<div class="order-card"><div class="order-card-title">Order items</div>';
 
-        items.forEach(function (item) {
+        items.forEach((item) => {
           const imgHtml = item.image
-            ? '<img class="order-item-img" src="' + esc(item.image) + '" alt="">'
+            ? `<img class="order-item-img" src="${esc(item.image)}" alt="">`
             : "";
 
           html +=
             '<div class="order-item">' +
             imgHtml +
             '<div class="order-item-info">' +
-            '<div class="order-item-name">' +
-            esc(item.title) +
+            `<div class="order-item-name">${esc(item.title)}</div>` +
+            (item.subtitle ? `<div class="order-item-qty">${esc(item.subtitle)}</div>` : "") +
+            `<div class="order-item-qty">Quantity: ${SpaceIS.fromApiQty(item.quantity)}</div>` +
             "</div>" +
-            (item.subtitle ? '<div class="order-item-qty">' + esc(item.subtitle) + "</div>" : "") +
-            '<div class="order-item-qty">Quantity: ' +
-            SpaceIS.fromApiQty(item.quantity) +
-            "</div>" +
-            "</div>" +
-            '<div class="order-item-price">' +
-            fp(item.final_price) +
-            "</div>" +
+            `<div class="order-item-price">${fp(item.final_price)}</div>` +
             "</div>";
         });
 
         html += "</div>";
 
         // Totals
-        html += '<div class="order-card">' + '<div class="order-card-title">Summary</div>';
+        html += '<div class="order-card"><div class="order-card-title">Summary</div>';
 
         if (order.regular_total_price !== order.final_total_price) {
           html +=
             '<div class="order-total-row">' +
             "<span>Regular price</span>" +
-            '<span style="text-decoration:line-through">' +
-            fp(order.regular_total_price) +
-            "</span>" +
+            `<span style="text-decoration:line-through">${fp(order.regular_total_price)}</span>` +
             "</div>";
         }
-        if (order.discount && order.discount.totalDiscountedValue) {
+        if (order.discount?.totalDiscountedValue) {
           html +=
             '<div class="order-total-row discount">' +
-            "<span>Discount" +
-            (order.discount.code ? " (" + esc(order.discount.code) + ")" : "") +
-            "</span>" +
-            "<span>-" +
-            fp(order.discount.totalDiscountedValue) +
-            "</span>" +
+            `<span>Discount${order.discount.code ? ` (${esc(order.discount.code)})` : ""}</span>` +
+            `<span>-${fp(order.discount.totalDiscountedValue)}</span>` +
             "</div>";
         }
-        if (order.sale && order.sale.totalDiscountedValue) {
+        if (order.sale?.totalDiscountedValue) {
           html +=
             '<div class="order-total-row discount">' +
             "<span>Sale</span>" +
-            "<span>-" +
-            fp(order.sale.totalDiscountedValue) +
-            "</span>" +
+            `<span>-${fp(order.sale.totalDiscountedValue)}</span>` +
             "</div>";
         }
-        if (order.package_included && order.package_included.totalDiscountedValue) {
+        if (order.package_included?.totalDiscountedValue) {
           html +=
             '<div class="order-total-row discount">' +
             "<span>Package discount</span>" +
-            "<span>-" +
-            fp(order.package_included.totalDiscountedValue) +
-            "</span>" +
+            `<span>-${fp(order.package_included.totalDiscountedValue)}</span>` +
             "</div>";
         }
         html +=
           '<div class="order-total-row final">' +
           "<span>Total</span>" +
-          "<span>" +
-          fp(order.final_total_price) +
-          "</span>" +
+          `<span>${fp(order.final_total_price)}</span>` +
           "</div>";
 
         html += "</div>";
@@ -201,7 +179,7 @@
         html += '<a class="back-link" href="index.html">&#8592; Back to shop</a>';
 
         detailsEl.innerHTML = html;
-        document.title = "Order " + (order.code || "") + " — SpaceIS SDK";
+        document.title = `Order ${order.code || ""} — SpaceIS SDK`;
       }
     </script>
   </body>

@@ -30,31 +30,25 @@
 
       const mainEl = document.getElementById("main-content");
 
-      client.content
-        .statute()
-        .then(function (statute) {
+      (async () => {
+        try {
+          const statute = await client.content.statute();
           const title = statute.title || "Terms";
-          document.title = title + " — SpaceIS SDK";
+          document.title = `${title} — SpaceIS SDK`;
 
-          var tempDiv = document.createElement("div");
+          const tempDiv = document.createElement("div");
           tempDiv.innerHTML = statute.content || "";
           sanitizeHtml(tempDiv);
-          var safeContent = tempDiv.innerHTML;
+          const safeContent = tempDiv.innerHTML;
 
           let metaHtml = "";
           if (statute.created_at || statute.updated_at) {
             metaHtml = '<div class="statute-meta">';
             if (statute.created_at) {
-              metaHtml +=
-                "<span>Created: " +
-                new Date(statute.created_at).toLocaleDateString("en") +
-                "</span>";
+              metaHtml += `<span>Created: ${new Date(statute.created_at).toLocaleDateString("en")}</span>`;
             }
             if (statute.updated_at) {
-              metaHtml +=
-                "<span>Last updated: " +
-                new Date(statute.updated_at).toLocaleDateString("en") +
-                "</span>";
+              metaHtml += `<span>Last updated: ${new Date(statute.updated_at).toLocaleDateString("en")}</span>`;
             }
             metaHtml += "</div>";
           }
@@ -63,25 +57,21 @@
             '<div class="statute-content">' +
             '<div class="statute-content-panel">' +
             '<div class="statute-body">' +
-            "<h1>" +
-            esc(title) +
-            "</h1>" +
+            `<h1>${esc(title)}</h1>` +
             safeContent +
             "</div>" +
             metaHtml +
             "</div>" +
             "</div>";
-        })
-        .catch(function (err) {
+        } catch (err) {
           mainEl.innerHTML =
             '<div class="page-not-found">' +
             '<div class="icon">&#9888;</div>' +
             "<h2>Error</h2>" +
-            "<p>" +
-            esc(getErrorMessage(err)) +
-            "</p>" +
+            `<p>${esc(getErrorMessage(err))}</p>` +
             "</div>";
-        });
+        }
+      })();
     </script>
   </body>
 </html>

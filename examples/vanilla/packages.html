@@ -42,7 +42,7 @@
     <script>
       "use strict";
 
-      var state = {
+      const state = {
         currentPage: 1,
         currentCategory: null,
         categoriesLoaded: false,
@@ -50,66 +50,65 @@
 
       // ── Categories ────────────────────────────────────────────
 
-      function loadCategories() {
+      async function loadCategories() {
         if (state.categoriesLoaded) return;
         state.categoriesLoaded = true;
 
-        client.categories.list()
-          .then(function (categories) {
-            var container = document.getElementById("categories");
-            categories.forEach(function (cat) {
-              if (!cat.is_active) return;
-              var btn = document.createElement("button");
-              btn.className = "cat-btn";
-              btn.textContent = cat.name;
-              btn.dataset.uuid = cat.uuid;
-              btn.addEventListener("click", function () {
-                selectCategory(cat, btn);
-              });
-              container.appendChild(btn);
+        try {
+          const categories = await client.categories.list();
+          const container = document.getElementById("categories");
+          categories.forEach((cat) => {
+            if (!cat.is_active) return;
+            const btn = document.createElement("button");
+            btn.className = "cat-btn";
+            btn.textContent = cat.name;
+            btn.dataset.uuid = cat.uuid;
+            btn.addEventListener("click", () => {
+              selectCategory(cat, btn);
             });
-          })
-          .catch(function () {});
+            container.appendChild(btn);
+          });
+        } catch { /* ignore */ }
       }
 
       function selectCategory(cat, btn) {
         state.currentCategory = cat.uuid;
         state.currentPage = 1;
 
-        document.querySelectorAll("#categories .cat-btn").forEach(function (b) {
+        document.querySelectorAll("#categories .cat-btn").forEach((b) => {
           b.classList.remove("active");
         });
         if (btn) btn.classList.add("active");
 
         // Subcategories
-        var subContainer = document.getElementById("subcategories");
+        const subContainer = document.getElementById("subcategories");
         subContainer.innerHTML = "";
 
-        var activeChildren = (cat.children || []).filter(function (c) { return c.is_active; });
+        const activeChildren = (cat.children || []).filter((c) => c.is_active);
 
         if (activeChildren.length > 0) {
           subContainer.style.display = "";
 
-          var allBtn = document.createElement("button");
+          const allBtn = document.createElement("button");
           allBtn.className = "cat-btn cat-child active";
           allBtn.textContent = "All";
-          allBtn.addEventListener("click", function () {
+          allBtn.addEventListener("click", () => {
             state.currentCategory = cat.uuid;
             state.currentPage = 1;
-            subContainer.querySelectorAll(".cat-btn").forEach(function (b) { b.classList.remove("active"); });
+            subContainer.querySelectorAll(".cat-btn").forEach((b) => { b.classList.remove("active"); });
             allBtn.classList.add("active");
             loadPackages();
           });
           subContainer.appendChild(allBtn);
 
-          activeChildren.forEach(function (child) {
-            var subBtn = document.createElement("button");
+          activeChildren.forEach((child) => {
+            const subBtn = document.createElement("button");
             subBtn.className = "cat-btn cat-child";
             subBtn.textContent = child.name;
-            subBtn.addEventListener("click", function () {
+            subBtn.addEventListener("click", () => {
               state.currentCategory = child.uuid;
               state.currentPage = 1;
-              subContainer.querySelectorAll(".cat-btn").forEach(function (b) { b.classList.remove("active"); });
+              subContainer.querySelectorAll(".cat-btn").forEach((b) => { b.classList.remove("active"); });
               subBtn.classList.add("active");
               loadPackages();
             });
@@ -125,7 +124,7 @@
       document.getElementById("cat-all").addEventListener("click", function () {
         state.currentCategory = null;
         state.currentPage = 1;
-        document.querySelectorAll(".cat-btn").forEach(function (b) { b.classList.remove("active"); });
+        document.querySelectorAll(".cat-btn").forEach((b) => { b.classList.remove("active"); });
         this.classList.add("active");
         document.getElementById("subcategories").style.display = "none";
         loadPackages();
@@ -133,89 +132,88 @@
 
       // ── Packages ─────────────────────────────────────────────
 
-      function loadPackages() {
+      async function loadPackages() {
         renderSkeletons("packages-container", 6);
         document.getElementById("pagination").style.display = "none";
 
-        var params = { page: state.currentPage };
+        const params = { page: state.currentPage };
         if (state.currentCategory) params.category_uuid = state.currentCategory;
 
-        client.packages.list(params)
-          .then(function (result) {
-            var container = document.getElementById("packages-container");
+        try {
+          const result = await client.packages.list(params);
+          const container = document.getElementById("packages-container");
 
-            if (result.data.length === 0) {
-              container.innerHTML = '<div class="empty-state"><p>No packages available.</p></div>';
-              return;
+          if (result.data.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>No packages available.</p></div>';
+            return;
+          }
+
+          const grid = document.createElement("div");
+          grid.className = "products-grid";
+
+          result.data.forEach((pkg, idx) => {
+            const card = document.createElement("div");
+            card.className = "product-card";
+            card.style.animationDelay = `${idx * 0.04}s`;
+
+            const productObj = pkg.shop_product || {};
+            const imgHtml = productObj.image
+              ? `<img class="product-img" src="${esc(productObj.image)}" alt="${esc(productObj.name)}" loading="lazy">`
+              : `<div class="product-img-placeholder">${PLACEHOLDER_SVG_LG}</div>`;
+
+            const discountHtml = pkg.percentage_discount
+              ? `<div class="product-discount-badge">-${esc(pkg.percentage_discount)}%</div>`
+              : '';
+
+            const minPrice = pkg.minimal_price != null ? pkg.minimal_price : null;
+            const minBasePrice = pkg.minimal_base_price != null ? pkg.minimal_base_price : null;
+            const oldHtml = (minBasePrice && minBasePrice !== minPrice)
+              ? `<br><span class="product-price-old">${fp(minBasePrice)}</span>`
+              : '';
+
+            card.innerHTML =
+              `<div class="product-img-wrap">${imgHtml}${discountHtml}</div>` +
+              '<div class="product-body">' +
+                `<div class="product-name">${esc(productObj.name || '')}</div>` +
+                '<div class="product-footer">' +
+                  `<div><span class="product-price">${minPrice != null ? fp(minPrice) : ''}</span>${oldHtml}</div>` +
+                  '<button class="view-btn">View</button>' +
+                '</div>' +
+              '</div>';
+
+            if (productObj.slug) {
+              card.addEventListener("click", () => {
+                openProductModal(productObj.slug);
+              });
             }
 
-            var grid = document.createElement("div");
-            grid.className = "products-grid";
-
-            result.data.forEach(function (pkg, idx) {
-              var card = document.createElement("div");
-              card.className = "product-card";
-              card.style.animationDelay = idx * 0.04 + "s";
-
-              var productObj = pkg.shop_product || {};
-              var imgHtml = productObj.image
-                ? '<img class="product-img" src="' + esc(productObj.image) + '" alt="' + esc(productObj.name) + '" loading="lazy">'
-                : '<div class="product-img-placeholder">' + PLACEHOLDER_SVG_LG + '</div>';
-
-              var discountHtml = pkg.percentage_discount
-                ? '<div class="product-discount-badge">-' + esc(pkg.percentage_discount) + '%</div>'
-                : '';
-
-              var minPrice = pkg.minimal_price != null ? pkg.minimal_price : null;
-              var minBasePrice = pkg.minimal_base_price != null ? pkg.minimal_base_price : null;
-              var oldHtml = (minBasePrice && minBasePrice !== minPrice)
-                ? '<br><span class="product-price-old">' + fp(minBasePrice) + '</span>'
-                : '';
-
-              card.innerHTML =
-                '<div class="product-img-wrap">' + imgHtml + discountHtml + '</div>' +
-                '<div class="product-body">' +
-                  '<div class="product-name">' + esc(productObj.name || '') + '</div>' +
-                  '<div class="product-footer">' +
-                    '<div><span class="product-price">' + (minPrice != null ? fp(minPrice) : '') + '</span>' + oldHtml + '</div>' +
-                    '<button class="view-btn">View</button>' +
-                  '</div>' +
-                '</div>';
-
-              if (productObj.slug) {
-                card.addEventListener("click", function () {
-                  openProductModal(productObj.slug);
-                });
-              }
-
-              grid.appendChild(card);
-            });
-
-            container.innerHTML = "";
-            container.appendChild(grid);
-            renderPagination(result.meta);
-          })
-          .catch(function () {
-            document.getElementById("packages-container").innerHTML =
-              '<div class="empty-state"><p>Failed to load packages.</p></div>';
+            grid.appendChild(card);
           });
+
+          container.innerHTML = "";
+          container.appendChild(grid);
+          renderPagination(result.meta);
+        } catch {
+          document.getElementById("packages-container").innerHTML =
+            '<div class="empty-state"><p>Failed to load packages.</p></div>';
+        }
       }
 
       function renderPagination(meta) {
-        var pag = document.getElementById("pagination");
+        const pag = document.getElementById("pagination");
         if (!meta || meta.last_page <= 1) { pag.style.display = "none"; return; }
         pag.style.display = "flex";
-        document.getElementById("page-info").textContent = meta.current_page + " / " + meta.last_page;
+        document.getElementById("page-info").textContent = `${meta.current_page} / ${meta.last_page}`;
         document.getElementById("prev-btn").disabled = meta.current_page <= 1;
         document.getElementById("next-btn").disabled = meta.current_page >= meta.last_page;
       }
 
-      document.getElementById("prev-btn").addEventListener("click", function () {
+      document.getElementById("prev-btn").addEventListener("click", () => {
         state.currentPage--;
         loadPackages();
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
-      document.getElementById("next-btn").addEventListener("click", function () {
+      document.getElementById("next-btn").addEventListener("click", () => {
         state.currentPage++;
         loadPackages();
         window.scrollTo({ top: 0, behavior: "smooth" });

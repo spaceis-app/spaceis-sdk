@@ -41,46 +41,44 @@
     <script>
       "use strict";
 
-      client.recaptcha.load().catch(function () {});
+      client.recaptcha.load().catch(() => {});
 
-      document.getElementById("daily-submit-btn").addEventListener("click", function () {
-        var nick = document.getElementById("daily-nick").value.trim();
+      document.getElementById("daily-submit-btn").addEventListener("click", async () => {
+        const nick = document.getElementById("daily-nick").value.trim();
         if (!nick) { showToast("Player nickname is required", "error"); return; }
 
         hideResult("daily-result");
-        var btn = document.getElementById("daily-submit-btn");
+        const btn = document.getElementById("daily-submit-btn");
         btn.disabled = true;
         btn.textContent = "Claiming...";
 
-        client.recaptcha.execute("daily_reward")
-          .then(function (token) {
-            return client.dailyRewards.claim({ nick: nick, "g-recaptcha-response": token });
-          })
-          .then(function (result) {
-            showResult("daily-result", result.message || "Daily reward claimed!", "success");
-            showToast(result.message || "Reward claimed!", "success");
-            btn.disabled = false; btn.textContent = "Claim reward";
-          })
-          .catch(function (err) {
-            var msg = getErrorMessage(err);
-            showResult("daily-result", msg, "error");
-            showToast(msg, "error");
-            btn.disabled = false; btn.textContent = "Claim reward";
-          });
+        try {
+          const token = await client.recaptcha.execute("daily_reward");
+          const result = await client.dailyRewards.claim({ nick, "g-recaptcha-response": token });
+          showResult("daily-result", result.message || "Daily reward claimed!", "success");
+          showToast(result.message || "Reward claimed!", "success");
+        } catch (err) {
+          const msg = getErrorMessage(err);
+          showResult("daily-result", msg, "error");
+          showToast(msg, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Claim reward";
+        }
       });
 
-      document.getElementById("daily-nick").addEventListener("keydown", function (e) {
+      document.getElementById("daily-nick").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("daily-submit-btn").click();
       });
 
       function showResult(id, message, type) {
-        var el = document.getElementById(id);
+        const el = document.getElementById(id);
         if (!el) return;
         el.textContent = message;
-        el.className = "result-box show " + (type || "");
+        el.className = `result-box show ${type || ""}`;
       }
       function hideResult(id) {
-        var el = document.getElementById(id);
+        const el = document.getElementById(id);
         if (el) el.className = "result-box";
       }
     </script>
