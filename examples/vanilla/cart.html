@@ -75,7 +75,8 @@
         var summaryEl = document.getElementById("cart-page-summary");
         var discountEl = document.getElementById("cart-page-discount");
 
-        if (cartMgr.isLoading) {
+        // Show spinner only on initial load
+        if (cartMgr.isLoading && !cartMgr.cart) {
           loadingEl.style.display = "";
           emptyEl.style.display = "none";
           contentEl.style.display = "none";
@@ -96,57 +97,86 @@
         var totalQty = cartMgr.totalQuantity;
         titleEl.textContent = "Cart (" + totalQty + ")";
 
-        // ── Items ──
-        var html = "";
-        cartMgr.items.forEach(function (item) {
-          var variantUuid = item.variant ? item.variant.uuid : "";
-          var imgSrc = SpaceIS.getCartItemImage(item);
-          var displayQty = SpaceIS.getItemQty(item);
-          var showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
+        // ── Items — incremental update if same items, full rebuild otherwise ──
+        var existingEls = itemsEl.querySelectorAll(".cp-item");
+        var currentUuids = cartMgr.items.map(function (i) { return i.variant ? i.variant.uuid : ""; });
+        var existingUuids = Array.from(existingEls).map(function (el) { return el.dataset.uuid || ""; });
+        var sameItems = currentUuids.length === existingUuids.length &&
+          currentUuids.every(function (uuid, i) { return uuid === existingUuids[i]; });
+        var prevDiscountActive = !!contentEl.querySelector(".discount-active");
+        var sameDiscount = prevDiscountActive === cartMgr.hasDiscount;
 
-          var imgHtml = imgSrc
-            ? '<img class="cp-item-img" src="' + esc(imgSrc) + '" alt="">'
-            : '<div class="cp-item-img cp-item-img-ph">' + PLACEHOLDER_SVG_MD + '</div>';
+        if (sameItems && sameDiscount && existingEls.length > 0) {
+          // Patch only qty + prices
+          cartMgr.items.forEach(function (item, i) {
+            var el = existingEls[i];
+            var displayQty = SpaceIS.getItemQty(item);
+            var qtyInput = el.querySelector(".qty-input");
+            if (qtyInput && document.activeElement !== qtyInput) {
+              qtyInput.value = displayQty;
+            }
+            var pricesEl = el.querySelector(".cp-item-prices");
+            if (pricesEl) {
+              var priceHtml = '<span class="cp-item-price">' + fp(item.final_price_value) + '</span>';
+              if (item.regular_price_value !== item.final_price_value) {
+                priceHtml += ' <span class="cp-item-price-old">' + fp(item.regular_price_value) + '</span>';
+              }
+              pricesEl.innerHTML = priceHtml;
+            }
+          });
+        } else {
+          // Full rebuild
+          var html = "";
+          cartMgr.items.forEach(function (item) {
+            var variantUuid = item.variant ? item.variant.uuid : "";
+            var imgSrc = SpaceIS.getCartItemImage(item);
+            var displayQty = SpaceIS.getItemQty(item);
+            var showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
 
-          var variantHtml = showVariant
-            ? '<div class="cp-item-variant">' + esc(item.variant.name) + '</div>'
-            : '';
+            var imgHtml = imgSrc
+              ? '<img class="cp-item-img" src="' + esc(imgSrc) + '" alt="">'
+              : '<div class="cp-item-img cp-item-img-ph">' + PLACEHOLDER_SVG_MD + '</div>';
 
-          var packageHtml = item.package
-            ? '<div class="cp-item-package">Package: ' + esc(item.package.name) + '</div>'
-            : '';
+            var variantHtml = showVariant
+              ? '<div class="cp-item-variant">' + esc(item.variant.name) + '</div>'
+              : '';
 
-          var priceHtml = '<span class="cp-item-price">' + fp(item.final_price_value) + '</span>';
-          if (item.regular_price_value !== item.final_price_value) {
-            priceHtml += ' <span class="cp-item-price-old">' + fp(item.regular_price_value) + '</span>';
-          }
+            var packageHtml = item.package
+              ? '<div class="cp-item-package">Package: ' + esc(item.package.name) + '</div>'
+              : '';
 
-          html +=
-            '<div class="cp-item" data-uuid="' + esc(variantUuid) + '">' +
-              '<div class="cp-item-img-wrap">' + imgHtml + '</div>' +
-              '<div class="cp-item-body">' +
-                '<div class="cp-item-top">' +
-                  '<div class="cp-item-info">' +
-                    '<div class="cp-item-name">' + esc(item.shop_product ? item.shop_product.name : '') + '</div>' +
-                    variantHtml +
-                    packageHtml +
-                    '<div class="cp-item-prices">' + priceHtml + '</div>' +
+            var priceHtml = '<span class="cp-item-price">' + fp(item.final_price_value) + '</span>';
+            if (item.regular_price_value !== item.final_price_value) {
+              priceHtml += ' <span class="cp-item-price-old">' + fp(item.regular_price_value) + '</span>';
+            }
+
+            html +=
+              '<div class="cp-item" data-uuid="' + esc(variantUuid) + '">' +
+                '<div class="cp-item-img-wrap">' + imgHtml + '</div>' +
+                '<div class="cp-item-body">' +
+                  '<div class="cp-item-top">' +
+                    '<div class="cp-item-info">' +
+                      '<div class="cp-item-name">' + esc(item.shop_product ? item.shop_product.name : '') + '</div>' +
+                      variantHtml +
+                      packageHtml +
+                      '<div class="cp-item-prices">' + priceHtml + '</div>' +
+                    '</div>' +
+                    '<button class="cp-item-remove" data-uuid="' + esc(variantUuid) + '" aria-label="Remove">' +
+                      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>' +
+                    '</button>' +
                   '</div>' +
-                  '<button class="cp-item-remove" data-uuid="' + esc(variantUuid) + '" aria-label="Remove">' +
-                    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>' +
-                  '</button>' +
-                '</div>' +
-                '<div class="cp-item-bottom">' +
-                  '<div class="qty-stepper">' +
-                    '<button class="qty-step-btn" data-action="minus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-                    '<input class="qty-input" type="text" inputmode="numeric" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
-                    '<button class="qty-step-btn" data-action="plus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+                  '<div class="cp-item-bottom">' +
+                    '<div class="qty-stepper">' +
+                      '<button class="qty-step-btn" data-action="minus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+                      '<input class="qty-input" type="text" inputmode="numeric" value="' + displayQty + '" data-uuid="' + esc(variantUuid) + '">' +
+                      '<button class="qty-step-btn" data-action="plus" data-uuid="' + esc(variantUuid) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+                    '</div>' +
                   '</div>' +
                 '</div>' +
-              '</div>' +
-            '</div>';
-        });
-        itemsEl.innerHTML = html;
+              '</div>';
+          });
+          itemsEl.innerHTML = html;
+        }
 
         // ── Discount ──
         renderDiscountSection(discountEl, {

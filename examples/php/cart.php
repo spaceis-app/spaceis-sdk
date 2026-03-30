@@ -37,7 +37,10 @@ window.renderCartPage = function() {
     var isLoading = cart.isLoading;
     var discountAmount = regularPrice - finalPrice;
 
-    if (isLoading && !cart.cart) {
+    // Skip render during mutations to avoid flicker
+    if (isLoading && cart.cart) return;
+
+    if (isLoading) {
         root.innerHTML = '<div style="display:flex;justify-content:center;padding:60px 0"><div class="spinner"></div></div>';
         return;
     }
@@ -47,6 +50,48 @@ window.renderCartPage = function() {
         return;
     }
 
+    // Incremental update if same items AND same discount
+    var currentUuids = items.map(function(i) { return i.variant ? i.variant.uuid : ''; });
+    var currentDiscountCode = discount ? discount.code : null;
+    var existingEls = root.querySelectorAll('.cp-item');
+    var existingUuids = Array.from(existingEls).map(function(el) { return el.dataset.uuid || ''; });
+    var prevDiscountEl = root.querySelector('.discount-active');
+    var prevDiscountCode = prevDiscountEl ? 'active' : null;
+    var sameItems = currentUuids.length === existingUuids.length &&
+        currentUuids.every(function(uuid, i) { return uuid === existingUuids[i]; });
+    var sameDiscount = (currentDiscountCode ? 'active' : null) === prevDiscountCode;
+
+    if (sameItems && sameDiscount && existingEls.length > 0) {
+        // Patch title
+        var titleEl = root.querySelector('.cart-section-title');
+        if (titleEl) titleEl.textContent = 'Your cart (' + totalQuantity + ')';
+
+        // Patch qty + prices per item
+        items.forEach(function(item, i) {
+            var el = existingEls[i];
+            var displayQty = SpaceIS.getItemQty(item);
+            var qtyInput = el.querySelector('.qty-input');
+            if (qtyInput && document.activeElement !== qtyInput) qtyInput.value = displayQty;
+            var pricesEl = el.querySelector('.cp-item-prices');
+            if (pricesEl) {
+                var ph = '<span class="cp-item-price">' + fp(item.final_price_value) + '</span>';
+                if (item.regular_price_value !== item.final_price_value) {
+                    ph += '<span class="cp-item-price-old">' + fp(item.regular_price_value) + '</span>';
+                }
+                pricesEl.innerHTML = ph;
+            }
+        });
+
+        // Patch summary
+        var summaryHeader = root.querySelector('.cart-summary-header');
+        if (summaryHeader) summaryHeader.textContent = 'Subtotal (' + totalQuantity + ')';
+        var summaryTotal = root.querySelector('.cart-summary-total span:last-child');
+        if (summaryTotal) summaryTotal.textContent = fp(finalPrice);
+
+        return;
+    }
+
+    // Full rebuild
     var html = '<h1 class="cart-section-title">Your cart (' + totalQuantity + ')</h1>';
     html += '<div class="cart-page-layout">';
 
@@ -58,7 +103,7 @@ window.renderCartPage = function() {
         var displayQty = SpaceIS.getItemQty(item);
         var showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
 
-        html += '<div class="cp-item">';
+        html += '<div class="cp-item" data-uuid="' + esc(variantUuid) + '">';
         html += '<div class="cp-item-img-wrap">';
         if (imgSrc) {
             html += '<img class="cp-item-img" src="' + esc(imgSrc) + '" alt="">';

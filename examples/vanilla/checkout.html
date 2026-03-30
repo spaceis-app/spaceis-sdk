@@ -291,7 +291,7 @@
 
         Promise.all([
           client.checkout.paymentMethods(),
-          client.checkout.agreements().catch(function (e) { console.warn("Agreements fetch failed:", e); return []; }),
+          client.checkout.agreements().catch(function () { return []; }),
         ])
           .then(function (results) {
             paymentMethodsData = results[0];
@@ -308,14 +308,13 @@
               renderOrderSummary();
               loadCheckoutRecommendations();
             } catch (renderErr) {
-              console.error("Checkout render error:", renderErr);
+              showToast("Render error: " + getErrorMessage(renderErr), "error");
             }
             client.recaptcha.load().catch(function () {});
           })
           .catch(function (err) {
             _checkoutInitialized = false;
             document.getElementById("checkout-loading").style.display = "none";
-            console.error("Checkout init error:", err);
             showToast(getErrorMessage(err) || "Failed to load checkout data", "error");
           });
       }
@@ -379,7 +378,7 @@
 
         var errors = [];
         if (!nick) errors.push("Player nickname is required");
-        if (!email || !email.includes("@")) errors.push("Enter a valid email");
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Enter a valid email");
         if (!paymentRadio) errors.push("Choose payment method");
 
         if (errors.length > 0) {

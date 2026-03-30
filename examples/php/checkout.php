@@ -51,11 +51,6 @@ require __DIR__ . '/includes/header.php';
         var isLoading = cart.isLoading;
         var discountAmount = regularPrice - finalPrice;
 
-        if (isLoading && !cart.cart) {
-            root.innerHTML = '<div style="display:flex;justify-content:center;padding:60px 0"><div class="spinner"></div></div>';
-            return;
-        }
-
         if (isEmpty) {
             root.innerHTML = '<div class="empty-state"><div class="icon">&#128722;</div><p>Your cart is empty.</p><br><a href="/index.php" class="back-link">&larr; Back to shop</a></div>';
             return;
@@ -291,6 +286,7 @@ require __DIR__ . '/includes/header.php';
         var code = input.value.trim();
         if (!code) return;
         SpaceISApp.cart.applyDiscount(code).then(function() {
+            SpaceISApp.showToast('Discount applied!', 'success');
             discountCode = '';
         }).catch(function(err) {
             SpaceISApp.showToast(SpaceISApp.getErrorMessage(err) || 'Invalid code', 'error');

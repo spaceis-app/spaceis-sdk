@@ -11,7 +11,7 @@ This document explains how to integrate SpaceIS shop into any HTML website using
 ### Step 1: Add SDK script
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js"></script>
 ```
 
 ### Step 2: Initialize client
@@ -292,7 +292,7 @@ You don't need to manage the token manually.
     <h2>Cart (<span id="count">0</span> items) — <span id="total">0,00 zl</span></h2>
     <div id="cart-items"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk/dist/spaceis.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js"></script>
     <script>
       const client = SpaceIS.createSpaceIS({
         baseUrl: "https://storefront-api.spaceis.app",

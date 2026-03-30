@@ -62,7 +62,7 @@ export function CheckoutPage() {
   const handlePlaceOrder = async () => {
     const errors: string[] = [];
     if (!nick.trim()) errors.push("Player nickname is required");
-    if (!email.trim() || !email.includes("@"))
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
       errors.push("Enter a valid email");
     if (!selectedMethodUuid) errors.push("Choose payment method");
 

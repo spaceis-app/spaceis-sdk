@@ -133,7 +133,7 @@ function handleApplyDiscount() {
           <div v-if="hasDiscount && discount" class="discount-active">
             <span>Code: <strong>{{ discount.code }}</strong></span>
             <span class="discount-active-pct">-{{ discount.percentage_discount }}%</span>
-            <button class="discount-remove" @click="removeDiscount().catch(() => {})">Remove</button>
+            <button class="discount-remove" @click="removeDiscount().then(() => toastSuccess('Discount removed')).catch((err) => toastError(getErrorMessage(err)))">Remove</button>
           </div>
           <div v-else class="discount-row">
             <input

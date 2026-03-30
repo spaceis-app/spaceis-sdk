@@ -194,7 +194,7 @@ require __DIR__ . '/includes/header.php';
     function updateDisplay() {
         var v = getSelectedVariant();
         if (!v) return;
-        var fp = SpaceISApp.fp;
+        var fp = (typeof SpaceISApp !== 'undefined') ? SpaceISApp.fp : SpaceIS.formatPrice;
 
         var price = v.price * quantity;
         var basePrice = v.base_price * quantity;

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run"
   },
   "dependencies": {
     "@spaceis/react": "^0.1.3",
@@ -18,9 +19,13 @@
     "sonner": "^1.7.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "typescript": "^6.0.0"
+    "@vitejs/plugin-react": "^4.0.0",
+    "jsdom": "^25.0.0",
+    "typescript": "^6.0.0",
+    "vitest": "^2.0.0"
   }
 }

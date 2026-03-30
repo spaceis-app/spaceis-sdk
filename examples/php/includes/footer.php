@@ -78,6 +78,10 @@
             placeholderSvg: placeholderSvg,
         };
 
+        // Track previous state for incremental update (must be before onChange)
+        var prevDrawerUuids = [];
+        var prevDrawerDiscount = null;
+
         // Subscribe to cart changes
         cart.onChange(function() {
             updateBadge();
@@ -101,16 +105,61 @@
             var drawer = document.getElementById('cart-drawer');
             if (!drawer) return;
 
-            var items = cart.items;
-            var totalQuantity = cart.totalQuantity;
-            var finalPrice = cart.finalPrice;
-            var regularPrice = cart.regularPrice;
-            var hasDiscount = cart.hasDiscount;
-            var discount = cart.discount;
+            var items = cart.items || [];
+            var totalQuantity = cart.totalQuantity || 0;
+            var finalPrice = cart.finalPrice || 0;
+            var regularPrice = cart.regularPrice || 0;
+            var hasDiscount = cart.hasDiscount || false;
+            var discount = cart.discount || null;
             var isEmpty = cart.isEmpty;
             var isLoading = cart.isLoading;
             var discountAmount = regularPrice - finalPrice;
 
+            var currentUuids = items.map(function(i) { return i.variant ? i.variant.uuid : ''; });
+            var discountCode = discount ? discount.code : null;
+            var sameItems = currentUuids.length === prevDrawerUuids.length &&
+                currentUuids.every(function(uuid, i) { return uuid === prevDrawerUuids[i]; });
+            var sameDiscount = discountCode === prevDrawerDiscount;
+
+            // Incremental update — same items AND same discount, just patch qty/prices
+            if (sameItems && sameDiscount && currentUuids.length > 0 && drawer.querySelector('.cart-items-list')) {
+                // Patch title
+                var titleEl = drawer.querySelector('.drawer-title');
+                if (titleEl) titleEl.textContent = 'CART' + (totalQuantity > 0 ? ' (' + totalQuantity + ')' : '');
+
+                // Patch item qty + prices
+                var itemEls = drawer.querySelectorAll('.cart-item');
+                items.forEach(function(item, i) {
+                    if (!itemEls[i]) return;
+                    var displayQty = SpaceIS.getItemQty(item);
+                    var qtyInput = itemEls[i].querySelector('.qty-input');
+                    if (qtyInput && document.activeElement !== qtyInput) {
+                        qtyInput.value = displayQty;
+                    }
+                    var pricesEl = itemEls[i].querySelector('.cart-item-prices');
+                    if (pricesEl) {
+                        var ph = '<span class="cart-item-price-current">' + fp(item.final_price_value) + '</span>';
+                        if (item.regular_price_value !== item.final_price_value) {
+                            ph += '<span class="cart-item-price-old">' + fp(item.regular_price_value) + '</span>';
+                        }
+                        pricesEl.innerHTML = ph;
+                    }
+                });
+
+                // Patch summary
+                var summaryHeader = drawer.querySelector('.cart-summary-header');
+                if (summaryHeader) summaryHeader.textContent = 'Subtotal (' + totalQuantity + ')';
+                var summaryTotal = drawer.querySelector('.cart-summary-total span:last-child');
+                if (summaryTotal) summaryTotal.textContent = fp(finalPrice);
+                var summarySubtotal = drawer.querySelector('.cart-summary-row:not(.cart-summary-discount) span:last-child');
+                if (summarySubtotal) summarySubtotal.textContent = fp(regularPrice);
+
+                return;
+            }
+
+            // Full rebuild
+            prevDrawerUuids = currentUuids;
+            prevDrawerDiscount = discountCode;
             var html = '';
 
             // Header
@@ -186,7 +235,6 @@
             if (!isEmpty) {
                 html += '<div class="drawer-footer">';
 
-                // Discount section
                 if (hasDiscount && discount) {
                     html += '<div class="discount-active">';
                     html += '<span>Code: <strong>' + esc(discount.code) + '</strong></span>';
@@ -200,21 +248,17 @@
                     html += '</div>';
                 }
 
-                // Summary
                 html += '<div class="cart-summary-panel">';
                 html += '<div class="cart-summary-header">Subtotal (' + totalQuantity + ')</div>';
                 html += '<div class="cart-summary-row"><span>Subtotal</span><span>' + fp(regularPrice) + '</span></div>';
                 if (discountAmount > 0) {
                     html += '<div class="cart-summary-row cart-summary-discount"><span>Discount';
-                    if (hasDiscount && discount) {
-                        html += ' (' + discount.percentage_discount + '%)';
-                    }
+                    if (hasDiscount && discount) html += ' (' + discount.percentage_discount + '%)';
                     html += '</span><span>-' + fp(discountAmount) + '</span></div>';
                 }
                 html += '<div class="cart-summary-total"><span>Total</span><span>' + fp(finalPrice) + '</span></div>';
                 html += '</div>';
 
-                // Actions
                 html += '<div class="cart-actions">';
                 html += '<button class="cart-action-primary" onclick="SpaceISApp.closeDrawer();window.location.href=\'/checkout.php\'">Proceed to checkout <span style="margin-left:6px">&rarr;</span></button>';
                 html += '<button class="cart-action-secondary" onclick="SpaceISApp.closeDrawer();window.location.href=\'/cart.php\'">View cart</button>';

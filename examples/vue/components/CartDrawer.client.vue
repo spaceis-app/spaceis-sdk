@@ -42,6 +42,7 @@ async function handleApplyDiscount() {
 async function handleRemoveDiscount() {
   try {
     await removeDiscount();
+    toastSuccess('Discount removed');
   } catch (err) {
     toastError(getErrorMessage(err));
   }

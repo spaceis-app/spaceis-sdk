@@ -59,7 +59,7 @@ const discountAmount = computed(() => regularPrice.value - finalPrice.value);
 async function handlePlaceOrder() {
   const errors: string[] = [];
   if (!nick.value.trim()) errors.push('Player nickname is required');
-  if (!email.value.trim() || !email.value.includes('@')) errors.push('Enter a valid email');
+  if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) errors.push('Enter a valid email');
   if (!selectedMethodUuid.value) errors.push('Choose payment method');
 
   if (errors.length > 0) {
