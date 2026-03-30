@@ -19,7 +19,7 @@ src/
     daily-rewards.ts, goals.ts, orders.ts, packages.ts,
     products.ts, rankings.ts, recaptcha.ts, sales.ts,
     shop.ts, vouchers.ts
-  types/            — TypeScript interfaces (19 files)
+  types/            — TypeScript interfaces (17 files)
 ```
 
 ## Key Concepts

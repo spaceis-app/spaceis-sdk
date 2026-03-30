@@ -23,7 +23,7 @@ examples/vue/
 │   ├── daily-reward.vue        — Daily reward claim (reCAPTCHA)
 │   ├── order/[code].vue        — Order summary lookup
 │   ├── page/index.vue          — CMS pages list
-│   ├── page/[slug].vue         — Single CMS page with sanitized HTML
+│   ├── page/[slug].vue         — Single CMS page
 │   └── statute.vue             — Shop terms/statute
 ├─��� components/                 — Auto-imported Vue components
 │   ├── AppHeader.vue           — Navigation + mobile menu + cart badge

@@ -11,7 +11,7 @@ This document explains how to integrate SpaceIS shop into a Nuxt 4 project using
 ### Step 1: Install dependencies
 
 ```bash
-pnpm add @spaceis/sdk @spaceis/vue isomorphic-dompurify
+pnpm add @spaceis/sdk @spaceis/vue
 ```
 
 ### Step 2: Set environment variables
