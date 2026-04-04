@@ -1,0 +1,45 @@
+{
+  "name": "create-spaceis",
+  "version": "0.1.0",
+  "description": "Scaffold a SpaceIS storefront — copy an example or install SDK packages into an existing project.",
+  "type": "module",
+  "bin": {
+    "create-spaceis": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.10.0",
+    "giget": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "spaceis",
+    "create",
+    "scaffold",
+    "cli",
+    "ecommerce"
+  ],
+  "author": "SpaceIS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spaceis-app/spaceis-sdk.git",
+    "directory": "packages/create"
+  }
+}
