@@ -12,6 +12,8 @@ const SHOP_CONFIG = {
   baseUrl: "https://storefront-api.spaceis.app",
   shopUuid: "2f6f558d-b7cb-42b2-bc02-116d740b2f97",
   lang: "pl",
+  returnUrl: "http://localhost:3333/order-summary",
+  cancelUrl: "http://localhost:3333/checkout",
 };
 
 // ══════════════════════════════════════════════════════════

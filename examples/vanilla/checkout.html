@@ -392,6 +392,8 @@
             payment_method_uuid: paymentMethodUuid,
             "g-recaptcha-response": recaptchaToken,
             agreements: agreementUuids,
+            return_url: SHOP_CONFIG.returnUrl || undefined,
+            cancel_url: SHOP_CONFIG.cancelUrl || undefined,
           });
           if (result.redirect_url) {
             window.location.href = result.redirect_url;

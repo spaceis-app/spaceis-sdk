@@ -60,7 +60,7 @@
       };
 
       const params = new URLSearchParams(window.location.search);
-      const codeFromUrl = params.get("code");
+      const codeFromUrl = params.get("order") || params.get("code");
       if (codeFromUrl) {
         document.getElementById("order-code-input").value = codeFromUrl;
         loadOrder(codeFromUrl);

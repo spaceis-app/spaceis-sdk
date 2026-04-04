@@ -272,6 +272,8 @@ require __DIR__ . '/includes/header.php';
                     payment_method_uuid: selectedMethodUuid,
                     'g-recaptcha-response': token || '',
                     agreements: agreementUuids,
+                    return_url: '<?= e(getenv("RETURN_URL") ?: "") ?>' || undefined,
+                    cancel_url: '<?= e(getenv("CANCEL_URL") ?: "") ?>' || undefined,
                 });
 
                 if (result.redirect_url) {

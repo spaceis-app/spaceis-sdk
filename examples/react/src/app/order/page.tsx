@@ -6,11 +6,7 @@ export const metadata: Metadata = {
   description: "Check your order status and details.",
 };
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ code: string }>;
-}) {
-  const { code } = await params;
-  return <OrderSummaryPage code={code} />;
+export default async function Page({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
+  const { order } = await searchParams;
+  return <OrderSummaryPage code={order} />;
 }

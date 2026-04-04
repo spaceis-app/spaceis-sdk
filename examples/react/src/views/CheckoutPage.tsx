@@ -79,6 +79,8 @@ export function CheckoutPage() {
         payment_method_uuid: selectedMethodUuid!,
         "g-recaptcha-response": recaptchaToken,
         agreements: Array.from(checkedAgreements),
+        return_url: process.env.NEXT_PUBLIC_RETURN_URL || undefined,
+        cancel_url: process.env.NEXT_PUBLIC_CANCEL_URL || undefined,
       });
 
       if (result.redirect_url) {

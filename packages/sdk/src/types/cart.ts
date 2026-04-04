@@ -15,6 +15,7 @@ export interface IncludedVariant {
 export interface CartItemShopProduct {
   uuid: string;
   name: string;
+  slug: string;
   image: string | null;
   /** Price in cents */
   price: number;

@@ -5,6 +5,8 @@ export default defineNuxtConfig({
     public: {
       spaceisApiUrl: 'https://storefront-api.spaceis.app',
       spaceisShopUuid: '',
+      returnUrl: '',
+      cancelUrl: '',
     },
   },
   app: {

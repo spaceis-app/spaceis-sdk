@@ -69,12 +69,15 @@ async function handlePlaceOrder() {
 
   try {
     const recaptchaToken = await executeRecaptcha('checkout');
+    const config = useRuntimeConfig();
     const result = await placeOrder.mutateAsync({
       email: email.value.trim(),
       first_name: nick.value.trim(),
       payment_method_uuid: selectedMethodUuid.value!,
       'g-recaptcha-response': recaptchaToken,
       agreements: Array.from(checkedAgreements.value),
+      return_url: (config.public.returnUrl as string) || undefined,
+      cancel_url: (config.public.cancelUrl as string) || undefined,
     });
 
     if (result.redirect_url) {

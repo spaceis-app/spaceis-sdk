@@ -8,7 +8,7 @@ require_once __DIR__ . '/includes/helpers.php';
 
 $api = new SpaceISApi();
 
-$codeFromUrl = $_GET['code'] ?? '';
+$codeFromUrl = $_GET['order'] ?? $_GET['code'] ?? '';
 
 $pageTitle = 'Order Summary — SpaceIS Shop';
 $metaDesc = 'Check the status of your order.';
@@ -125,10 +125,10 @@ require __DIR__ . '/includes/header.php';
 
     window.lookupOrder = lookupOrder;
 
-    // Auto-lookup if code in URL
+    // Auto-lookup if code in URL (wait for footer/SDK to load)
     const urlCode = '<?= e($codeFromUrl) ?>';
     if (urlCode) {
-        lookupOrder();
+        window.addEventListener('DOMContentLoaded', () => lookupOrder(), { once: true });
     }
 })();
 </script>

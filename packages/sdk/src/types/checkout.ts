@@ -53,8 +53,14 @@ export interface CheckoutRequest {
   payment_method_uuid: string;
   /** BLIK code (6 digits) — required only for `blik_level_0` payment method */
   blik_code?: string | null;
+  /** Language code for the order (e.g. `"pl"`, `"en"`) */
+  lang?: string | null;
   /** reCAPTCHA v3 token */
   "g-recaptcha-response": string;
+  /** URL to redirect the user to after a successful payment. The order code is appended as `?order=IS-XXX-XXX-XXX`. */
+  return_url?: string | null;
+  /** URL to redirect the user to if the payment is cancelled. Redirects to `cancel_url?order=` (empty order param). */
+  cancel_url?: string | null;
   /** Array of accepted agreement UUIDs */
   agreements?: string[] | null;
 }

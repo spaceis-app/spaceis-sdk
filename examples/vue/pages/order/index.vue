@@ -2,7 +2,7 @@
 useHead({ title: 'Order Summary' });
 
 const route = useRoute();
-const codeFromUrl = computed(() => route.params.code as string);
+const codeFromUrl = computed(() => (route.query.order as string) || '');
 </script>
 
 <template>
