@@ -50,3 +50,9 @@ jobs:
         run: pnpm publish --access public --no-git-checks || echo "Version already published, skipping"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish create-spaceis
+        working-directory: packages/create
+        run: pnpm publish --access public --no-git-checks || echo "Version already published, skipping"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

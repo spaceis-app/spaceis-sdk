@@ -4,7 +4,7 @@
   "type": "module",
   "description": "SpaceIS SDK monorepo — JavaScript SDK + React & Vue bindings",
   "scripts": {
-    "build": "pnpm --filter @spaceis/sdk build && pnpm --filter @spaceis/react build && pnpm --filter @spaceis/vue build",
+    "build": "pnpm --filter @spaceis/sdk build && pnpm --filter @spaceis/react build && pnpm --filter @spaceis/vue build && pnpm --filter create-spaceis build",
     "dev": "pnpm -r --parallel dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
