@@ -32,7 +32,13 @@ function mountWithContext(setup: () => unknown) {
     shopUuid: "test-shop-uuid",
   });
   // cartManager is not needed for data composables — provide a minimal stub
-  const cartManager = { cart: null, onChange: vi.fn(() => vi.fn()), load: vi.fn() } as any;
+  const cartManager = {
+    cart: null,
+    isLoading: false,
+    error: null,
+    onChange: vi.fn(() => vi.fn()),
+    load: vi.fn(),
+  } as unknown as import("@spaceis/sdk").CartManager;
 
   const Comp = defineComponent({
     setup() {

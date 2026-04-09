@@ -33,17 +33,22 @@ export interface UseRecaptchaReturn {
 export function useRecaptcha(): UseRecaptchaReturn {
   const { client } = useSpaceIS();
   const loadedRef = useRef(false);
+  const loadPromiseRef = useRef<Promise<void> | null>(null);
 
   const execute = useCallback(
     async (action: string): Promise<string> => {
       if (!loadedRef.current) {
-        try {
-          await client.recaptcha.load();
-          loadedRef.current = true;
-        } catch (error) {
-          loadedRef.current = false;
-          throw error;
+        if (!loadPromiseRef.current) {
+          loadPromiseRef.current = client.recaptcha.load()
+            .then(() => {
+              loadedRef.current = true;
+            })
+            .catch((err) => {
+              loadPromiseRef.current = null;
+              throw err;
+            });
         }
+        await loadPromiseRef.current;
       }
       return client.recaptcha.execute(action);
     },

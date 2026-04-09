@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetCategoriesParams } from "@spaceis/sdk";
 
@@ -26,7 +26,7 @@ export function useCategories(params?: MaybeRef<GetCategoriesParams | undefined>
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "categories", params] as const,
+    queryKey: computed(() => ["spaceis", "categories", toValue(params)] as const),
     queryFn: () => client.categories.list(toValue(params)),
     staleTime: 5 * 60_000,
   });

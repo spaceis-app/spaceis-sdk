@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SpaceISClient } from "../client";
+import type { HttpConfig } from "../http";
 import { CartManager } from "../cart-manager";
 
 function makeClient(overrides: Partial<ConstructorParameters<typeof SpaceISClient>[0]> = {}) {
@@ -8,6 +9,11 @@ function makeClient(overrides: Partial<ConstructorParameters<typeof SpaceISClien
     shopUuid: "shop-uuid-abc",
     ...overrides,
   });
+}
+
+/** Access the private _config for test assertions */
+function getConfig(client: SpaceISClient): HttpConfig {
+  return (client as unknown as { _config: HttpConfig })._config;
 }
 
 beforeEach(() => {
@@ -55,27 +61,27 @@ describe("SpaceISClient constructor", () => {
 
     it("strips trailing slash from baseUrl", () => {
       const client = makeClient({ baseUrl: "https://api.example.com/" });
-      expect(client.config.baseUrl).toBe("https://api.example.com");
+      expect(getConfig(client).baseUrl).toBe("https://api.example.com");
     });
 
     it("sets default timeout to 30000 when not specified", () => {
       const client = makeClient();
-      expect(client.config.timeout).toBe(30_000);
+      expect(getConfig(client).timeout).toBe(30_000);
     });
 
     it("uses the provided timeout", () => {
       const client = makeClient({ timeout: 5000 });
-      expect(client.config.timeout).toBe(5000);
+      expect(getConfig(client).timeout).toBe(5000);
     });
 
     it("stores lang in config", () => {
       const client = makeClient({ lang: "en" });
-      expect(client.config.lang).toBe("en");
+      expect(getConfig(client).lang).toBe("en");
     });
 
     it("stores initial cartToken in config", () => {
       const client = makeClient({ cartToken: "my-token" });
-      expect(client.config.cartToken).toBe("my-token");
+      expect(getConfig(client).cartToken).toBe("my-token");
     });
 
     it("stores onRequest, onResponse, onError callbacks", () => {
@@ -85,9 +91,9 @@ describe("SpaceISClient constructor", () => {
 
       const client = makeClient({ onRequest, onResponse, onError });
 
-      expect(client.config.onRequest).toBe(onRequest);
-      expect(client.config.onResponse).toBe(onResponse);
-      expect(client.config.onError).toBe(onError);
+      expect(getConfig(client).onRequest).toBe(onRequest);
+      expect(getConfig(client).onResponse).toBe(onResponse);
+      expect(getConfig(client).onError).toBe(onError);
     });
   });
 
@@ -129,7 +135,7 @@ describe("SpaceISClient.setCartToken", () => {
   it("updates the cart token in config", () => {
     const client = makeClient();
     client.setCartToken("new-token");
-    expect(client.config.cartToken).toBe("new-token");
+    expect(getConfig(client).cartToken).toBe("new-token");
     expect(client.cartToken).toBe("new-token");
   });
 
@@ -161,7 +167,7 @@ describe("SpaceISClient.setLang", () => {
   it("updates the lang in config", () => {
     const client = makeClient({ lang: "pl" });
     client.setLang("en");
-    expect(client.config.lang).toBe("en");
+    expect(getConfig(client).lang).toBe("en");
   });
 
   it("lang change is reflected in the request URL", async () => {

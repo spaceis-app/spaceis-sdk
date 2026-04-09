@@ -10,8 +10,9 @@ import type { UseVoucherRequest, MessageResponse } from "../types";
  * @example
  * ```ts
  * const result = await client.vouchers.redeem({
- *   username: 'Steve',
+ *   nick: 'Steve',
  *   code: 'FREE-VIP-2024',
+ *   'g-recaptcha-response': recaptchaToken,
  * });
  * console.log(result.message); // "Voucher redeemed successfully"
  * ```

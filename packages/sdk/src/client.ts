@@ -61,7 +61,7 @@ export class SpaceISClient {
   readonly shopUuid: string;
 
   /** @internal */
-  config: HttpConfig;
+  private _config: HttpConfig;
 
   // ── API Modules ──
   readonly products: ProductsModule;
@@ -89,7 +89,7 @@ export class SpaceISClient {
 
     this.shopUuid = options.shopUuid;
 
-    this.config = {
+    this._config = {
       baseUrl: options.baseUrl.replace(/\/$/, ""),
       shopUuid: options.shopUuid,
       lang: options.lang,
@@ -100,7 +100,7 @@ export class SpaceISClient {
       onError: options.onError,
     };
 
-    const request = createHttpClient(() => this.config);
+    const request = createHttpClient(() => this._config);
 
     this.products = new ProductsModule(request);
     this.categories = new CategoriesModule(request);
@@ -122,17 +122,22 @@ export class SpaceISClient {
 
   /** Current cart token */
   get cartToken(): string | undefined {
-    return this.config.cartToken;
+    return this._config.cartToken;
   }
 
   /** Set or clear cart token */
   setCartToken(token: string | undefined) {
-    this.config.cartToken = token;
+    this._config.cartToken = token;
+  }
+
+  /** Current language code */
+  get lang(): string | undefined {
+    return this._config.lang;
   }
 
   /** Set language for API requests */
   setLang(lang: string) {
-    this.config.lang = lang;
+    this._config.lang = lang;
   }
 
   // ── Factory ──

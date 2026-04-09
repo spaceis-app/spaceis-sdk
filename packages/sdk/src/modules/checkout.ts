@@ -13,9 +13,10 @@ import type { PaymentMethod, Agreement, CheckoutRequest, CheckoutResponse } from
  * const methods = await client.checkout.paymentMethods();
  * const agreements = await client.checkout.agreements();
  * const result = await client.checkout.placeOrder({
- *   username: 'Steve',
+ *   first_name: 'Steve',
  *   email: 'steve@example.com',
  *   payment_method_uuid: methods[0].uuid,
+ *   'g-recaptcha-response': recaptchaToken,
  *   agreements: agreements.map(a => a.uuid),
  * });
  * window.location.href = result.redirect_url;

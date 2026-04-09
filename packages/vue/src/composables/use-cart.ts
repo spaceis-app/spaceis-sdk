@@ -1,9 +1,9 @@
-import { ref, computed, onMounted, onUnmounted, type ComputedRef, type Ref } from "vue";
+import { shallowRef, computed, getCurrentInstance, onMounted, onUnmounted, type ComputedRef, type ShallowRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
-import { fromApiQty, type Cart, type CartItem, type CartMutationResponse } from "@spaceis/sdk";
+import { fromApiQty, type Cart, type CartItem, type CartMutationResponse, type SpaceISError } from "@spaceis/sdk";
 
 export interface UseCartReturn {
-  cart: Ref<Cart | null>;
+  cart: ShallowRef<Cart | null>;
   items: ComputedRef<CartItem[]>;
   itemCount: ComputedRef<number>;
   totalQuantity: ComputedRef<number>;
@@ -12,8 +12,8 @@ export interface UseCartReturn {
   discount: ComputedRef<Cart["discount"]>;
   hasDiscount: ComputedRef<boolean>;
   isEmpty: ComputedRef<boolean>;
-  isLoading: Ref<boolean>;
-  error: Ref<unknown>;
+  isLoading: ShallowRef<boolean>;
+  error: ShallowRef<SpaceISError | Error | null>;
 
   load: () => Promise<Cart>;
   add: (variantUuid: string, quantity?: number) => Promise<CartMutationResponse>;
@@ -43,10 +43,10 @@ const ssrNoop = (): Promise<never> =>
 export function useCart(): UseCartReturn {
   const { cartManager } = useSpaceIS();
 
-  // All reactive state as plain refs — updated in sync function
-  const cart = ref<Cart | null>(null);
-  const isLoading = ref(false);
-  const error = ref<unknown>(null);
+  // Use shallowRef — CartManager owns the state, no deep reactivity needed
+  const cart = shallowRef<Cart | null>(null);
+  const isLoading = shallowRef(false);
+  const error = shallowRef<SpaceISError | Error | null>(null);
 
   function sync() {
     if (!cartManager) return;
@@ -58,18 +58,20 @@ export function useCart(): UseCartReturn {
   // Initial sync (safe on SSR — just reads current state)
   sync();
 
-  // Subscribe on client mount
+  // Subscribe on client mount — only register lifecycle hooks inside a component
   let unsubscribe: (() => void) | undefined;
 
-  onMounted(() => {
-    if (!cartManager) return;
-    sync();
-    unsubscribe = cartManager.onChange(() => sync());
-  });
+  if (getCurrentInstance()) {
+    onMounted(() => {
+      if (!cartManager) return;
+      sync();
+      unsubscribe = cartManager.onChange(() => sync());
+    });
 
-  onUnmounted(() => {
-    unsubscribe?.();
-  });
+    onUnmounted(() => {
+      unsubscribe?.();
+    });
+  }
 
   return {
     cart,

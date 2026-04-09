@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@spaceis/sdk 0.1.6] - 2026-04-10
+
+### Fixed
+- `CartManager`: extract `_mutate()` helper — eliminates 7 identical try/catch blocks
+- `OrderSummary` type: API may return `items` as single object or array — normalize to always-array; split into internal `RawOrderSummary` and public `OrderSummary`
+- `client.ts`: `_config` is now truly private; added public `lang` getter
+- `escapeHtml`: typed escape map with exhaustive keys; fallback via `?? ch`
+- `RecaptchaModule`: reset `_configPromise` on failure to allow retry
+- `encodeURIComponent` applied to `siteKey` and callback name in reCAPTCHA script URL (security)
+
+### Added
+- `CartManager.error` typed as `SpaceISError | Error | null` (was `unknown`)
+
+## [@spaceis/react 0.1.4] - 2026-04-10
+
+### Fixed
+- `useCart`: all action callbacks wrapped in `useMemo` — stable references across re-renders
+- `useRecaptcha`: concurrent `execute()` calls deduplicated via `loadPromiseRef`
+- `SpaceISProvider`: warns in console when `config` prop identity changes after mount
+
+## [@spaceis/vue 0.1.1] - 2026-04-10
+
+### Fixed
+- All composables: `queryKey` wrapped in `computed(() => [..., toValue(params)])` — fixes SSR hydration miss when params are reactive refs
+- `useCart`: lifecycle hooks (`onMounted`/`onUnmounted`) guarded by `getCurrentInstance()` — no SSR warning
+- `useCart`: `ref` → `shallowRef` for cart, isLoading, error — avoids deep reactivity on complex objects
+
 ## [@spaceis/sdk 0.1.4] - 2026-03-29
 
 ### Changed

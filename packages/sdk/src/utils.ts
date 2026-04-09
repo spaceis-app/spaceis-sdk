@@ -170,7 +170,7 @@ export function snapQuantity(qty: number, limits: ProductLimits): number {
  * // → "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;"
  * ```
  */
-const HTML_ESCAPE_MAP: Record<string, string> = {
+const HTML_ESCAPE_MAP: Readonly<Record<"&" | "<" | ">" | '"' | "'", string>> = {
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
@@ -179,5 +179,5 @@ const HTML_ESCAPE_MAP: Record<string, string> = {
 };
 
 export function escapeHtml(str: string): string {
-  return str.replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch]);
+  return str.replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch as keyof typeof HTML_ESCAPE_MAP] ?? ch);
 }

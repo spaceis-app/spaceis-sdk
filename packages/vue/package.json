@@ -1,6 +1,6 @@
 {
   "name": "@spaceis/vue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vue 3 composables, Plugin, and Nuxt SSR helpers for the SpaceIS SDK.",
   "type": "module",
   "main": "./dist/index.cjs",

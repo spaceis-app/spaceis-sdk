@@ -29,12 +29,18 @@ export function usePages(params?: GetPagesParams) {
  * Fetch a single CMS page by slug.
  * The query is disabled when `slug` is `null`.
  *
+ * @warning `page.content` is raw HTML from the API. Sanitize it with
+ * a library like DOMPurify before rendering via `dangerouslySetInnerHTML`.
+ *
  * @example
  * ```tsx
+ * import DOMPurify from 'dompurify';
+ *
  * function CmsPage({ slug }: { slug: string }) {
  *   const { data: page, isLoading } = usePage(slug);
  *   if (isLoading) return <Spinner />;
- *   return <article dangerouslySetInnerHTML={{ __html: page?.content ?? '' }} />;
+ *   const safeHtml = DOMPurify.sanitize(page?.content ?? '');
+ *   return <article dangerouslySetInnerHTML={{ __html: safeHtml }} />;
  * }
  * ```
  */
@@ -52,11 +58,17 @@ export function usePage(slug: string | null) {
  * Fetch the shop's legal statute.
  * Uses a longer stale time (10 min) since statute rarely changes.
  *
+ * @warning `statute.content` is raw HTML from the API. Sanitize it with
+ * a library like DOMPurify before rendering via `dangerouslySetInnerHTML`.
+ *
  * @example
  * ```tsx
+ * import DOMPurify from 'dompurify';
+ *
  * function StatutePage() {
  *   const { data: statute } = useStatute();
- *   return <article dangerouslySetInnerHTML={{ __html: statute?.content ?? '' }} />;
+ *   const safeHtml = DOMPurify.sanitize(statute?.content ?? '');
+ *   return <article dangerouslySetInnerHTML={{ __html: safeHtml }} />;
  * }
  * ```
  */

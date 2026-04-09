@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetPagesParams } from "@spaceis/sdk";
 
@@ -23,7 +23,7 @@ export function usePages(params?: MaybeRef<GetPagesParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "pages", params] as const,
+    queryKey: computed(() => ["spaceis", "pages", toValue(params)] as const),
     queryFn: () => client.content.pages(toValue(params)),
     staleTime: 5 * 60_000,
   });
@@ -33,18 +33,23 @@ export function usePages(params?: MaybeRef<GetPagesParams | undefined>) {
  * Fetch a single CMS page by slug.
  * The query is disabled when `slug` is `null`.
  *
+ * @warning `page.content` is raw HTML from the API. Sanitize it with
+ * a library like DOMPurify before rendering via `v-html`.
+ *
  * @example
  * ```vue
  * <script setup>
  * import { usePage } from '@spaceis/vue';
+ * import DOMPurify from 'dompurify';
  *
  * const props = defineProps<{ slug: string }>();
  * const { data: page, isLoading } = usePage(() => props.slug);
+ * const safeHtml = computed(() => DOMPurify.sanitize(page.value?.content ?? ''));
  * </script>
  *
  * <template>
  *   <p v-if="isLoading">Loading...</p>
- *   <article v-else v-html="page?.content" />
+ *   <article v-else v-html="safeHtml" />
  * </template>
  * ```
  */
@@ -52,7 +57,7 @@ export function usePage(slug: MaybeRef<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "page", slug] as const,
+    queryKey: computed(() => ["spaceis", "page", toValue(slug)] as const),
     queryFn: () => client.content.page(toValue(slug)!),
     enabled: () => {
       const s = toValue(slug);
@@ -65,16 +70,21 @@ export function usePage(slug: MaybeRef<string | null>) {
  * Fetch the shop's legal statute.
  * Uses a longer stale time (10 min) since statute rarely changes.
  *
+ * @warning `statute.content` is raw HTML from the API. Sanitize it with
+ * a library like DOMPurify before rendering via `v-html`.
+ *
  * @example
  * ```vue
  * <script setup>
  * import { useStatute } from '@spaceis/vue';
+ * import DOMPurify from 'dompurify';
  *
  * const { data: statute } = useStatute();
+ * const safeHtml = computed(() => DOMPurify.sanitize(statute.value?.content ?? ''));
  * </script>
  *
  * <template>
- *   <article v-html="statute?.content" />
+ *   <article v-html="safeHtml" />
  * </template>
  * ```
  */

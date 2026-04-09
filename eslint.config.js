@@ -18,7 +18,7 @@ export default [
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       "no-console": "warn",
     },
   },
@@ -38,7 +38,7 @@ export default [
     rules: {
       ...vuePlugin.configs["flat/recommended"].rules,
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       "no-console": "warn",
       "vue/multi-word-component-names": "off",
     },

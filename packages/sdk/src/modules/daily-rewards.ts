@@ -10,7 +10,8 @@ import type { UseDailyRewardRequest, MessageResponse } from "../types";
  * @example
  * ```ts
  * const result = await client.dailyRewards.claim({
- *   username: 'Steve',
+ *   nick: 'Steve',
+ *   'g-recaptcha-response': recaptchaToken,
  * });
  * console.log(result.message); // "Daily reward claimed!"
  * ```

@@ -26,13 +26,11 @@ export interface OrderDiscountInfo {
 }
 
 /**
- * Order summary returned after checkout.
- *
- * Note: `items` may be a single object or an array from the API.
- * The SDK normalizes it to always be an array via `client.orders.summary()`.
- * Prices are in **cents**.
+ * Raw order summary shape from the API.
+ * `items` may be a single object or an array — use `OrderSummary` for the normalized version.
+ * @internal
  */
-export interface OrderSummary {
+export interface RawOrderSummary {
   /** Unique order code (e.g. `"ORD-12345"`) */
   code: string | null;
   /** Current order status */
@@ -41,7 +39,7 @@ export interface OrderSummary {
   regular_total_price: number;
   /** Total final price in cents */
   final_total_price: number;
-  /** Order items (normalized to array by the SDK) */
+  /** Order items (may be single object or array from API) */
   items: OrderSummaryItem | OrderSummaryItem[];
   /** Discount info, or `null` if no discount was applied */
   discount: OrderDiscountInfo | null;
@@ -49,4 +47,14 @@ export interface OrderSummary {
   package_included: OrderDiscountInfo | null;
   /** Sale discount info, or `null` */
   sale: OrderDiscountInfo | null;
+}
+
+/**
+ * Normalized order summary returned by `client.orders.summary()`.
+ * `items` is always an array (normalized by the SDK).
+ * Prices are in **cents**.
+ */
+export interface OrderSummary extends Omit<RawOrderSummary, "items"> {
+  /** Order items (always an array — normalized by the SDK) */
+  items: OrderSummaryItem[];
 }

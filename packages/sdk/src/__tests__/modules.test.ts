@@ -218,9 +218,10 @@ describe("API Modules", () => {
       const client = makeClient();
 
       const body = {
-        username: "Steve",
+        first_name: "Steve",
         email: "steve@example.com",
         payment_method_uuid: "pm-1",
+        "g-recaptcha-response": "test-token",
         agreements: ["agr-1"],
       };
       const result = await client.checkout.placeOrder(body);
@@ -427,7 +428,7 @@ describe("API Modules", () => {
       const fetchMock = mockFetch(response);
       const client = makeClient();
 
-      const body = { username: "Steve", code: "FREE-VIP-2024" };
+      const body = { nick: "Steve", code: "FREE-VIP-2024", "g-recaptcha-response": "test-token" };
       const result = await client.vouchers.redeem(body);
 
       expect(fetchUrl(fetchMock)).toBe(`${BASE}/vouchers/use`);
@@ -446,7 +447,7 @@ describe("API Modules", () => {
       const fetchMock = mockFetch(response);
       const client = makeClient();
 
-      const body = { username: "Steve" };
+      const body = { nick: "Steve", "g-recaptcha-response": "test-token" };
       const result = await client.dailyRewards.claim(body);
 
       expect(fetchUrl(fetchMock)).toBe(`${BASE}/daily-rewards/use`);

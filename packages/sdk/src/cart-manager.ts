@@ -1,5 +1,6 @@
 import type { Cart, CartItem, CartMutationResponse } from "./types";
 import type { SpaceISClient } from "./client";
+import type { SpaceISError } from "./error";
 import { toApiQty, fromApiQty } from "./utils";
 
 type Listener = (cart: Cart | null) => void;
@@ -22,6 +23,12 @@ function generateToken(): string {
     return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
   }
   throw new Error("No cryptographically secure random generator available");
+}
+
+/** Narrow caught error to Error type */
+function toError(e: unknown): SpaceISError | Error {
+  if (e instanceof Error) return e as SpaceISError | Error;
+  return new Error(String(e));
 }
 
 export interface CartManagerOptions {
@@ -58,7 +65,7 @@ export class CartManager {
   private _loading = false;
   /** Learned step sizes per variant (raw API units) */
   private _steps = new Map<string, number>();
-  private _error: unknown = null;
+  private _error: SpaceISError | Error | null = null;
   private storageKey: string;
 
   constructor(
@@ -133,8 +140,8 @@ export class CartManager {
     return this._loading;
   }
 
-  /** Last error (or null) */
-  get error(): unknown {
+  /** Last error from a cart operation, or `null` */
+  get error(): SpaceISError | Error | null {
     return this._error;
   }
 
@@ -148,7 +155,7 @@ export class CartManager {
    */
   formatPrice(cents?: number, currency = "PLN", locale?: string): string {
     const amount = cents ?? this.finalPrice;
-    const loc = locale ?? this.client.config.lang ?? "pl";
+    const loc = locale ?? this.client.lang ?? "pl";
     return new Intl.NumberFormat(loc, {
       style: "currency",
       currency,
@@ -222,7 +229,7 @@ export class CartManager {
     }
   }
 
-  // ── Mutation helper ──
+  // ── Mutation helpers ──
 
   private applyMutation(res: CartMutationResponse): CartMutationResponse {
     this._cart = res.data.cart;
@@ -230,6 +237,20 @@ export class CartManager {
     this._loading = false;
     this.notify();
     return res;
+  }
+
+  /** Wraps a cart mutation with loading/error state management */
+  private async _mutate<T>(fn: () => Promise<T>): Promise<T> {
+    this._loading = true;
+    this.notify();
+    try {
+      return await fn();
+    } catch (e) {
+      this._error = toError(e);
+      this._loading = false;
+      this.notify();
+      throw e;
+    }
   }
 
   // ── Cart Operations ──
@@ -243,21 +264,14 @@ export class CartManager {
       this.notify();
       return empty;
     }
-    this._loading = true;
-    this._error = null;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const cart = await this.client.cart.get();
       this._cart = cart;
       this._loading = false;
+      this._error = null;
       this.notify();
       return cart;
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /**
@@ -267,9 +281,7 @@ export class CartManager {
    */
   async add(variantUuid: string, quantity = 1): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const qtyBefore = this.findItem(variantUuid)?.quantity ?? 0;
       const res = await this.client.cart.addItem({
         variant_uuid: variantUuid,
@@ -285,12 +297,7 @@ export class CartManager {
       }
 
       return res;
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /**
@@ -300,20 +307,13 @@ export class CartManager {
    */
   async remove(variantUuid: string, quantity?: number): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const res = await this.client.cart.removeItem({
         variant_uuid: variantUuid,
         ...(quantity != null ? { quantity: toApiQty(quantity) } : {}),
       });
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /**
@@ -323,9 +323,7 @@ export class CartManager {
    */
   async increment(variantUuid: string): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const rawStep = this._steps.get(variantUuid) ?? DEFAULT_STEP;
       const res = await this.client.cart.addItem({
         variant_uuid: variantUuid,
@@ -333,12 +331,7 @@ export class CartManager {
       });
       this.saveToken();
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /**
@@ -359,20 +352,13 @@ export class CartManager {
       return this.remove(variantUuid);
     }
 
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const res = await this.client.cart.removeItem({
         variant_uuid: variantUuid,
         quantity: rawStep,
       });
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /**
@@ -382,52 +368,31 @@ export class CartManager {
    */
   async setQuantity(variantUuid: string, quantity: number): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const res = await this.client.cart.updateQuantity({
         variant_uuid: variantUuid,
         quantity: toApiQty(quantity),
       });
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /** Apply discount code */
   async applyDiscount(code: string): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const res = await this.client.cart.applyDiscount(code);
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /** Remove active discount */
   async removeDiscount(): Promise<CartMutationResponse> {
     this.ensureToken();
-    this._loading = true;
-    this.notify();
-    try {
+    return this._mutate(async () => {
       const res = await this.client.cart.removeDiscount();
       return this.applyMutation(res);
-    } catch (e) {
-      this._error = e;
-      this._loading = false;
-      this.notify();
-      throw e;
-    }
+    });
   }
 
   /** Clear cart state locally (does not call API) */

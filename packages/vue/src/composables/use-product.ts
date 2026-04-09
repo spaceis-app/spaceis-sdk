@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 
 /**
@@ -25,7 +25,7 @@ export function useProduct(slug: MaybeRef<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "product", slug] as const,
+    queryKey: computed(() => ["spaceis", "product", toValue(slug)] as const),
     queryFn: () => client.products.get(toValue(slug)!),
     enabled: () => {
       const s = toValue(slug);
@@ -42,7 +42,7 @@ export function useProductRecommendations(slug: MaybeRef<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "product-recommendations", slug] as const,
+    queryKey: computed(() => ["spaceis", "product-recommendations", toValue(slug)] as const),
     queryFn: () => client.products.recommendations(toValue(slug)!),
     enabled: () => {
       const s = toValue(slug);

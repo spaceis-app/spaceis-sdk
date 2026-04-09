@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetGoalsParams } from "@spaceis/sdk";
 
@@ -28,7 +28,7 @@ export function useGoals(params?: MaybeRef<GetGoalsParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({
-    queryKey: ["spaceis", "goals", params] as const,
+    queryKey: computed(() => ["spaceis", "goals", toValue(params)] as const),
     queryFn: () => client.goals.list(toValue(params)),
   });
 }

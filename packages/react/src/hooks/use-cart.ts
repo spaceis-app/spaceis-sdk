@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useSyncExternalStore } from "react";
-import type { Cart, CartItem, CartMutationResponse } from "@spaceis/sdk";
+import type { Cart, CartItem, CartMutationResponse, SpaceISError } from "@spaceis/sdk";
 import { useSpaceIS } from "../provider";
 
 export interface UseCartReturn {
@@ -28,7 +28,7 @@ export interface UseCartReturn {
   /** `true` while a network request is in progress. */
   isLoading: boolean;
   /** Last error from a cart operation, or `null`. */
-  error: unknown;
+  error: SpaceISError | Error | null;
 
   // ── Actions ──────────────────────────────────────────────────────────────
   /** Load/refresh cart from the server. */
@@ -116,8 +116,28 @@ export function useCart(): UseCartReturn {
     () => null
   );
 
+  // Memoize bound methods to preserve referential equality across renders
+  const actions = useMemo(
+    () => ({
+      load: cartManager.load.bind(cartManager),
+      add: cartManager.add.bind(cartManager),
+      remove: cartManager.remove.bind(cartManager),
+      increment: cartManager.increment.bind(cartManager),
+      decrement: cartManager.decrement.bind(cartManager),
+      setQuantity: cartManager.setQuantity.bind(cartManager),
+      applyDiscount: cartManager.applyDiscount.bind(cartManager),
+      removeDiscount: cartManager.removeDiscount.bind(cartManager),
+      clear: cartManager.clear.bind(cartManager),
+      findItem: cartManager.findItem.bind(cartManager),
+      hasItem: cartManager.hasItem.bind(cartManager),
+      getQuantity: cartManager.getQuantity.bind(cartManager),
+      formatPrice: cartManager.formatPrice.bind(cartManager),
+    }),
+    [cartManager]
+  );
+
   return {
-    // State
+    // State (read fresh on each render — useSyncExternalStore triggers re-render on change)
     cart: cartManager.cart,
     items: cartManager.items,
     itemCount: cartManager.itemCount,
@@ -130,21 +150,7 @@ export function useCart(): UseCartReturn {
     isLoading: cartManager.isLoading,
     error: cartManager.error,
 
-    // Actions (bound to preserve `this`)
-    load: cartManager.load.bind(cartManager),
-    add: cartManager.add.bind(cartManager),
-    remove: cartManager.remove.bind(cartManager),
-    increment: cartManager.increment.bind(cartManager),
-    decrement: cartManager.decrement.bind(cartManager),
-    setQuantity: cartManager.setQuantity.bind(cartManager),
-    applyDiscount: cartManager.applyDiscount.bind(cartManager),
-    removeDiscount: cartManager.removeDiscount.bind(cartManager),
-    clear: cartManager.clear.bind(cartManager),
-
-    // Helpers (bound to preserve `this`)
-    findItem: cartManager.findItem.bind(cartManager),
-    hasItem: cartManager.hasItem.bind(cartManager),
-    getQuantity: cartManager.getQuantity.bind(cartManager),
-    formatPrice: cartManager.formatPrice.bind(cartManager),
+    // Actions & helpers (memoized)
+    ...actions,
   };
 }

@@ -10,7 +10,7 @@
  */
 const SHOP_CONFIG = {
   baseUrl: "https://storefront-api.spaceis.app",
-  shopUuid: "2f6f558d-b7cb-42b2-bc02-116d740b2f97",
+  shopUuid: "your-shop-uuid-here",
   lang: "pl",
   returnUrl: "http://localhost:3333/order-summary",
   cancelUrl: "http://localhost:3333/checkout",
@@ -234,7 +234,7 @@ function renderFooter() {
   footerEl.className = "site-footer";
   footerEl.innerHTML =
     '<div class="container">' +
-      '<span class="footer-text">Powered by <strong>SpaceIS SDK</strong> v0.1.4</span>' +
+      '<span class="footer-text">Powered by <strong>SpaceIS SDK</strong> v0.1.5</span>' +
     '</div>';
 }
 
@@ -934,6 +934,8 @@ function renderModalContent(product) {
     ? `<img class="modal-img" src="${esc(product.image)}" alt="${esc(product.name)}">`
     : `<div class="modal-img-placeholder">${PLACEHOLDER_SVG_SM}</div>`;
 
+  // product.description is rich HTML from the CMS — backend sanitizes before saving.
+  // If using untrusted content, sanitize with DOMPurify before rendering.
   const descHtml = product.description
     ? `<div class="modal-desc">${product.description}</div>`
     : "";

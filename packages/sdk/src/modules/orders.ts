@@ -1,5 +1,5 @@
 import type { RequestFn } from "../http";
-import type { OrderSummary } from "../types";
+import type { OrderSummary, RawOrderSummary } from "../types";
 
 /**
  * Orders API module.
@@ -27,14 +27,16 @@ export class OrdersModule {
    * @returns Order summary with status, items, prices, and discount info
    */
   async summary(orderCode: string): Promise<OrderSummary> {
-    const res = await this.request<{ data: OrderSummary }>(
+    const res = await this.request<{ data: RawOrderSummary }>(
       `cart/summary/${encodeURIComponent(orderCode)}`
     );
-    const order = res.data;
-    // API may return items as single object or array — normalize
-    if (order.items && !Array.isArray(order.items)) {
-      order.items = [order.items];
-    }
-    return order;
+    const raw = res.data;
+    // API may return items as single object or array — normalize (immutable)
+    const items = Array.isArray(raw.items)
+      ? raw.items
+      : raw.items
+        ? [raw.items]
+        : [];
+    return { ...raw, items };
   }
 }

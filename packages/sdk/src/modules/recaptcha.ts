@@ -35,6 +35,9 @@ export class RecaptchaModule {
     this._configPromise = this.request<RecaptchaConfig>("recaptcha/config").then((config) => {
       this._config = config;
       return config;
+    }).catch((err) => {
+      this._configPromise = null; // Allow retry on failure
+      throw err;
     });
 
     return this._configPromise;
@@ -96,7 +99,7 @@ export class RecaptchaModule {
       };
 
       const script = document.createElement("script");
-      script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}&onload=${callbackName}`;
+      script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}&onload=${encodeURIComponent(callbackName)}`;
       script.async = true;
       script.defer = true;
       script.onerror = () => {
