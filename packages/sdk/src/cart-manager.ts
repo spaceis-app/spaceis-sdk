@@ -223,7 +223,9 @@ export class CartManager {
 
   private get storage(): Storage | null {
     try {
-      return globalThis.localStorage;
+      const s = globalThis.localStorage;
+      if (!s || typeof s.getItem !== "function") return null;
+      return s;
     } catch {
       return null;
     }
