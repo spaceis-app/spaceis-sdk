@@ -261,6 +261,36 @@ describe("CartManager", () => {
       // Fires twice: once for isLoading=true, once for completion
       expect(listener).toHaveBeenCalledTimes(2);
     });
+
+    it("notifies exactly twice on load error (start + error)", async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error("boom"));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = makeClient({ cartToken: "my-token" });
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await expect(manager.load()).rejects.toThrow("boom");
+
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(manager.isLoading).toBe(false);
+      expect(manager.error).toBeInstanceOf(Error);
+    });
+
+    it("notifies exactly once when no token (empty-cart shortcut, no _mutate)", async () => {
+      const client = makeClient();
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await manager.load();
+
+      // Empty-cart shortcut does not enter _mutate — single notify with empty cart
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("add()", () => {
@@ -320,6 +350,25 @@ describe("CartManager", () => {
       await expect(manager.add("v-1")).rejects.toThrow("Server error");
       expect(manager.error).toBeInstanceOf(Error);
       expect(manager.isLoading).toBe(false);
+    });
+
+    it("notifies exactly twice on add success (start + end)", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(makeMutationResponse(makeCart({
+          items: [makeCartItem("v-1", 1000)],
+        }))), { status: 200 })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = makeClient();
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await manager.add("v-1");
+
+      expect(listener).toHaveBeenCalledTimes(2);
     });
   });
 
