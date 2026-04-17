@@ -32,8 +32,12 @@ export interface RequestOptions {
   method?: string;
   /** Request body — automatically serialized to JSON */
   body?: unknown;
-  /** Query parameters — appended to the URL */
-  params?: Record<string, unknown>;
+  /**
+   * Query parameters — appended to the URL. Accepts any typed query-params
+   * interface (e.g. `GetProductsParams`). A nested `extraParams` object is
+   * flattened into the query string, with top-level keys winning on collision.
+   */
+  params?: object;
   /** Additional request headers */
   headers?: Record<string, string>;
   /** AbortSignal for request cancellation */
@@ -43,13 +47,24 @@ export interface RequestOptions {
 function buildUrl(
   prefix: string,
   path: string,
-  params?: Record<string, unknown>,
+  params?: object,
   lang?: string
 ): string {
   const url = new URL(`${prefix}/${path}`);
   if (lang) url.searchParams.set("lang", lang);
   if (params) {
-    for (const [key, value] of Object.entries(params)) {
+    const entries = params as Record<string, unknown>;
+    // Flatten extraParams first so explicit top-level keys win on collision.
+    const extra = entries.extraParams;
+    if (extra && typeof extra === "object" && !Array.isArray(extra)) {
+      for (const [k, v] of Object.entries(extra as Record<string, unknown>)) {
+        if (v != null && v !== "") {
+          url.searchParams.set(k, String(v));
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(entries)) {
+      if (key === "extraParams") continue;
       if (value != null && value !== "") {
         url.searchParams.set(key, String(value));
       }

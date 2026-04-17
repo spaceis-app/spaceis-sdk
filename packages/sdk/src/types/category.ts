@@ -25,6 +25,10 @@ export interface ShopCategory {
 export interface GetCategoriesParams {
   /** Filter by active status */
   active?: boolean;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }

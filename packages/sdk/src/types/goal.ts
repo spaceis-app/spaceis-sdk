@@ -25,6 +25,10 @@ export interface GetGoalsParams {
   sort?: string;
   /** Number of items per page */
   per_page?: number;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }
