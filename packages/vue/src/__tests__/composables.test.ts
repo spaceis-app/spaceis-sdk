@@ -11,6 +11,7 @@ import { useCategories } from "../composables/use-categories";
 import { useSales } from "../composables/use-sales";
 import { useShopConfig } from "../composables/use-shop-config";
 import { usePlaceOrder } from "../composables/use-checkout";
+import { useProductRecommendations } from "../composables/use-product";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -149,6 +150,53 @@ describe("data composables", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const url = mockFetch.mock.calls[0]![0] as string;
     expect(url).toContain("/template");
+    wrapper.unmount();
+  });
+});
+
+describe("MaybeRefOrGetter compatibility — getter functions as params", () => {
+  it("useProducts accepts a getter function for params", async () => {
+    const apiResponse = { data: [{ uuid: "g1", name: "Getter Product" }], meta: { current_page: 1, last_page: 1 } };
+    mockApiResponse(apiResponse);
+
+    const getter = () => ({ page: 1 as const });
+
+    const { wrapper } = mountWithContext(() => useProducts(getter));
+    await flushPromises();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const url = mockFetch.mock.calls[0]![0] as string;
+    expect(url).toContain("/products");
+    wrapper.unmount();
+  });
+
+  it("useProduct accepts a getter function for slug", async () => {
+    const product = { uuid: "g2", name: "Getter Product", slug: "getter-slug" };
+    mockApiResponse({ data: product });
+
+    const getter = () => "getter-slug";
+
+    const { wrapper } = mountWithContext(() => useProduct(getter));
+    await flushPromises();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const url = mockFetch.mock.calls[0]![0] as string;
+    expect(url).toContain("/products/getter-slug");
+    wrapper.unmount();
+  });
+
+  it("useProductRecommendations accepts a getter function for slug", async () => {
+    const recommendations = [{ uuid: "pkg1", name: "Bundle A" }];
+    mockApiResponse({ data: recommendations });
+
+    const getter = () => "some-slug";
+
+    const { wrapper } = mountWithContext(() => useProductRecommendations(getter));
+    await flushPromises();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const url = mockFetch.mock.calls[0]![0] as string;
+    expect(url).toContain("/products/some-slug/package-recommendations");
     wrapper.unmount();
   });
 });

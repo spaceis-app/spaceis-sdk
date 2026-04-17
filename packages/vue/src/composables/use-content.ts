@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { computed, toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetPagesParams } from "@spaceis/sdk";
 
@@ -19,7 +19,7 @@ import type { GetPagesParams } from "@spaceis/sdk";
  * </template>
  * ```
  */
-export function usePages(params?: MaybeRef<GetPagesParams | undefined>) {
+export function usePages(params?: MaybeRefOrGetter<GetPagesParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({
@@ -53,7 +53,7 @@ export function usePages(params?: MaybeRef<GetPagesParams | undefined>) {
  * </template>
  * ```
  */
-export function usePage(slug: MaybeRef<string | null>) {
+export function usePage(slug: MaybeRefOrGetter<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({

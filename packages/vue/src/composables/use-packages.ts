@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { computed, toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetPackagesParams } from "@spaceis/sdk";
 
@@ -22,7 +22,7 @@ import type { GetPackagesParams } from "@spaceis/sdk";
  * </template>
  * ```
  */
-export function usePackages(params?: MaybeRef<GetPackagesParams | undefined>) {
+export function usePackages(params?: MaybeRefOrGetter<GetPackagesParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({
