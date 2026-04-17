@@ -106,7 +106,4 @@ export type {
   // Utilities
   ProductLimits,
 
-  // Vouchers / Daily Rewards
-  UseVoucherRequest,
-  UseDailyRewardRequest,
 } from "@spaceis/sdk";
