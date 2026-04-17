@@ -75,11 +75,21 @@ bugs, and clarifying security expectations for consumers of HTML-typed fields.
   consumers inherit the stricter query-params typing (see SDK 0.2.0 notes).
 - Removed duplicate `"shop"` keyword from `package.json`.
 
+### Documentation
+- Promoted AGENTS.md as canonical agent-guidance file. CLAUDE.md kept as
+  a thin pointer for Claude Code's hierarchical loading. AGENTS.md ships
+  in the npm tarball.
+
 ## [@spaceis/vue 0.2.0] - 2026-04-17
 
 ### Changed
 - Peer dependency `@spaceis/sdk` bumped to `>=0.2.0`. Downstream TypeScript
   consumers inherit the stricter query-params typing (see SDK 0.2.0 notes).
+
+### Documentation
+- Promoted AGENTS.md as canonical agent-guidance file. CLAUDE.md kept as
+  a thin pointer for Claude Code's hierarchical loading. AGENTS.md ships
+  in the npm tarball.
 
 ## [create-spaceis 0.2.0] - 2026-04-17
 
