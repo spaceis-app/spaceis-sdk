@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { SpaceISClient } from "../client";
+import { generateCallbackName } from "../modules/recaptcha";
 
 const BASE_URL = "https://api.example.com";
 const SHOP_UUID = "test-shop";
@@ -519,9 +520,34 @@ describe("API Modules", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // RecaptchaModule — skipped (requires DOM/script loading)
+  // RecaptchaModule
   // ---------------------------------------------------------------------------
   describe("RecaptchaModule", () => {
-    it.skip("skipped — requires DOM and script loading, not unit-testable easily", () => {});
+    describe("generateCallbackName", () => {
+      it("returns a string with the expected prefix", () => {
+        const name = generateCallbackName();
+        expect(name).toMatch(/^__spaceis_recaptcha_cb_/);
+      });
+
+      it("produces a unique name on every call", () => {
+        const names = new Set<string>();
+        for (let i = 0; i < 1000; i++) names.add(generateCallbackName());
+        expect(names.size).toBe(1000);
+      });
+
+      it("produces names safe to use as object keys (no collisions across shops)", () => {
+        const a = generateCallbackName();
+        const b = generateCallbackName();
+        expect(a).not.toBe(b);
+        const holder: Record<string, number> = {};
+        holder[a] = 1;
+        holder[b] = 2;
+        expect(holder[a]).toBe(1);
+        expect(holder[b]).toBe(2);
+      });
+    });
+
+    // Full _loadScript test requires DOM — enable jsdom env to cover (tracked as T3).
+    it.skip("end-to-end script load (requires jsdom)", () => {});
   });
 });

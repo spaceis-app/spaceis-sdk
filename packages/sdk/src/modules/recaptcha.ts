@@ -4,6 +4,19 @@ import type { RecaptchaConfig } from "../types";
 const LOAD_TIMEOUT_MS = 15_000;
 
 /**
+ * Generate a unique global callback name for a reCAPTCHA script load.
+ *
+ * Using a fresh name per load prevents collisions when multiple SDK
+ * instances coexist on the same page (e.g. multi-shop embeds, React
+ * StrictMode double-mount, HMR re-render).
+ *
+ * @internal Exported for testing. Not part of the public API.
+ */
+export function generateCallbackName(): string {
+  return `__spaceis_recaptcha_cb_${Math.random().toString(36).slice(2)}`;
+}
+
+/**
  * reCAPTCHA v3 integration module.
  *
  * Handles fetching the site key from the API, loading the reCAPTCHA script,
@@ -81,7 +94,7 @@ export class RecaptchaModule {
 
     // Inject script
     return new Promise<void>((resolve, reject) => {
-      const callbackName = "__spaceis_recaptcha_cb";
+      const callbackName = generateCallbackName();
 
       const timer = setTimeout(() => {
         cleanup();
