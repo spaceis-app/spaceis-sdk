@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "postbuild": "chmod +x dist/index.js",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
@@ -33,7 +34,11 @@
     "create",
     "scaffold",
     "cli",
-    "ecommerce"
+    "ecommerce",
+    "nextjs",
+    "nuxt",
+    "react",
+    "vue"
   ],
   "author": "SpaceIS",
   "license": "MIT",

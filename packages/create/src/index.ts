@@ -7,22 +7,10 @@ import { downloadTemplate } from "giget";
 const REPO = "spaceis-app/spaceis-sdk";
 
 const EXAMPLES = {
-  react: {
-    label: "React    — Next.js App Router + SSR + hooks",
-    dir: "examples/react",
-  },
-  vue: {
-    label: "Vue      — Nuxt 4 + SSR + composables",
-    dir: "examples/vue",
-  },
-  vanilla: {
-    label: "Vanilla  — HTML + vanilla JS + SDK IIFE",
-    dir: "examples/vanilla",
-  },
-  php: {
-    label: "PHP      — PHP SSR + client-side SDK",
-    dir: "examples/php",
-  },
+  react:   { label: "React",   hint: "Next.js App Router + SSR + hooks", dir: "examples/react"   },
+  vue:     { label: "Vue",     hint: "Nuxt 4 + SSR + composables",       dir: "examples/vue"     },
+  vanilla: { label: "Vanilla", hint: "HTML + vanilla JS + SDK IIFE",     dir: "examples/vanilla" },
+  php:     { label: "PHP",     hint: "PHP SSR + client-side SDK",        dir: "examples/php"     },
 } as const;
 
 type ExampleKey = keyof typeof EXAMPLES;
@@ -72,10 +60,14 @@ async function getLatestVersion(pkg: string): Promise<string> {
  */
 async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]> {
   const raw = fs.readFileSync(pkgJsonPath, "utf8");
-  const pkg = JSON.parse(raw) as {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
+  let pkg: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  try {
+    pkg = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(
+      `Invalid JSON in ${pkgJsonPath}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   const changed: string[] = [];
   const cache = new Map<string, string>();
 
@@ -103,21 +95,36 @@ async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]
   return changed;
 }
 
-function run(cmd: string, cwd?: string): Promise<string> {
+/**
+ * Spawn a subprocess with explicit argv — never via a shell. That way even
+ * if a dependency name or CLI path ever contained special characters, we
+ * don't risk shell metacharacter interpretation.
+ *
+ * Captures both stdout and stderr so that on failure the caller has the
+ * full context of what the child printed, not just stderr.
+ */
+function run(file: string, args: string[], cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let stderr = "";
-    const child = spawn(cmd, {
+    let stdout = "";
+    const child = spawn(file, args, {
       cwd,
       stdio: "pipe",
-      shell: true,
+      shell: false,
       env: { ...process.env, CI: "1" },
     });
     child.stdin?.end();
-    child.stdout?.resume();
+    child.stdout?.on("data", (d: Buffer) => {
+      stdout += d.toString();
+    });
     child.stderr?.on("data", (d: Buffer) => {
       stderr += d.toString();
     });
-    child.on("close", (code) => (code === 0 ? resolve(stderr) : reject(new Error(stderr || `Exit code ${code}`))));
+    child.on("close", (code) => {
+      if (code === 0) return resolve(stdout + stderr);
+      const detail = [stderr.trim(), stdout.trim()].filter(Boolean).join("\n").trim();
+      reject(new Error(detail || `${file} exited with code ${code}`));
+    });
     child.on("error", reject);
   });
 }
@@ -144,18 +151,24 @@ function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
   return "npm";
 }
 
-function installCommand(pm: string, packages: string[]): string {
-  const pkgs = packages.join(" ");
+/**
+ * Build the argv for an install command — `{ file, args }`. The verb differs
+ * between npm (`install`) and the rest (`add`). Returned as a tuple so it
+ * can be fed straight into `run()` without shell interpolation.
+ */
+function installArgs(pm: string, packages: string[]): { file: string; args: string[] } {
   switch (pm) {
-    case "pnpm":
-      return `pnpm add ${pkgs}`;
-    case "yarn":
-      return `yarn add ${pkgs}`;
-    case "bun":
-      return `bun add ${pkgs}`;
-    default:
-      return `npm install ${pkgs}`;
+    case "pnpm": return { file: "pnpm", args: ["add", ...packages] };
+    case "yarn": return { file: "yarn", args: ["add", ...packages] };
+    case "bun":  return { file: "bun",  args: ["add", ...packages] };
+    default:     return { file: "npm",  args: ["install", ...packages] };
   }
+}
+
+/** Human-readable rendering of an install command (for prompts and "run manually" hints). */
+function formatInstallCommand(pm: string, packages: string[]): string {
+  const { file, args } = installArgs(pm, packages);
+  return `${file} ${args.join(" ")}`;
 }
 
 async function main() {
@@ -202,12 +215,11 @@ async function main() {
 async function handleExample() {
   const example = await p.select({
     message: "Choose an example:",
-    options: [
-      { value: "react" as const, label: "React", hint: "Next.js App Router + SSR + hooks" },
-      { value: "vue" as const, label: "Vue", hint: "Nuxt 4 + SSR + composables" },
-      { value: "vanilla" as const, label: "Vanilla", hint: "HTML + vanilla JS + SDK IIFE" },
-      { value: "php" as const, label: "PHP", hint: "PHP SSR + client-side SDK" },
-    ],
+    options: (Object.keys(EXAMPLES) as ExampleKey[]).map((key) => ({
+      value: key,
+      label: EXAMPLES[key].label,
+      hint: EXAMPLES[key].hint,
+    })),
   });
 
   if (p.isCancel(example)) cancel();
@@ -238,7 +250,15 @@ async function handleExample() {
     s.stop(`${example} example downloaded.`);
   } catch (err) {
     s.stop("Download failed.");
-    p.log.error(String(err));
+    const msg = err instanceof Error ? err.message : String(err);
+    p.log.error(msg);
+    // GitHub's public API caps unauthenticated requests at 60/hour/IP — surface that clearly.
+    if (/403|429|rate[ _-]?limit|api rate/i.test(msg)) {
+      p.log.info(
+        "Hint: GitHub rate-limited this request. Set GITHUB_TOKEN to a personal access token " +
+          "(scope: public_repo) and rerun — authenticated requests have a much higher quota.",
+      );
+    }
     process.exit(1);
   }
 
@@ -283,7 +303,7 @@ async function handleExample() {
       const si = p.spinner();
       si.start(`Installing dependencies in ${projectName}/ ...`);
       try {
-        await run(`${pm} install`, targetDir);
+        await run(pm, ["install"], targetDir);
         si.stop("Dependencies installed.");
         depsInstalled = true;
       } catch (err) {
@@ -345,7 +365,7 @@ async function handleBlank() {
     const s = p.spinner();
     s.start("Initializing project...");
     try {
-      await run(`${pm} init -y`, targetDir);
+      await run(pm, ["init", "-y"], targetDir);
       s.stop(`Project initialized in ${projectName}/`);
     } catch {
       s.stop("Failed to initialize project.");
@@ -380,15 +400,16 @@ async function handleBlank() {
   }
 
   const pm = detectPackageManager();
-  const cmd = installCommand(pm, packages);
+  const display = formatInstallCommand(pm, packages);
+  const { file, args } = installArgs(pm, packages);
 
   const shouldRun = await p.confirm({
-    message: `Run: ${cmd} ?`,
+    message: `Run: ${display} ?`,
     initialValue: true,
   });
 
   if (p.isCancel(shouldRun) || !shouldRun) {
-    p.note(cmd, "Run manually:");
+    p.note(display, "Run manually:");
     p.outro("Done!");
     return;
   }
@@ -397,11 +418,12 @@ async function handleBlank() {
   s.start("Installing packages...");
 
   try {
-    await run(cmd);
+    await run(file, args);
     s.stop("Packages installed.");
-  } catch {
+  } catch (err) {
     s.stop("Failed to install packages.");
-    p.note(cmd, "Run manually:");
+    if (err instanceof Error && err.message) p.log.error(err.message);
+    p.note(display, "Run manually:");
   }
 
   p.note(
