@@ -23,6 +23,7 @@
   "jsdelivr": "./dist/spaceis.global.js",
   "files": [
     "dist",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
