@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Order Summary</title>
+    <meta name="description" content="SpaceIS storefront — check the status of your order.">
+    <meta property="og:title" content="SpaceIS SDK — Order Summary">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -44,7 +47,7 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
@@ -60,6 +63,8 @@
       };
 
       const params = new URLSearchParams(window.location.search);
+      // T11: codeFromUrl is set via .value (input attribute), NOT via innerHTML — safe against XSS.
+      // Do NOT use codeFromUrl directly in innerHTML/insertAdjacentHTML without esc().
       const codeFromUrl = params.get("order") || params.get("code");
       if (codeFromUrl) {
         document.getElementById("order-code-input").value = codeFromUrl;
