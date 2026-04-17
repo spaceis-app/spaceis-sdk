@@ -64,7 +64,14 @@ export interface ShowShopProduct {
   name: string;
   /** URL-friendly slug */
   slug: string;
-  /** HTML product description, or `null` */
+  /**
+   * Product description (raw HTML from API), or `null`.
+   *
+   * @remarks
+   * Sanitize before injecting into the DOM (e.g. with DOMPurify) or render
+   * as escaped text via {@link escapeHtml}. Do NOT assign directly to
+   * `innerHTML` on untrusted content — risk of stored XSS.
+   */
   description: string | null;
   /** Product image URL, or `null` */
   image: string | null;

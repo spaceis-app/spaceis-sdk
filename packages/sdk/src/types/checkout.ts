@@ -26,7 +26,14 @@ export interface Agreement {
   uuid: string;
   /** Agreement title */
   name: string;
-  /** Agreement body (HTML) */
+  /**
+   * Agreement body (raw HTML from API).
+   *
+   * @remarks
+   * Sanitize before injecting into the DOM (e.g. with DOMPurify) or render
+   * as escaped text via {@link escapeHtml}. Do NOT assign directly to
+   * `innerHTML` on untrusted content — risk of stored XSS.
+   */
   content: string;
 }
 
