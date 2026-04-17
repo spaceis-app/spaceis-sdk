@@ -41,7 +41,8 @@ const REGISTRY_TIMEOUT_MS = 10_000;
  * Uses Node's built-in fetch (Node ≥ 18) with a 10s timeout so a slow
  * or unresponsive registry can't hang the CLI indefinitely.
  */
-async function getLatestVersion(pkg: string): Promise<string> {
+/** @internal */
+export async function getLatestVersion(pkg: string): Promise<string> {
   const url = `https://registry.npmjs.org/${encodeURIComponent(pkg).replace("%40", "@")}/latest`;
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -58,7 +59,8 @@ async function getLatestVersion(pkg: string): Promise<string> {
  * version published on npm. Keeps non-spaceis deps untouched. Writes the
  * file in-place and returns a list of human-readable change descriptions.
  */
-async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]> {
+/** @internal */
+export async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]> {
   const raw = fs.readFileSync(pkgJsonPath, "utf8");
   let pkg: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
   try {
@@ -139,7 +141,8 @@ function cancel(): never {
   process.exit(130);
 }
 
-function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
+/** @internal */
+export function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
   const ua = process.env.npm_config_user_agent ?? "";
   if (ua.startsWith("pnpm")) return "pnpm";
   if (ua.startsWith("yarn")) return "yarn";
@@ -156,7 +159,8 @@ function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
  * between npm (`install`) and the rest (`add`). Returned as a tuple so it
  * can be fed straight into `run()` without shell interpolation.
  */
-function installArgs(pm: string, packages: string[]): { file: string; args: string[] } {
+/** @internal */
+export function installArgs(pm: string, packages: string[]): { file: string; args: string[] } {
   switch (pm) {
     case "pnpm": return { file: "pnpm", args: ["add", ...packages] };
     case "yarn": return { file: "yarn", args: ["add", ...packages] };
@@ -165,8 +169,11 @@ function installArgs(pm: string, packages: string[]): { file: string; args: stri
   }
 }
 
-/** Human-readable rendering of an install command (for prompts and "run manually" hints). */
-function formatInstallCommand(pm: string, packages: string[]): string {
+/**
+ * Human-readable rendering of an install command (for prompts and "run manually" hints).
+ * @internal
+ */
+export function formatInstallCommand(pm: string, packages: string[]): string {
   const { file, args } = installArgs(pm, packages);
   return `${file} ${args.join(" ")}`;
 }

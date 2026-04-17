@@ -15,7 +15,9 @@
     "build": "tsup",
     "postbuild": "chmod +x dist/index.js",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
@@ -24,7 +26,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^3"
   },
   "engines": {
     "node": ">=20.0.0"
