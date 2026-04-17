@@ -369,6 +369,26 @@ queryClient.invalidateQueries({ queryKey: ["spaceis"] });
 
 ---
 
+## Query Invalidation
+
+To manually invalidate SpaceIS queries (e.g. after a WebSocket event or an external mutation), use `useQueryClient()` from `@tanstack/vue-query`. It returns the same `QueryClient` instance that was provided to `SpaceISPlugin`:
+
+```ts
+import { useQueryClient } from "@tanstack/vue-query";
+
+const queryClient = useQueryClient();
+
+// Invalidate all SpaceIS queries
+queryClient.invalidateQueries({ queryKey: ["spaceis"] });
+
+// Invalidate only products
+queryClient.invalidateQueries({ queryKey: ["spaceis", "products"] });
+```
+
+> `useSpaceIS()` does **not** expose `queryClient` — use `useQueryClient()` directly.
+
+---
+
 ## Reactive Parameters
 
 All data composables accept `MaybeRef` parameters, so you can pass reactive values:

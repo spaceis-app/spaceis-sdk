@@ -7,6 +7,10 @@ import { SpaceISKey, type SpaceISContext } from "../plugin";
  *
  * @throws If called outside of an app with `SpaceISPlugin` installed.
  *
+ * @see For query invalidation outside a mutation `onSuccess`, use
+ * `useQueryClient()` from `@tanstack/vue-query` — it returns the same
+ * QueryClient instance that was provided to the SpaceISPlugin.
+ *
  * @example
  * ```ts
  * const { client, cartManager } = useSpaceIS();

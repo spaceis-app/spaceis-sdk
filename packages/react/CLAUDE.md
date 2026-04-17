@@ -4,7 +4,7 @@
 
 React bindings for the SpaceIS SDK. Thin wrapper — no logic is duplicated from `@spaceis/sdk`.
 
-Peer dependencies: `@spaceis/sdk >=0.1.0`, `@tanstack/react-query >=5.0.0`, `react >=18.0.0`
+Peer dependencies: `@spaceis/sdk >=0.2.0`, `@tanstack/react-query >=5.0.0`, `react >=18.0.0`
 
 ## Architecture
 
