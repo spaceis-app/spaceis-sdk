@@ -51,6 +51,13 @@ bugs, and clarifying security expectations for consumers of HTML-typed fields.
 ### Documentation
 - Full JSDoc with `@param`, `@returns`, and `@example` added to `cartToken`,
   `setCartToken`, `setLang`, `getCartItemImage`, and `escapeHtml`.
+- `PaymentMethod.commission` JSDoc now correctly describes it as a **price
+  multiplier** (`final = base * commission`, e.g. `1.2 × 100 PLN = 120 PLN`),
+  not a percentage. The previous wording suggested the value was a % surcharge
+  added to the order — that was incorrect.
+- Promoted `AGENTS.md` as the canonical agent-guidance file for the SDK.
+  `CLAUDE.md` remains as a thin pointer for Claude Code's hierarchical
+  loading. `AGENTS.md` ships in the npm tarball.
 - Removed duplicate `"shop"` keyword from `package.json`.
 
 ### Internal

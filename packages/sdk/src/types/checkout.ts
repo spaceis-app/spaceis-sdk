@@ -14,7 +14,16 @@ export interface PaymentMethod {
   uuid: string;
   /** Display name (e.g. `"PayPal"`, `"BLIK"`) */
   name: string;
-  /** Commission percentage added to the order total (e.g. `5` = 5%) */
+  /**
+   * Price multiplier applied to the base total for orders paid with this method.
+   *
+   * The final price is `base_total * commission`. For example `commission: 1.2`
+   * against a 100 PLN order produces a 120 PLN final price — i.e. a 20% surcharge.
+   * A value of `1.0` means no surcharge; values below `1.0` would act as a discount.
+   *
+   * To render as a percentage surcharge in UI: `(commission - 1) * 100`.
+   * The multiplier is configured per payment method in the SpaceIS admin panel.
+   */
   commission: number;
   /** Payment method type identifier */
   method: PaymentMethodType;
