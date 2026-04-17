@@ -227,7 +227,8 @@
 
         const commission = getSelectedCommission();
         const basePrice = cartMgr.finalPrice;
-        const commissionAmount = commission > 0 ? Math.round((basePrice * commission) / 100) : 0;
+        // commission is a multiplier (e.g. 1.2 = 20% surcharge), not a percentage integer
+        const commissionAmount = commission > 0 ? Math.round(basePrice * commission - basePrice) : 0;
         const totalWithCommission = basePrice + commissionAmount;
 
         let html = '<div class="cart-page-summary">';
@@ -253,7 +254,8 @@
             const m = paymentMethodsData.find((m) => m.uuid === selectedMethodUuid);
             return m ? m.name : "Commission";
           })();
-          html += `<div class="cart-summary-row"><span>Fee (${esc(methodName)} +${commission}%)</span><span>+${fp(commissionAmount)}</span></div>`;
+          const commissionPct = Math.round((commission - 1) * 100);
+          html += `<div class="cart-summary-row"><span>Fee (${esc(methodName)} +${commissionPct}%)</span><span>+${fp(commissionAmount)}</span></div>`;
         }
 
         // Total
@@ -316,7 +318,8 @@
 
         let html = "";
         methods.forEach((m) => {
-          const commissionText = m.commission ? ` (+${m.commission}%)` : "";
+          // commission is a multiplier (e.g. 1.2 = 20% surcharge) — convert for display
+          const commissionText = m.commission > 1 ? ` (+${Math.round((m.commission - 1) * 100)}%)` : "";
           html +=
             `<label class="payment-method" data-uuid="${esc(m.uuid)}">` +
             `<input type="radio" name="payment_method" value="${esc(m.uuid)}">` +
