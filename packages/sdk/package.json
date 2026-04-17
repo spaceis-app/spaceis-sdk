@@ -37,6 +37,7 @@
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
+    "jsdom": "^25",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
     "vitest": "^3.0.0"

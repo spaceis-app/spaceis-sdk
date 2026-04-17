@@ -90,6 +90,9 @@ importers:
 
   packages/sdk:
     devDependencies:
+      jsdom:
+        specifier: ^25
+        version: 25.0.1
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(typescript@6.0.3)(yaml@2.8.3)
@@ -98,7 +101,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: ^3.0.0
-        version: 3.2.4(@types/node@25.5.0)(happy-dom@15.11.7)(jsdom@29.0.2)(terser@5.46.1)
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@15.11.7)(jsdom@25.0.1)(terser@5.46.1)
 
   packages/vue:
     devDependencies:
@@ -4323,7 +4326,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@3.2.4(@types/node@25.5.0)(happy-dom@15.11.7)(jsdom@29.0.2)(terser@5.46.1):
+  vitest@3.2.4(@types/node@25.5.0)(happy-dom@15.11.7)(jsdom@25.0.1)(terser@5.46.1):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
@@ -4351,7 +4354,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.5.0
       happy-dom: 15.11.7
-      jsdom: 29.0.2
+      jsdom: 25.0.1
     transitivePeerDependencies:
       - less
       - lightningcss

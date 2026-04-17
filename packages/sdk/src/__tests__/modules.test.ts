@@ -547,7 +547,96 @@ describe("API Modules", () => {
       });
     });
 
-    // Full _loadScript test requires DOM — enable jsdom env to cover (tracked as T3).
-    it.skip("end-to-end script load (requires jsdom)", () => {});
+    describe("load()", () => {
+      afterEach(() => {
+        // Remove any recaptcha script tags injected during the test
+        document.querySelectorAll('script[src*="recaptcha"]').forEach((el) => el.remove());
+        // Remove any leftover callback globals
+        const globals = globalThis as unknown as Record<string, unknown>;
+        for (const key of Object.keys(globals)) {
+          if (key.startsWith("__spaceis_recaptcha_cb_")) {
+            delete globals[key];
+          }
+        }
+        // Remove grecaptcha mock
+        delete (globalThis as unknown as Record<string, unknown>).grecaptcha;
+      });
+
+      it("resolves immediately when grecaptcha is already loaded", async () => {
+        (globalThis as unknown as Record<string, unknown>).grecaptcha = {
+          execute: () => Promise.resolve("token"),
+          ready: (cb: () => void) => cb(),
+        };
+        const client = makeClient();
+        // mockFetch not even needed — returns before fetching config
+        mockFetch({ key: "test-site-key", url: "https://verify.google.com" });
+
+        await expect(client.recaptcha.load()).resolves.toBeUndefined();
+      });
+
+      it("loads the reCAPTCHA script and resolves once grecaptcha callback fires", async () => {
+        const client = makeClient();
+        mockFetch({ key: "test-site-key", url: "https://verify.google.com" });
+
+        const appendChildSpy = vi.spyOn(document.head, "appendChild");
+
+        const loadPromise = client.recaptcha.load();
+
+        // Flush microtasks so the fetch and script injection complete
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(appendChildSpy).toHaveBeenCalledTimes(1);
+        const script = appendChildSpy.mock.calls[0]?.[0] as HTMLScriptElement;
+        expect(script?.tagName).toBe("SCRIPT");
+        expect(script.src).toMatch(
+          /https:\/\/www\.google\.com\/recaptcha\/api\.js\?render=test-site-key&onload=__spaceis_recaptcha_cb_/
+        );
+
+        // Extract callback name injected into the URL
+        const callbackMatch = script.src.match(/onload=([^&]+)/);
+        const callbackName = callbackMatch?.[1];
+        expect(typeof callbackName).toBe("string");
+
+        // Simulate grecaptcha being ready and firing the callback
+        const globals = globalThis as unknown as Record<string, unknown>;
+        const cb = globals[callbackName as string];
+        expect(typeof cb).toBe("function");
+        (cb as () => void)();
+
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        appendChildSpy.mockRestore();
+      });
+
+      it("waits for existing recaptcha script without re-injecting a new one", async () => {
+        // Simulate a script tag that is already in the DOM (e.g. added by user)
+        const existingScript = document.createElement("script");
+        existingScript.src = "https://www.google.com/recaptcha/api.js?render=existing-key";
+        document.head.appendChild(existingScript);
+
+        // grecaptcha is available at the moment load() checks post-fetch
+        (globalThis as unknown as Record<string, unknown>).grecaptcha = {
+          execute: () => Promise.resolve("token"),
+          ready: (cb: () => void) => cb(),
+        };
+
+        const client = makeClient();
+        mockFetch({ key: "test-site-key", url: "https://verify.google.com" });
+
+        // Spy AFTER the existing script is already in DOM
+        const appendChildSpy = vi.spyOn(document.head, "appendChild");
+
+        const loadPromise = client.recaptcha.load();
+        // Flush so the config fetch and grecaptcha check happen
+        await new Promise((r) => setTimeout(r, 0));
+
+        // No new script should have been injected
+        expect(appendChildSpy).not.toHaveBeenCalled();
+
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        appendChildSpy.mockRestore();
+      });
+    });
   });
 });
