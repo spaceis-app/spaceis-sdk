@@ -12,6 +12,9 @@ import { useSales } from "../composables/use-sales";
 import { useShopConfig } from "../composables/use-shop-config";
 import { usePlaceOrder } from "../composables/use-checkout";
 import { useProductRecommendations } from "../composables/use-product";
+import { useCart } from "../composables/use-cart";
+import { useRecaptcha } from "../composables/use-recaptcha";
+import { useTopCustomers, useLatestOrders } from "../composables/use-rankings";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -39,6 +42,17 @@ function makeCartManagerStub(overrides: Partial<CartManager> = {}): CartManager 
     onChange: vi.fn(() => vi.fn()),
     load: vi.fn(),
     clear: vi.fn(),
+    add: vi.fn(),
+    remove: vi.fn(),
+    increment: vi.fn(),
+    decrement: vi.fn(),
+    setQuantity: vi.fn(),
+    applyDiscount: vi.fn(),
+    removeDiscount: vi.fn(),
+    findItem: vi.fn(() => null),
+    hasItem: vi.fn(() => false),
+    getQuantity: vi.fn(() => 0),
+    formatPrice: vi.fn(() => ""),
     ...overrides,
   } as unknown as CartManager;
 }
@@ -286,6 +300,168 @@ describe("usePlaceOrder — auto cart clear", () => {
     await flushPromises();
 
     expect(userOnSuccess).toHaveBeenCalledTimes(1);
+
+    wrapper.unmount();
+  });
+});
+
+describe("useCart", () => {
+  it("returns refs and computed props with correct initial values", () => {
+    const cartStub = makeCartManagerStub();
+    let captured: ReturnType<typeof useCart> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useCart();
+      return captured;
+    }, cartStub);
+
+    expect(captured).toBeDefined();
+    // ShallowRefs
+    expect(captured!.cart.value).toBeNull();
+    expect(captured!.isLoading.value).toBe(false);
+    expect(captured!.error.value).toBeNull();
+    // ComputedRefs derived from null cart
+    expect(captured!.isEmpty.value).toBe(true);
+    expect(captured!.items.value).toEqual([]);
+    expect(captured!.itemCount.value).toBe(0);
+    expect(captured!.totalQuantity.value).toBe(0);
+    expect(captured!.finalPrice.value).toBe(0);
+    expect(captured!.regularPrice.value).toBe(0);
+    expect(captured!.hasDiscount.value).toBe(false);
+
+    wrapper.unmount();
+  });
+
+  it("exposes all cart action methods", () => {
+    let captured: ReturnType<typeof useCart> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useCart();
+      return captured;
+    });
+
+    expect(typeof captured!.load).toBe("function");
+    expect(typeof captured!.add).toBe("function");
+    expect(typeof captured!.remove).toBe("function");
+    expect(typeof captured!.increment).toBe("function");
+    expect(typeof captured!.decrement).toBe("function");
+    expect(typeof captured!.setQuantity).toBe("function");
+    expect(typeof captured!.applyDiscount).toBe("function");
+    expect(typeof captured!.removeDiscount).toBe("function");
+    expect(typeof captured!.clear).toBe("function");
+    expect(typeof captured!.findItem).toBe("function");
+    expect(typeof captured!.hasItem).toBe("function");
+    expect(typeof captured!.getQuantity).toBe("function");
+    expect(typeof captured!.formatPrice).toBe("function");
+
+    wrapper.unmount();
+  });
+});
+
+describe("useRecaptcha", () => {
+  it("returns an execute function", () => {
+    let captured: ReturnType<typeof useRecaptcha> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useRecaptcha();
+      return captured;
+    });
+
+    expect(typeof captured!.execute).toBe("function");
+
+    wrapper.unmount();
+  });
+
+  it("execute() rejects when called outside browser (no window)", async () => {
+    let captured: ReturnType<typeof useRecaptcha> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useRecaptcha();
+      return captured;
+    });
+
+    // Simulate non-browser environment by removing window temporarily
+    const originalWindow = globalThis.window;
+    // @ts-expect-error — intentionally deleting window to simulate SSR
+    delete globalThis.window;
+
+    await expect(captured!.execute("checkout")).rejects.toThrow(
+      "useRecaptcha can only be used on the client"
+    );
+
+    // Restore
+    globalThis.window = originalWindow;
+    wrapper.unmount();
+  });
+});
+
+describe("useTopCustomers", () => {
+  it("fetches top customers and exposes data", async () => {
+    // RankingsModule.top() unwraps res.data — so data.value is the array directly
+    const topCustomers = [
+      {
+        first_name: "steve",
+        total_orders: 5,
+        total_items: 10,
+        total_items_quantity: 10000,
+        total_spent: 5000,
+      },
+    ];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: topCustomers }),
+    });
+
+    let captured: ReturnType<typeof useTopCustomers> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useTopCustomers({ limit: 10 });
+      return captured;
+    });
+
+    await flushPromises();
+
+    expect(captured!.isSuccess.value).toBe(true);
+    const data = captured!.data.value as typeof topCustomers;
+    expect(data).toHaveLength(1);
+    expect(data[0]!.first_name).toBe("steve");
+    expect(data[0]!.total_spent).toBe(5000);
+
+    wrapper.unmount();
+  });
+});
+
+describe("useLatestOrders", () => {
+  it("fetches latest orders and exposes data", async () => {
+    // RankingsModule.latest() unwraps res.data — so data.value is the array directly
+    // LatestOrder type: { first_name: string, completed_at: string }
+    const latestOrders = [
+      {
+        first_name: "player1",
+        completed_at: "2026-01-01T12:00:00Z",
+      },
+    ];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: latestOrders }),
+    });
+
+    let captured: ReturnType<typeof useLatestOrders> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      captured = useLatestOrders({ limit: 5 });
+      return captured;
+    });
+
+    await flushPromises();
+
+    expect(captured!.isSuccess.value).toBe(true);
+    const data = captured!.data.value;
+    expect(data).toHaveLength(1);
+    expect(data![0]!.first_name).toBe("player1");
+    expect(data![0]!.completed_at).toBe("2026-01-01T12:00:00Z");
 
     wrapper.unmount();
   });

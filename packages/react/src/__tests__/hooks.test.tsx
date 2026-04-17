@@ -13,6 +13,7 @@ import { usePaymentMethods, useAgreements, useCheckout, usePlaceOrder } from "..
 import { useRecaptcha } from "../hooks/use-recaptcha";
 import { useTopCustomers, useLatestOrders } from "../hooks/use-rankings";
 import { useCart } from "../hooks/use-cart";
+import { SpaceISError } from "@spaceis/sdk";
 import type { ReactNode } from "react";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
@@ -258,6 +259,27 @@ describe("data hooks", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(orders);
+  });
+});
+
+describe("error states", () => {
+  it("useProducts surfaces SpaceISError with correct status when API returns 404", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      json: () => Promise.resolve({ message: "Products endpoint not found" }),
+    });
+
+    const { result } = renderHook(() => useProducts(), { wrapper: makeWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBeInstanceOf(SpaceISError);
+    const err = result.current.error as SpaceISError;
+    expect(err.status).toBe(404);
+    expect(err.isNotFound).toBe(true);
+    expect(err.message).toBe("Products endpoint not found");
   });
 });
 

@@ -104,4 +104,79 @@ describe("useCart", () => {
     expect(result.current.items).toEqual([]);
     expect(result.current.isEmpty).toBe(true);
   });
+
+  it("add() triggers re-render and updates items state reactively", async () => {
+    // CartManager.add() calls client.cart.addItem internally, which calls fetch.
+    // The response must be a CartMutationResponse: { message, data: { cart } }
+    const cartAfterAdd = {
+      items: [
+        {
+          variant: { uuid: "variant-abc", name: "Test Item" },
+          quantity: 1000,
+          regular_price: 1000,
+          final_price: 1000,
+        },
+      ],
+      discount: null,
+      regular_price: 1000,
+      final_price: 1000,
+    };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message: "Added", data: { cart: cartAfterAdd } }),
+    });
+
+    const { result } = renderHook(() => useCart(), { wrapper: makeWrapper() });
+
+    expect(result.current.cart).toBeNull();
+    expect(result.current.isEmpty).toBe(true);
+
+    await act(async () => {
+      await result.current.add("variant-abc");
+    });
+
+    expect(result.current.items).toHaveLength(1);
+    expect(result.current.isEmpty).toBe(false);
+    // quantity 1000 in API units = 1 human-readable
+    expect(result.current.totalQuantity).toBe(1);
+  });
+
+  it("clear() after add() empties state and triggers re-render", async () => {
+    const cartWithItem = {
+      items: [
+        {
+          variant: { uuid: "variant-xyz", name: "Item" },
+          quantity: 1000,
+          regular_price: 500,
+          final_price: 500,
+        },
+      ],
+      discount: null,
+      regular_price: 500,
+      final_price: 500,
+    };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message: "Added", data: { cart: cartWithItem } }),
+    });
+
+    const { result } = renderHook(() => useCart(), { wrapper: makeWrapper() });
+
+    await act(async () => {
+      await result.current.add("variant-xyz");
+    });
+
+    expect(result.current.items).toHaveLength(1);
+
+    act(() => {
+      result.current.clear();
+    });
+
+    expect(result.current.cart).toBeNull();
+    expect(result.current.items).toEqual([]);
+    expect(result.current.isEmpty).toBe(true);
+    expect(result.current.totalQuantity).toBe(0);
+  });
 });
