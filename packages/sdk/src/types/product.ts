@@ -85,6 +85,12 @@ export interface ShowShopProduct {
   min_quantity: number | null;
   /** Maximum quantity in API thousandths, or `null` for default */
   max_quantity: number | null;
+  /**
+   * Human-readable unit label for the product's quantity — e.g. `"szt"`
+   * (pieces), `"dni"` (days), `"min"` (minutes), `"godz"` (hours). Used
+   * for display only; the SDK does not interpret the value.
+   */
+  unit: string;
   /** Available variants with pricing */
   variants: ShowShopProductVariant[];
   /** Parent package if product belongs to one, or `null` */

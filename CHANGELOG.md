@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Audit-driven release hardening the public API, fixing two edge-case runtime
 bugs, and clarifying security expectations for consumers of HTML-typed fields.
 
+### Added
+- `ShowShopProduct.unit` — human-readable quantity unit label (e.g. `"szt"`,
+  `"dni"`, `"min"`) returned by `GET /products/{shopProduct}`. Intended for
+  display next to quantity inputs (e.g. `"+1 szt"`, `"-1 dni"`). Not present
+  on list/cart/order responses — only the product detail endpoint.
+
 ### Changed
 - **BREAKING (TS)**: `GetProductsParams`, `GetCategoriesParams`, `GetSalesParams`,
   `GetGoalsParams`, `GetPackagesParams`, `GetPagesParams`, `GetTopCustomersParams`,
