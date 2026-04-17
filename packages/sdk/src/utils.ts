@@ -80,7 +80,21 @@ export function centsToAmount(cents: number): number {
 
 /**
  * Get the display image URL for a cart item.
- * Falls back: variant image → product image → null.
+ *
+ * Falls back in order: variant image → product image → `null`.
+ * Useful for rendering cart/checkout UI where variant-specific images
+ * (e.g. different colors) should override the product-level image.
+ *
+ * @param item - Cart item with optional `variant` and `shop_product` relations
+ * @returns Image URL, or `null` if neither variant nor product has one
+ *
+ * @example
+ * ```js
+ * cart.items.forEach(item => {
+ *   const img = SpaceIS.getCartItemImage(item);
+ *   if (img) thumbnailEl.src = img;
+ * });
+ * ```
  */
 export function getCartItemImage(item: {
   variant?: { image?: string | null } | null;
@@ -161,15 +175,6 @@ export function snapQuantity(qty: number, limits: ProductLimits): number {
 
 // ── HTML helpers ──
 
-/**
- * Escape HTML special characters to prevent XSS.
- *
- * @example
- * ```js
- * SpaceIS.escapeHtml('<script>alert("xss")</script>')
- * // → "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;"
- * ```
- */
 const HTML_ESCAPE_MAP: Readonly<Record<"&" | "<" | ">" | '"' | "'", string>> = {
   "&": "&amp;",
   "<": "&lt;",
@@ -178,6 +183,25 @@ const HTML_ESCAPE_MAP: Readonly<Record<"&" | "<" | ">" | '"' | "'", string>> = {
   "'": "&#39;",
 };
 
+/**
+ * Escape HTML special characters (`& < > " '`) to prevent XSS.
+ *
+ * Use when rendering untrusted text into HTML context (e.g. via
+ * `innerHTML` or template strings). Note that this is a minimal text-node
+ * escaper — for raw HTML fields from the API (product descriptions,
+ * statute content), prefer a full sanitizer like DOMPurify.
+ *
+ * @param str - Untrusted string to escape
+ * @returns HTML-safe string with special characters replaced by entities
+ *
+ * @example
+ * ```js
+ * SpaceIS.escapeHtml('<script>alert("xss")</script>')
+ * // → "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;"
+ *
+ * el.innerHTML = `<h1>${SpaceIS.escapeHtml(userInput)}</h1>`;
+ * ```
+ */
 export function escapeHtml(str: string): string {
   return str.replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch as keyof typeof HTML_ESCAPE_MAP] ?? ch);
 }
