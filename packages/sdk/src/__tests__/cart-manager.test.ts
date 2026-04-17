@@ -25,7 +25,7 @@ function makeCart(overrides: Partial<Cart> = {}): Cart {
 
 function makeCartItem(variantUuid: string, quantity = 1000, price = 500) {
   return {
-    shop_product: { uuid: "prod-1", name: "Product", image: null, price },
+    shop_product: { uuid: "prod-1", name: "Product", slug: "product", image: null, price },
     variant: { uuid: variantUuid, name: "Variant", image: null, price },
     package: null,
     from_package: null,
@@ -532,7 +532,6 @@ describe("CartManager", () => {
     it("decrements by step when item quantity exceeds step", async () => {
       // Item has quantity 3000, learned step is 1000
       const cartWithItem = makeCart({ items: [makeCartItem("v-1", 3000)] });
-      const cartAfterAdd = makeCart({ items: [makeCartItem("v-1", 1000)] });
       const cartAfterDecrement = makeCart({ items: [makeCartItem("v-1", 2000)] });
 
       const fetchMock = vi.fn()

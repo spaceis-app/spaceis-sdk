@@ -22,6 +22,8 @@ export interface Sale {
 export interface GetSalesParams {
   /** Sort field (e.g. `"expires_at"`, `"created_at"`) */
   sort?: string;
+  /** Page number for pagination */
+  page?: number;
   /** Number of items per page */
   per_page?: number;
   /**

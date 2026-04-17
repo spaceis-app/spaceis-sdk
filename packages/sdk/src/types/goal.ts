@@ -23,6 +23,8 @@ export interface Goal {
 export interface GetGoalsParams {
   /** Sort field */
   sort?: string;
+  /** Page number for pagination */
+  page?: number;
   /** Number of items per page */
   per_page?: number;
   /**
