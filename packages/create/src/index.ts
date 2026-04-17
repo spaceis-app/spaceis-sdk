@@ -45,6 +45,57 @@ const PACKAGES = [
   },
 ];
 
+/**
+ * Fetch the `latest` tag version of a package from the npm registry.
+ * Uses Node's built-in fetch (Node ≥ 18).
+ */
+async function getLatestVersion(pkg: string): Promise<string> {
+  const url = `https://registry.npmjs.org/${encodeURIComponent(pkg).replace("%40", "@")}/latest`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`npm registry returned ${res.status} for ${pkg}`);
+  const data = (await res.json()) as { version?: unknown };
+  if (typeof data.version !== "string") throw new Error(`Invalid registry payload for ${pkg}`);
+  return data.version;
+}
+
+/**
+ * Rewrite all `@spaceis/*` dependencies in a package.json to the latest
+ * version published on npm. Keeps non-spaceis deps untouched. Writes the
+ * file in-place and returns a list of human-readable change descriptions.
+ */
+async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]> {
+  const raw = fs.readFileSync(pkgJsonPath, "utf8");
+  const pkg = JSON.parse(raw) as {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  const changed: string[] = [];
+  const cache = new Map<string, string>();
+
+  for (const field of ["dependencies", "devDependencies"] as const) {
+    const deps = pkg[field];
+    if (!deps) continue;
+    for (const name of Object.keys(deps)) {
+      if (!name.startsWith("@spaceis/")) continue;
+      let latest = cache.get(name);
+      if (!latest) {
+        latest = await getLatestVersion(name);
+        cache.set(name, latest);
+      }
+      const newRange = `^${latest}`;
+      if (deps[name] !== newRange) {
+        changed.push(`${name}: ${deps[name]} → ${newRange}`);
+        deps[name] = newRange;
+      }
+    }
+  }
+
+  if (changed.length > 0) {
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + "\n");
+  }
+  return changed;
+}
+
 function run(cmd: string, cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let stderr = "";
@@ -180,8 +231,28 @@ async function handleExample() {
   }
 
   const pm = detectPackageManager();
-  const hasPackageJson = fs.existsSync(path.join(targetDir, "package.json"));
+  const pkgJsonPath = path.join(targetDir, "package.json");
+  const hasPackageJson = fs.existsSync(pkgJsonPath);
   let depsInstalled = false;
+
+  // Resolve @spaceis/* versions to latest published on npm, so the example
+  // always installs fresh regardless of what's committed in the repo.
+  if (hasPackageJson) {
+    const sr = p.spinner();
+    sr.start("Resolving @spaceis/* versions to latest on npm...");
+    try {
+      const changed = await resolveSpaceisDepsToLatest(pkgJsonPath);
+      if (changed.length > 0) {
+        sr.stop(`Updated ${changed.length} @spaceis/* dependency${changed.length === 1 ? "" : "ies"} to latest.`);
+        for (const line of changed) p.log.info(`  ${line}`);
+      } else {
+        sr.stop("No @spaceis/* dependencies to update.");
+      }
+    } catch (err) {
+      sr.stop("Could not reach npm registry — keeping versions from the example.");
+      p.log.warning(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   if (hasPackageJson) {
     const shouldInstall = await p.confirm({
@@ -190,7 +261,8 @@ async function handleExample() {
     });
 
     if (!p.isCancel(shouldInstall) && shouldInstall) {
-      // Remove foreign lockfiles so the detected package manager doesn't conflict
+      // Remove foreign lockfiles so the detected package manager doesn't conflict,
+      // and drop the monorepo lockfile whose workspace-resolved refs no longer apply.
       for (const lockfile of ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"]) {
         const lf = path.join(targetDir, lockfile);
         if (fs.existsSync(lf)) fs.unlinkSync(lf);

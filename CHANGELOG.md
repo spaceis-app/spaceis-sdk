@@ -68,6 +68,22 @@ bugs, and clarifying security expectations for consumers of HTML-typed fields.
 - Peer dependency `@spaceis/sdk` bumped to `>=0.2.0`. Downstream TypeScript
   consumers inherit the stricter query-params typing (see SDK 0.2.0 notes).
 
+## [create-spaceis 0.2.0] - 2026-04-17
+
+### Added
+- After downloading an example template, the CLI now fetches the `latest`
+  version of every `@spaceis/*` dependency from the npm registry and
+  rewrites the example's `package.json` before running `install`. This
+  means a fresh `npx create-spaceis` always lands on the current release
+  even if the committed example references an older version.
+- Graceful offline fallback: if the npm registry is unreachable the CLI
+  prints a warning and continues with the example-provided versions,
+  rather than failing the whole run.
+
+### Changed
+- Bumped to 0.2.0 to align with the `@spaceis/sdk` / `@spaceis/react` /
+  `@spaceis/vue` 0.2.0 release trio.
+
 ## [@spaceis/sdk 0.1.6] - 2026-04-10
 
 ### Fixed

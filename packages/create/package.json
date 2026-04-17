@@ -1,6 +1,6 @@
 {
   "name": "create-spaceis",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scaffold a SpaceIS storefront — copy an example or install SDK packages into an existing project.",
   "type": "module",
   "bin": {
