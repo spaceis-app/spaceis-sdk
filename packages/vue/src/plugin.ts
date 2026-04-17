@@ -12,7 +12,7 @@ import type { CartManager } from "@spaceis/sdk";
 
 export interface SpaceISContext {
   client: SpaceISClient;
-  cartManager: CartManager;
+  cartManager: CartManager | null;
 }
 
 export const SpaceISKey: InjectionKey<SpaceISContext> = Symbol("spaceis");

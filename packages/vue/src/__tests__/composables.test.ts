@@ -3,12 +3,14 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
 import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query";
 import { createSpaceIS } from "@spaceis/sdk";
+import type { CartManager } from "@spaceis/sdk";
 import { SpaceISKey } from "../plugin";
 import { useProducts } from "../composables/use-products";
 import { useProduct } from "../composables/use-product";
 import { useCategories } from "../composables/use-categories";
 import { useSales } from "../composables/use-sales";
 import { useShopConfig } from "../composables/use-shop-config";
+import { usePlaceOrder } from "../composables/use-checkout";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -21,24 +23,34 @@ function mockApiResponse(json: unknown) {
   });
 }
 
-function mountWithContext(setup: () => unknown) {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-  const client = createSpaceIS({
+function makeClient() {
+  return createSpaceIS({
     baseUrl: "https://api.example.com",
     shopUuid: "test-shop-uuid",
   });
-  // cartManager is not needed for data composables — provide a minimal stub
-  const cartManager = {
+}
+
+function makeCartManagerStub(overrides: Partial<CartManager> = {}): CartManager {
+  return {
     cart: null,
     isLoading: false,
     error: null,
     onChange: vi.fn(() => vi.fn()),
     load: vi.fn(),
-  } as unknown as import("@spaceis/sdk").CartManager;
+    clear: vi.fn(),
+    ...overrides,
+  } as unknown as CartManager;
+}
+
+function mountWithContext(setup: () => unknown, cartManager?: CartManager | null) {
+  const qc = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  const client = makeClient();
+  const cm = cartManager !== undefined ? cartManager : makeCartManagerStub();
 
   const Comp = defineComponent({
     setup() {
@@ -50,12 +62,14 @@ function mountWithContext(setup: () => unknown) {
     },
   });
 
-  return mount(Comp, {
+  const wrapper = mount(Comp, {
     global: {
       plugins: [[VueQueryPlugin, { queryClient: qc }]],
-      provide: { [SpaceISKey as symbol]: { client, cartManager } },
+      provide: { [SpaceISKey as symbol]: { client, cartManager: cm } },
     },
   });
+
+  return { wrapper, qc, cartManager: cm };
 }
 
 beforeEach(() => {
@@ -68,7 +82,7 @@ describe("data composables", () => {
     const apiResponse = { data: [{ uuid: "1", name: "Test Product" }], meta: { current_page: 1, last_page: 1 } };
     mockApiResponse(apiResponse);
 
-    const wrapper = mountWithContext(() => useProducts({ page: 1 }));
+    const { wrapper } = mountWithContext(() => useProducts({ page: 1 }));
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -81,7 +95,7 @@ describe("data composables", () => {
     const categories = [{ uuid: "1", name: "VIP", is_active: true }];
     mockApiResponse({ data: categories });
 
-    const wrapper = mountWithContext(() => useCategories());
+    const { wrapper } = mountWithContext(() => useCategories());
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -91,7 +105,7 @@ describe("data composables", () => {
   });
 
   it("useProduct is disabled when slug is null", async () => {
-    const wrapper = mountWithContext(() => useProduct(null));
+    const { wrapper } = mountWithContext(() => useProduct(null));
     await flushPromises();
 
     // Should not make any fetch call when slug is null
@@ -103,7 +117,7 @@ describe("data composables", () => {
     const product = { uuid: "1", name: "Test", slug: "test" };
     mockApiResponse({ data: product });
 
-    const wrapper = mountWithContext(() => useProduct("test"));
+    const { wrapper } = mountWithContext(() => useProduct("test"));
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -116,7 +130,7 @@ describe("data composables", () => {
     const apiResponse = { data: [{ uuid: "1", name: "Summer Sale" }], meta: {} };
     mockApiResponse(apiResponse);
 
-    const wrapper = mountWithContext(() => useSales());
+    const { wrapper } = mountWithContext(() => useSales());
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -129,12 +143,102 @@ describe("data composables", () => {
     const config = { meta: { accent_color: "#000" } };
     mockApiResponse({ data: config });
 
-    const wrapper = mountWithContext(() => useShopConfig());
+    const { wrapper } = mountWithContext(() => useShopConfig());
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const url = mockFetch.mock.calls[0]![0] as string;
     expect(url).toContain("/template");
+    wrapper.unmount();
+  });
+});
+
+describe("usePlaceOrder — auto cart clear", () => {
+  it("calls cartManager.clear() and invalidates ['spaceis', 'cart'] on success", async () => {
+    // Mock placeOrder success response
+    mockApiResponse({ data: { order_code: "ORD-001" } });
+
+    const clearSpy = vi.fn();
+    const cm = makeCartManagerStub({ clear: clearSpy });
+    let capturedMutation: ReturnType<typeof usePlaceOrder> | undefined;
+
+    const { wrapper, qc } = mountWithContext(() => {
+      capturedMutation = usePlaceOrder();
+      return capturedMutation;
+    }, cm);
+
+    // Pre-populate cache so we can verify invalidation
+    qc.setQueryData(["spaceis", "cart"], { items: [], final_price: 0 });
+    expect(qc.getQueryData(["spaceis", "cart"])).toBeDefined();
+
+    // Trigger the mutation
+    capturedMutation!.mutate({
+      payment_method_uuid: "pm-uuid-1",
+      email: "user@example.com",
+      first_name: "testuser",
+      "g-recaptcha-response": "token",
+    });
+
+    await flushPromises();
+
+    // cartManager.clear() should have been called
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+
+    // Query should be invalidated (stale)
+    const cartQuery = qc.getQueryCache().find({ queryKey: ["spaceis", "cart"] });
+    expect(cartQuery?.isStale()).toBe(true);
+
+    wrapper.unmount();
+  });
+
+  it("works safely when cartManager is null (SSR context)", async () => {
+    // Mock placeOrder success response
+    mockApiResponse({ data: { order_code: "ORD-002" } });
+
+    let capturedMutation: ReturnType<typeof usePlaceOrder> | undefined;
+
+    // Pass null as cartManager (SSR scenario)
+    const { wrapper } = mountWithContext(() => {
+      capturedMutation = usePlaceOrder();
+      return capturedMutation;
+    }, null);
+
+    // Should not throw even with null cartManager
+    capturedMutation!.mutate({
+      payment_method_uuid: "pm-uuid-1",
+      email: "user@example.com",
+      first_name: "testuser",
+      "g-recaptcha-response": "token",
+    });
+
+    await flushPromises();
+
+    // Mutation completed without throwing
+    expect(capturedMutation!.isSuccess.value).toBe(true);
+
+    wrapper.unmount();
+  });
+
+  it("fires user-level onSuccess callback after hook-level auto-clear", async () => {
+    mockApiResponse({ data: { order_code: "ORD-003" } });
+
+    const userOnSuccess = vi.fn();
+    let capturedMutation: ReturnType<typeof usePlaceOrder> | undefined;
+
+    const { wrapper } = mountWithContext(() => {
+      capturedMutation = usePlaceOrder();
+      return capturedMutation;
+    });
+
+    capturedMutation!.mutate(
+      { payment_method_uuid: "pm-uuid-1", email: "user@example.com", first_name: "testuser", "g-recaptcha-response": "token" },
+      { onSuccess: userOnSuccess }
+    );
+
+    await flushPromises();
+
+    expect(userOnSuccess).toHaveBeenCalledTimes(1);
+
     wrapper.unmount();
   });
 });

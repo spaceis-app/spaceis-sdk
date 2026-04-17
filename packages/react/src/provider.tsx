@@ -74,7 +74,6 @@ export function SpaceISProvider({
   }
 
   // Warn if config identity changes after mount
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     if (configRef.current !== config) {
       console.error(
@@ -89,7 +88,6 @@ export function SpaceISProvider({
       client: clientRef.current!,
       cartManager: cartRef.current!,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -104,7 +102,6 @@ export function SpaceISProvider({
           },
         },
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [queryClient]
   );
 

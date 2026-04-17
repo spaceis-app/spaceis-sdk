@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { SpaceISProvider } from "../provider";
 import { useProducts } from "../hooks/use-products";
 import { useProduct } from "../hooks/use-product";
@@ -9,11 +9,12 @@ import { usePackages } from "../hooks/use-packages";
 import { useGoals } from "../hooks/use-goals";
 import { usePages, usePage, useStatute } from "../hooks/use-content";
 import { useShopConfig } from "../hooks/use-shop-config";
-import { usePaymentMethods, useAgreements, useCheckout } from "../hooks/use-checkout";
+import { usePaymentMethods, useAgreements, useCheckout, usePlaceOrder } from "../hooks/use-checkout";
 import { useRecaptcha } from "../hooks/use-recaptcha";
 import { useTopCustomers, useLatestOrders } from "../hooks/use-rankings";
+import { useCart } from "../hooks/use-cart";
 import type { ReactNode } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -257,5 +258,104 @@ describe("data hooks", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(orders);
+  });
+});
+
+// ── localStorage stub for cart tests ──────────────────────────────────────────
+const storage = new Map<string, string>();
+vi.stubGlobal("localStorage", {
+  getItem: (key: string) => storage.get(key) ?? null,
+  setItem: (key: string, value: string) => storage.set(key, value),
+  removeItem: (key: string) => storage.delete(key),
+});
+
+describe("usePlaceOrder — auto cart clear", () => {
+  function makeWrapperWithSharedQc() {
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <SpaceISProvider
+          config={{ baseUrl: "https://api.example.com", shopUuid: "test-shop-uuid" }}
+          queryClient={qc}
+        >
+          {children}
+        </SpaceISProvider>
+      );
+    }
+
+    return { qc, Wrapper };
+  }
+
+  beforeEach(() => {
+    storage.clear();
+    mockFetch.mockReset();
+  });
+
+  it("clears cart and invalidates query on successful order placement", async () => {
+    // Mock placeOrder success response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: { order_code: "ORD-001" } }),
+    });
+
+    const { qc, Wrapper } = makeWrapperWithSharedQc();
+
+    // Pre-populate query cache so we can verify invalidation later
+    qc.setQueryData(["spaceis", "cart"], { items: [], final_price: 0 });
+
+    const { result } = renderHook(
+      () => ({ placeOrder: usePlaceOrder(), cart: useCart() }),
+      { wrapper: Wrapper }
+    );
+
+    // Verify cache was populated
+    expect(qc.getQueryData(["spaceis", "cart"])).toBeDefined();
+
+    // Place order
+    await act(async () => {
+      result.current.placeOrder.mutate({
+        payment_method_uuid: "pm-uuid-1",
+        email: "user@example.com",
+        first_name: "testuser",
+        "g-recaptcha-response": "token",
+      });
+    });
+
+    await waitFor(() => expect(result.current.placeOrder.isSuccess).toBe(true));
+
+    // Cart state should be null (cleared by cartManager.clear())
+    expect(result.current.cart.cart).toBeNull();
+
+    // Query cache for spaceis cart should be invalidated (stale = needs refetch)
+    const cartQuery = qc.getQueryCache().find({ queryKey: ["spaceis", "cart"] });
+    expect(cartQuery?.isStale()).toBe(true);
+  });
+
+  it("fires user-level onSuccess callback after hook-level auto-clear", async () => {
+    // Mock placeOrder success response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: { order_code: "ORD-002" } }),
+    });
+
+    const { Wrapper } = makeWrapperWithSharedQc();
+    const userOnSuccess = vi.fn();
+
+    const { result } = renderHook(() => usePlaceOrder(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.mutate(
+        { payment_method_uuid: "pm-uuid-1", email: "user@example.com", first_name: "testuser", "g-recaptcha-response": "token" },
+        { onSuccess: userOnSuccess }
+      );
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(userOnSuccess).toHaveBeenCalledTimes(1);
   });
 });
