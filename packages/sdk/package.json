@@ -1,6 +1,6 @@
 {
   "name": "@spaceis/sdk",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "Official JavaScript SDK for SpaceIS shop platform. Zero dependencies, works everywhere.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -45,7 +45,6 @@
   },
   "keywords": [
     "spaceis",
-    "shop",
     "shop",
     "sdk",
     "api-client",

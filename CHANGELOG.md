@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@spaceis/sdk 0.2.0] - 2026-04-17
+
+Audit-driven release hardening the public API, fixing two edge-case runtime
+bugs, and clarifying security expectations for consumers of HTML-typed fields.
+
+### Changed
+- **BREAKING (TS)**: `GetProductsParams`, `GetCategoriesParams`, `GetSalesParams`,
+  `GetGoalsParams`, `GetPackagesParams`, `GetPagesParams`, `GetTopCustomersParams`,
+  `GetLatestOrdersParams` no longer carry an `[key: string]: unknown` index
+  signature. Use the new `extraParams?: Record<string, unknown>` field to forward
+  undocumented API parameters. Runtime behaviour is unchanged; only TypeScript
+  now rejects unknown top-level keys (catches typos like `categori_slug`).
+  - Migration: `client.products.list({ category_slug: 'vip', custom: 'x' })` →
+    `client.products.list({ category_slug: 'vip', extraParams: { custom: 'x' } })`.
+- `CartManager._mutate()` now resets `isLoading` and `error` on its success path.
+  The helper `applyMutation()` is renamed to `applyCart()` and only assigns
+  `_cart` — notification and state reset live in one place. Notification
+  semantics are unchanged (2 notifies per mutation: start + end).
+
+### Fixed
+- `RecaptchaModule`: the global callback registered on `globalThis` now uses a
+  unique name per load attempt (`__spaceis_recaptcha_cb_<random>`). Fixes a
+  denial-of-service when two SDK instances coexist on the same page
+  (multi-shop embed, React StrictMode double-mount, HMR re-render).
+- `buildUrl()` (`http.ts`) defensively handles a non-object `extraParams` value.
+
+### Removed
+- `RawOrderSummary` is no longer re-exported from `@spaceis/sdk`. The type
+  was marked `@internal` and described the un-normalised API shape
+  (`items: T | T[]`). Consumers should use the public `OrderSummary` type.
+
+### Security
+- `Agreement.content`, `ShopPage.content`, `Statute.content`, and
+  `ShowShopProduct.description` now carry a JSDoc `@remarks` warning that
+  these fields contain raw HTML from the API and must be sanitised
+  (e.g. via DOMPurify) or escaped before being written to `innerHTML`.
+
+### Documentation
+- Full JSDoc with `@param`, `@returns`, and `@example` added to `cartToken`,
+  `setCartToken`, `setLang`, `getCartItemImage`, and `escapeHtml`.
+- Removed duplicate `"shop"` keyword from `package.json`.
+
+### Internal
+- `generateCallbackName()` exported (`@internal`) from
+  `modules/recaptcha.ts` for testability.
+- New test files: 5 new `buildUrl` tests for `extraParams` handling,
+  3 new `RecaptchaModule.generateCallbackName` tests, 3 new `CartManager`
+  notify-count invariant tests.
+- Bump `typescript` 6.0.2 → 6.0.3.
+
+## [@spaceis/react 0.2.0] - 2026-04-17
+
+### Changed
+- Peer dependency `@spaceis/sdk` bumped to `>=0.2.0`. Downstream TypeScript
+  consumers inherit the stricter query-params typing (see SDK 0.2.0 notes).
+- Removed duplicate `"shop"` keyword from `package.json`.
+
+## [@spaceis/vue 0.2.0] - 2026-04-17
+
+### Changed
+- Peer dependency `@spaceis/sdk` bumped to `>=0.2.0`. Downstream TypeScript
+  consumers inherit the stricter query-params typing (see SDK 0.2.0 notes).
+
 ## [@spaceis/sdk 0.1.6] - 2026-04-10
 
 ### Fixed
