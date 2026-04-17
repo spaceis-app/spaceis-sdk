@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useProductRecommendations, useCart, fromApiQty } from '@spaceis/vue';
+import { useProductRecommendations, useCart, fromApiQty, type PackageRecommendation } from '@spaceis/vue';
 import { fp, getErrorMessage } from '~/utils/helpers';
 
 const props = withDefaults(
@@ -18,7 +18,7 @@ const { success: toastSuccess, error: toastError } = useToast();
 const addingMap = reactive<Record<string, boolean>>({});
 const addedMap = reactive<Record<string, boolean>>({});
 
-async function handleAdd(rec: any) {
+async function handleAdd(rec: PackageRecommendation) {
   const variantUuid = rec.variant?.uuid;
   if (!variantUuid || addingMap[variantUuid]) return;
 
@@ -39,12 +39,12 @@ async function handleAdd(rec: any) {
 </script>
 
 <template>
-  <div v-if="recs && (recs as any[]).length > 0" class="recs-section">
+  <div v-if="recs && recs.length > 0" class="recs-section">
     <div class="recs-section-title">{{ title }}</div>
     <div class="recs-grid">
       <div
-        v-for="rec in (recs as any[])"
-        :key="rec.variant?.uuid ?? rec.uuid"
+        v-for="rec in recs"
+        :key="rec.variant?.uuid ?? rec.name"
         class="rec-card"
       >
         <img

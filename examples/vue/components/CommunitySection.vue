@@ -18,7 +18,7 @@ const { data: topCustomers, isLoading: loadingTop } = useTopCustomers({ limit: 1
 const { data: latestOrders, isLoading: loadingLatest } = useLatestOrders({ limit: 10, sort: '-completed_at' });
 const { data: goalsData, isLoading: loadingGoals } = useGoals({ per_page: 10 });
 
-const goals = computed(() => (goalsData.value as any)?.data ?? []);
+const goals = computed(() => goalsData.value?.data ?? []);
 </script>
 
 <template>
@@ -29,11 +29,11 @@ const goals = computed(() => (goalsData.value as any)?.data ?? []);
         <div class="community-card-header">Top customers</div>
         <div class="community-card-body">
           <div v-if="loadingTop" class="spinner" />
-          <div v-else-if="!topCustomers || (topCustomers as any[]).length === 0" class="community-empty">
+          <div v-else-if="!topCustomers || topCustomers.length === 0" class="community-empty">
             No data yet.
           </div>
           <template v-else>
-            <div v-for="(c, i) in (topCustomers as any[])" :key="i" class="rank-row">
+            <div v-for="(c, i) in topCustomers" :key="i" class="rank-row">
               <span class="rank-pos">#{{ i + 1 }}</span>
               <span class="rank-name">{{ c.first_name }}</span>
               <span class="rank-value">{{ fp(c.total_spent) }}</span>
@@ -47,11 +47,11 @@ const goals = computed(() => (goalsData.value as any)?.data ?? []);
         <div class="community-card-header">Latest orders</div>
         <div class="community-card-body">
           <div v-if="loadingLatest" class="spinner" />
-          <div v-else-if="!latestOrders || (latestOrders as any[]).length === 0" class="community-empty">
+          <div v-else-if="!latestOrders || latestOrders.length === 0" class="community-empty">
             No orders yet.
           </div>
           <template v-else>
-            <div v-for="(o, i) in (latestOrders as any[])" :key="i" class="latest-row">
+            <div v-for="(o, i) in latestOrders" :key="i" class="latest-row">
               <span class="latest-name">{{ o.first_name }}</span>
               <span class="latest-time">{{ timeAgo(o.completed_at) }}</span>
             </div>

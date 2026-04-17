@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'isomorphic-dompurify';
 import {
   useProduct,
   useCart,
@@ -12,6 +13,8 @@ const route = useRoute();
 const slug = computed(() => route.params.slug as string);
 
 const { data: product, isLoading } = useProduct(slug);
+
+const sanitizedDescription = computed(() => DOMPurify.sanitize(product.value?.description ?? ''));
 
 useSeoMeta({
   title: () => product.value?.name || 'Product',
@@ -211,7 +214,7 @@ function commitQty() {
           <div v-if="product.description" class="pdp-description">
             <div class="pdp-label">Description</div>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="pdp-desc-body" v-html="product.description" />
+            <div class="pdp-desc-body" v-html="sanitizedDescription" />
           </div>
         </div>
       </div>
