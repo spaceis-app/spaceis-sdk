@@ -45,13 +45,20 @@ const PACKAGES = [
   },
 ];
 
+/** How long to wait for the npm registry before giving up, per request. */
+const REGISTRY_TIMEOUT_MS = 10_000;
+
 /**
  * Fetch the `latest` tag version of a package from the npm registry.
- * Uses Node's built-in fetch (Node ≥ 18).
+ * Uses Node's built-in fetch (Node ≥ 18) with a 10s timeout so a slow
+ * or unresponsive registry can't hang the CLI indefinitely.
  */
 async function getLatestVersion(pkg: string): Promise<string> {
   const url = `https://registry.npmjs.org/${encodeURIComponent(pkg).replace("%40", "@")}/latest`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`npm registry returned ${res.status} for ${pkg}`);
   const data = (await res.json()) as { version?: unknown };
   if (typeof data.version !== "string") throw new Error(`Invalid registry payload for ${pkg}`);
@@ -115,9 +122,14 @@ function run(cmd: string, cwd?: string): Promise<string> {
   });
 }
 
+/**
+ * Abort the CLI with a cancel message. Exits with code 130 — the SIGINT
+ * convention — so CI/automation can tell "user cancelled" apart from
+ * "succeeded" (0) and "errored" (1).
+ */
 function cancel(): never {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(130);
 }
 
 function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
