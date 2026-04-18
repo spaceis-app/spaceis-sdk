@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fp, esc, getErrorMessage } from "@/helpers";
+import { fp, esc, getErrorMessage } from "@/lib/helpers";
 import { SpaceISError } from "@spaceis/react";
 
 describe("fp() — format price from cents", () => {

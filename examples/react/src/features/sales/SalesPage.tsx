@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSales } from "@spaceis/react";
-import { PlaceholderSVG } from "@/helpers";
-import { ProductGridSkeleton } from "@/components/ProductCard";
-import { CommunitySection } from "@/components/CommunitySection";
+import { PlaceholderSVG } from "@/lib/helpers";
+import { ProductGridSkeleton } from "@/features/products/ProductCard";
+import { CommunitySection } from "@/features/community/CommunitySection";
 
 export function SalesPage() {
   const { data, isLoading } = useSales({ sort: "expires_at" });

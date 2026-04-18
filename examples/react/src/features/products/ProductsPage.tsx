@@ -3,9 +3,9 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useProducts, useCategories, type ShopCategory } from "@spaceis/react";
-import { ProductCard, ProductGridSkeleton } from "@/components/ProductCard";
+import { ProductCard, ProductGridSkeleton } from "@/features/products/ProductCard";
 import { Pagination } from "@/components/Pagination";
-import { CommunitySection } from "@/components/CommunitySection";
+import { CommunitySection } from "@/features/community/CommunitySection";
 
 export function ProductsPage() {
   const searchParams = useSearchParams();

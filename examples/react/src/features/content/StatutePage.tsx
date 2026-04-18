@@ -1,6 +1,7 @@
 "use client";
 
 import { useStatute } from "@spaceis/react";
+import { SafeHtml } from "@/components/SafeHtml";
 
 
 function formatDate(iso: string): string {
@@ -38,10 +39,7 @@ export function StatutePage() {
         {statute.title && (
           <h1 className="statute-title">{statute.title}</h1>
         )}
-        <div
-          className="statute-body"
-          dangerouslySetInnerHTML={{ __html: statute.content || "" }}
-        />
+        <SafeHtml className="statute-body" html={statute.content} />
         <div className="statute-meta">
           <span>Created: {formatDate(statute.created_at)}</span>
           <span>Last updated: {formatDate(statute.updated_at)}</span>

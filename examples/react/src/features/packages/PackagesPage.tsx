@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { usePackages, useCategories, type ShopCategory } from "@spaceis/react";
-import { ProductCard, ProductGridSkeleton } from "@/components/ProductCard";
+import { ProductCard, ProductGridSkeleton } from "@/features/products/ProductCard";
 import { Pagination } from "@/components/Pagination";
-import { CommunitySection } from "@/components/CommunitySection";
+import { CommunitySection } from "@/features/community/CommunitySection";
 
 export function PackagesPage() {
   const [page, setPage] = useState(1);

@@ -1,5 +1,9 @@
 import { formatPrice, escapeHtml, SpaceISError } from "@spaceis/react";
 
+// Re-export PlaceholderSVG so existing call sites importing from "@/lib/helpers"
+// keep working without splitting imports across two paths.
+export { PlaceholderSVG } from "@/components/PlaceholderSVG";
+
 /** Escape HTML to prevent XSS */
 export function esc(str: unknown): string {
   return escapeHtml(str == null ? "" : String(str));
@@ -23,25 +27,3 @@ export function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message || "An error occurred";
   return "An error occurred";
 }
-
-/** Placeholder SVG for images */
-export const PlaceholderSVG = ({
-  size = 32,
-}: {
-  size?: number;
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <path d="M21 15l-5-5L5 21" />
-  </svg>
-);

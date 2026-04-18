@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSpaceIS, fromApiQty } from "@spaceis/react";
-import { fp, getErrorMessage } from "@/helpers";
+import type { OrderSummary, OrderSummaryItem } from "@spaceis/react";
+import { fp, getErrorMessage } from "@/lib/helpers";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {
@@ -16,10 +17,10 @@ export function OrderSummaryPage({ code: codeFromUrl }: { code?: string }) {
   const { client } = useSpaceIS();
 
   const [code, setCode] = useState(codeFromUrl || "");
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const loadOrder = async (orderCode: string) => {
+  const loadOrder = useCallback(async (orderCode: string) => {
     if (!orderCode.trim()) {
       toast.error("Enter order code");
       return;
@@ -33,14 +34,13 @@ export function OrderSummaryPage({ code: codeFromUrl }: { code?: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [client]);
 
   useEffect(() => {
     if (codeFromUrl) {
       loadOrder(codeFromUrl);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [codeFromUrl]);
+  }, [codeFromUrl, loadOrder]);
 
   const status = order?.status || "pending";
   const statusLabel = statusLabels[status] || status;
@@ -92,7 +92,7 @@ export function OrderSummaryPage({ code: codeFromUrl }: { code?: string }) {
           {/* Items */}
           <div className="order-card">
             <div className="order-card-title">Order items</div>
-            {(order.items || []).map((item: any, idx: number) => (
+            {(order.items || []).map((item: OrderSummaryItem, idx: number) => (
               <div key={idx} className="order-item">
                 {item.image && (
                   <img
@@ -130,7 +130,7 @@ export function OrderSummaryPage({ code: codeFromUrl }: { code?: string }) {
               </div>
             )}
 
-            {order.discount?.totalDiscountedValue > 0 && (
+            {order.discount != null && order.discount.totalDiscountedValue > 0 && (
               <div className="order-total-row discount">
                 <span>
                   Discount
@@ -142,14 +142,14 @@ export function OrderSummaryPage({ code: codeFromUrl }: { code?: string }) {
               </div>
             )}
 
-            {order.sale?.totalDiscountedValue > 0 && (
+            {order.sale != null && order.sale.totalDiscountedValue > 0 && (
               <div className="order-total-row discount">
                 <span>Sale</span>
                 <span>-{fp(order.sale.totalDiscountedValue)}</span>
               </div>
             )}
 
-            {order.package_included?.totalDiscountedValue > 0 && (
+            {order.package_included != null && order.package_included.totalDiscountedValue > 0 && (
               <div className="order-total-row discount">
                 <span>Package discount</span>
                 <span>

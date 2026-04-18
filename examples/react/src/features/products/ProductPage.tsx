@@ -7,10 +7,13 @@ import {
   useCart,
   getProductLimits,
   snapQuantity,
+  type ShowShopProduct,
   type ShowShopProductVariant,
 } from "@spaceis/react";
-import { fp, PlaceholderSVG, getErrorMessage } from "@/helpers";
-import { Recommendations } from "@/components/Recommendations";
+import { fp, PlaceholderSVG, getErrorMessage } from "@/lib/helpers";
+import { Recommendations } from "@/features/products/Recommendations";
+import { SafeHtml } from "@/components/SafeHtml";
+import { formatUnitLabel } from "@/features/products/unit-utils";
 import { toast } from "sonner";
 
 export function ProductPage({ slug }: { slug: string }) {
@@ -25,14 +28,18 @@ export function ProductPage({ slug }: { slug: string }) {
   const [addSuccess, setAddSuccess] = useState(false);
 
   useEffect(() => {
-    if (product && product.variants && product.variants.length > 0) {
+    if (!product) return;
+    if (product.variants && product.variants.length > 0) {
       setSelectedVariant(product.variants[0]);
       const lim = getProductLimits(product);
       setQuantity(lim.min);
       setQtyInput(String(lim.min));
     }
+  }, [product?.uuid]);
+
+  useEffect(() => {
     setAddSuccess(false);
-  }, [product]);
+  }, [product?.uuid]);
 
   const limits = product
     ? getProductLimits(product)
@@ -82,6 +89,8 @@ export function ProductPage({ slug }: { slug: string }) {
     : 0;
   const hasDiscount = currentBasePrice > currentPrice;
   const unitPrice = selectedVariant ? selectedVariant.price : 0;
+  // `unit` exists in SDK source but is not yet in the published dist types
+  const productUnit = (product as ShowShopProduct & { unit?: string }).unit;
 
   return (
     <div className="container pdp-container">
@@ -120,7 +129,7 @@ export function ProductPage({ slug }: { slug: string }) {
           </div>
 
           <div className="pdp-unit-price">
-            ({fp(unitPrice)}/{limits.step > 1 ? `${limits.step} pcs.` : "1 pcs."})
+            ({fp(unitPrice)} / {formatUnitLabel(limits.step, productUnit)})
           </div>
 
           {/* Variants */}
@@ -189,6 +198,7 @@ export function ProductPage({ slug }: { slug: string }) {
                   +
                 </button>
               </div>
+              <span className="qty-unit">{productUnit || "szt"}</span>
             </div>
           </div>
 
@@ -212,10 +222,7 @@ export function ProductPage({ slug }: { slug: string }) {
           {product.description && (
             <div className="pdp-description">
               <div className="pdp-label">Description</div>
-              <div
-                className="pdp-desc-body"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
+              <SafeHtml className="pdp-desc-body" html={product.description} />
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OrderSummaryPage } from "@/views/OrderSummaryPage";
+import { OrderSummaryPage } from "@/features/order/OrderSummaryPage";
 
 export const metadata: Metadata = {
   title: "Order Summary",

@@ -2,28 +2,23 @@
 
 import { useState } from "react";
 import { useSpaceIS, useRecaptcha } from "@spaceis/react";
-import { getErrorMessage } from "@/helpers";
+import { getErrorMessage } from "@/lib/helpers";
 import { toast } from "sonner";
 
-export function VoucherPage() {
+export function DailyRewardPage() {
   const { client } = useSpaceIS();
   const { execute: executeRecaptcha } = useRecaptcha();
 
   const [nick, setNick] = useState("");
-  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
 
-  const handleRedeem = async () => {
+  const handleClaim = async () => {
     if (!nick.trim()) {
       toast.error("Player nickname is required");
-      return;
-    }
-    if (!code.trim()) {
-      toast.error("Voucher code is required");
       return;
     }
 
@@ -31,16 +26,14 @@ export function VoucherPage() {
     setLoading(true);
 
     try {
-      const token = await executeRecaptcha("voucher");
-      const res = await client.vouchers.redeem({
+      const token = await executeRecaptcha("daily_reward");
+      const res = await client.dailyRewards.claim({
         nick: nick.trim(),
-        code: code.trim(),
         "g-recaptcha-response": token,
       });
-      const msg = res.message || "Voucher redeemed!";
+      const msg = res.message || "Daily reward claimed!";
       setResult({ message: msg, type: "success" });
       toast.success(msg);
-      setCode("");
     } catch (err) {
       const msg = getErrorMessage(err);
       setResult({ message: msg, type: "error" });
@@ -53,52 +46,34 @@ export function VoucherPage() {
   return (
     <div className="container voucher-layout">
       <div className="voucher-card">
-        <div className="voucher-card-title">Redeem voucher</div>
+        <div className="voucher-card-title">Daily reward</div>
         <div className="voucher-card-desc">
-          Enter your player nickname and voucher code to redeem it.
+          Claim a free reward — resets every 24 hours.
         </div>
 
         <div className="voucher-form">
           <div className="form-field">
-            <label className="form-label" htmlFor="voucher-nick">
+            <label className="form-label" htmlFor="daily-nick">
               Player nickname *
             </label>
             <input
               type="text"
-              id="voucher-nick"
+              id="daily-nick"
               placeholder="Steve"
               autoComplete="off"
               value={nick}
               onChange={(e) => setNick(e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label className="form-label" htmlFor="voucher-code">
-              Voucher code *
-            </label>
-            <input
-              type="text"
-              id="voucher-code"
-              placeholder="ABCD-1234-EFGH"
-              autoComplete="off"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleRedeem();
-              }}
-              style={{
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                fontFamily: "var(--mono)",
+                if (e.key === "Enter") handleClaim();
               }}
             />
           </div>
           <button
-            className="voucher-submit"
+            className="voucher-submit success-btn"
             disabled={loading}
-            onClick={handleRedeem}
+            onClick={handleClaim}
           >
-            {loading ? "Checking..." : "Redeem voucher"}
+            {loading ? "Claiming..." : "Claim reward"}
           </button>
         </div>
 

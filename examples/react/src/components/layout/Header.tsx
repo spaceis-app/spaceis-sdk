@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@spaceis/react";
-import { useCartDrawer } from "../cart-drawer-context";
+import { useCartDrawer } from "@/features/cart/cart-drawer-context";
 
 const SHOP_PAGES = ["/", "/packages", "/sales"];
 
@@ -34,17 +34,14 @@ export function Header() {
 
   const isShopPage = SHOP_PAGES.includes(pathname);
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-    document.body.style.overflow = "";
-  };
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const toggleMobileMenu = () => setMobileMenuOpen((p) => !p);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen((prev) => {
-      document.body.style.overflow = prev ? "" : "hidden";
-      return !prev;
-    });
-  };
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
 
   return (
     <>

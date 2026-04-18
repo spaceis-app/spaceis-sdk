@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { IndexShopProduct } from "@spaceis/react";
-import { fp, PlaceholderSVG } from "../helpers";
+import { fp, PlaceholderSVG } from "@/lib/helpers";
 
 interface ProductCardProps {
   product: IndexShopProduct;

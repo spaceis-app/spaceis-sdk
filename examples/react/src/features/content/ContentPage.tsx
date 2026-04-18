@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePages, usePage } from "@spaceis/react";
+import { SafeHtml } from "@/components/SafeHtml";
 
 
 function formatDate(iso: string): string {
@@ -84,10 +85,7 @@ export function SinglePageContent({ slug }: { slug: string }) {
         {page.title && (
           <h1 className="page-title">{page.title}</h1>
         )}
-        <div
-          className="page-body"
-          dangerouslySetInnerHTML={{ __html: page.content || "" }}
-        />
+        <SafeHtml className="page-body" html={page.content} />
         <div className="page-meta">
           <span>Last updated: {formatDate(page.updated_at)}</span>
         </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useTopCustomers, useLatestOrders, useGoals } from "@spaceis/react";
-import { fp } from "../helpers";
+import type { TopCustomer, LatestOrder, Goal } from "@spaceis/react";
+import { fp } from "@/lib/helpers";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -34,7 +35,7 @@ export function CommunitySection() {
             ) : !topCustomers || topCustomers.length === 0 ? (
               <div className="community-empty">No data yet.</div>
             ) : (
-              topCustomers.map((c: any, i: number) => (
+              topCustomers.map((c: TopCustomer, i) => (
                 <div key={i} className="rank-row">
                   <span className="rank-pos">#{i + 1}</span>
                   <span className="rank-name">{c.first_name}</span>
@@ -54,7 +55,7 @@ export function CommunitySection() {
             ) : !latestOrders || latestOrders.length === 0 ? (
               <div className="community-empty">No orders yet.</div>
             ) : (
-              latestOrders.map((o: any, i: number) => (
+              latestOrders.map((o: LatestOrder, i) => (
                 <div key={i} className="latest-row">
                   <span className="latest-name">{o.first_name}</span>
                   <span className="latest-time">{timeAgo(o.completed_at)}</span>
@@ -74,7 +75,7 @@ export function CommunitySection() {
           ) : goals.length === 0 ? (
             <div className="community-empty">No active goals.</div>
           ) : (
-            goals.map((g: any) => {
+            goals.map((g: Goal) => {
               const progress = Math.min(g.progress, 100);
               const target = g.target ? fp(g.target) : "\u2014";
               return (

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Providers } from "@/providers";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { ClientCartDrawer } from "@/components/ClientCartDrawer";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { ClientCartDrawer } from "@/features/cart/ClientCartDrawer";
 import { getServerClient } from "@/lib/server";
 import "@/styles.css";
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useProductRecommendations, useCart, fromApiQty } from "@spaceis/react";
-import { fp, PlaceholderSVG, getErrorMessage } from "../helpers";
+import { useProductRecommendations, useCart, fromApiQty, type PackageRecommendation } from "@spaceis/react";
+import type { CartMutationResponse } from "@spaceis/sdk";
+import { fp, PlaceholderSVG, getErrorMessage } from "@/lib/helpers";
 import { toast } from "sonner";
 
 interface RecommendationsProps {
@@ -20,15 +21,15 @@ export function Recommendations({ slug, title = "Recommended" }: Recommendations
     <div className="recs-section">
       <div className="recs-section-title">{title}</div>
       <div className="recs-grid">
-        {recs.map((rec: any) => (
-          <RecCard key={rec.variant?.uuid ?? rec.uuid} rec={rec} onAdd={add} />
+        {recs.map((rec: PackageRecommendation) => (
+          <RecCard key={rec.variant?.uuid ?? rec.shop_product.uuid} rec={rec} onAdd={add} />
         ))}
       </div>
     </div>
   );
 }
 
-function RecCard({ rec, onAdd }: { rec: any; onAdd: (uuid: string, qty?: number) => Promise<any> }) {
+function RecCard({ rec, onAdd }: { rec: PackageRecommendation; onAdd: (uuid: string, qty?: number) => Promise<CartMutationResponse> }) {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -73,7 +74,7 @@ function RecCard({ rec, onAdd }: { rec: any; onAdd: (uuid: string, qty?: number)
             <span className="rec-old-price">{fp(rec.base_price * minQty)}</span>
           )}
           {minQty > 1 && (
-            <span className="rec-qty-label">({minQty} pcs.)</span>
+            <span className="rec-qty-label">({minQty} szt)</span>
           )}
         </div>
       </div>

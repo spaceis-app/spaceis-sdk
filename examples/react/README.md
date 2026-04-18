@@ -42,55 +42,73 @@ Open `http://localhost:3000`.
 ```
 examples/react/
 ├── src/
-│   ├── app/
-│   │   ├── layout.tsx              — Root layout (Providers + Header + Footer + CartDrawer)
-│   │   ├── page.tsx                — Home: products + categories (SSR prefetched)
-│   │   ├── packages/page.tsx       — Package bundles (SSR prefetched)
-│   │   ├── sales/page.tsx          — Active promotions (SSR prefetched)
-│   │   ├── cart/page.tsx           — Full cart page (client-only, dynamic import)
-│   │   ├── checkout/page.tsx       — Checkout form (client-only, dynamic import)
-│   │   ├── voucher/page.tsx        — Voucher redemption
-│   │   ├── daily-reward/page.tsx   — Daily reward claim
-│   │   ├── order/[code]/page.tsx   — Order summary after payment
-│   │   ├── product/[slug]/page.tsx  — Product detail (SSR + dynamic metadata)
-│   │   ├── page/page.tsx           — CMS pages list
-│   │   ├── page/[slug]/page.tsx    — Single CMS page
-│   │   ├── statute/page.tsx        — Shop terms/statute
-│   │   ├── sitemap.ts              — Dynamic sitemap (products + CMS pages)
-│   │   ├── robots.ts               — robots.txt
-│   │   └── not-found.tsx           — Custom 404 page
-│   ├── views/                      — Page-level client components
-│   │   ├── ProductsPage.tsx
-│   │   ├── ProductPage.tsx
-│   │   ├── PackagesPage.tsx
-│   │   ├── SalesPage.tsx
-│   │   ├── CartPage.tsx
-│   │   ├── CheckoutPage.tsx
-│   │   ├── VoucherPage.tsx
-│   │   ├── DailyRewardPage.tsx
-│   │   ├── OrderSummaryPage.tsx
-│   │   ├── ContentPage.tsx
-│   │   └── StatutePage.tsx
-│   ├── components/                 — Shared UI components
-│   │   ├── Header.tsx
-│   │   ├── Footer.tsx
-│   │   ├── CartDrawer.tsx
-│   │   ├── ClientCartDrawer.tsx
-│   │   ├── ProductCard.tsx
+│   ├── app/                              — Next.js App Router routes
+│   │   ├── layout.tsx                    — Root layout (Providers + Header/Footer + CartDrawer)
+│   │   ├── page.tsx                      — Home: products + categories (SSR prefetched)
+│   │   ├── packages/page.tsx             — Package bundles (SSR prefetched)
+│   │   ├── sales/page.tsx                — Active promotions (SSR prefetched)
+│   │   ├── cart/page.tsx                 — Full cart (client-only, dynamic import)
+│   │   ├── checkout/page.tsx             — Checkout (client-only, dynamic import)
+│   │   ├── voucher/page.tsx              — Voucher redemption
+│   │   ├── daily-reward/page.tsx         — Daily reward claim
+│   │   ├── order/page.tsx                — Order summary lookup
+│   │   ├── product/[slug]/page.tsx       — Product detail (SSR + dynamic metadata)
+│   │   ├── page/page.tsx                 — CMS pages list
+│   │   ├── page/[slug]/page.tsx          — Single CMS page
+│   │   ├── statute/page.tsx              — Shop terms / statute
+│   │   ├── sitemap.ts                    — Dynamic sitemap
+│   │   ├── robots.ts                     — robots.txt
+│   │   └── not-found.tsx                 — Custom 404
+│   ├── features/                         — Feature-based folder layout
+│   │   ├── cart/                         — CartDrawer, CartPage, CartItemRow,
+│   │   │                                    DiscountSection, ClientCartDrawer,
+│   │   │                                    QtyInput, cart-drawer-context
+│   │   ├── checkout/                     — CheckoutPage + checkout-utils
+│   │   │                                    (calcPaymentFee, commissionPercent,
+│   │   │                                    isSafeRedirect)
+│   │   ├── products/                     — ProductsPage, ProductPage, ProductCard,
+│   │   │                                    Recommendations + unit-utils
+│   │   ├── packages/                     — PackagesPage
+│   │   ├── sales/                        — SalesPage
+│   │   ├── content/                      — ContentPage, StatutePage
+│   │   ├── community/                    — CommunitySection
+│   │   ├── voucher/                      — VoucherPage
+│   │   ├── daily-reward/                 — DailyRewardPage
+│   │   └── order/                        — OrderSummaryPage
+│   ├── components/                       — Cross-feature UI
+│   │   ├── layout/{Header,Footer}.tsx
 │   │   ├── Pagination.tsx
-│   │   ├── CommunitySection.tsx
-│   │   └── Recommendations.tsx
+│   │   ├── PlaceholderSVG.tsx
+│   │   └── SafeHtml.tsx                  — isomorphic-dompurify wrapper
 │   ├── lib/
-│   │   └── server.ts              — Server-side SpaceIS client factory
-│   ├── providers.tsx              — SpaceISProvider + Toaster wrapper
-│   ├── cart-drawer-context.tsx    — TanStack Store for cart drawer open/close
-│   ├── helpers.tsx                — fp(), esc(), getErrorMessage(), PlaceholderSVG
+│   │   ├── helpers.ts                    — fp(), esc(), getErrorMessage()
+│   │   ├── server.ts                     — Server-side SpaceIS client factory
+│   │   └── use-focus-trap.ts             — Dialog focus-trap hook
+│   ├── providers.tsx                     — SpaceISProvider + Toaster
+│   ├── globals.d.ts                      — `declare module "*.css"` shim
 │   └── styles.css
+├── __tests__/                            — vitest + @testing-library/react
+│   ├── helpers.test.ts
+│   ├── components.test.tsx
+│   ├── checkout-utils.test.ts            — calcPaymentFee / commissionPercent /
+│   │                                       isSafeRedirect (25 tests)
+│   ├── unit-utils.test.ts                — formatUnitLabel (8 tests)
+│   ├── CartItemRow.test.tsx              — 3 layouts, remove aria, prices
+│   ├── SafeHtml.test.tsx                 — DOMPurify integration
+│   └── use-focus-trap.test.tsx           — Tab/Shift+Tab cycling, return focus
 ├── package.json
-├── next.config.ts
+├── next.config.ts                        — Security headers (CSP, X-Frame-Options,
+│                                           nosniff, Referrer-Policy, Permissions-Policy)
 ├── tsconfig.json
-└── README.md                      — This file
+└── README.md                             — This file
 ```
+
+**91 unit tests total**, all passing. Run with `pnpm test`.
+
+**Folder rationale.** Features own their page-level views AND the small
+primitives only they use (e.g. `features/cart/QtyInput.tsx`). Cross-feature
+components stay under `components/`. Pure helpers live in `lib/` (domain-free)
+or `features/<x>/*-utils.ts` (domain-specific).
 
 ---
 

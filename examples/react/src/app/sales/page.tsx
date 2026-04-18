@@ -6,7 +6,7 @@ import {
   HydrationBoundary,
 } from "@spaceis/react/server";
 import { getServerClient } from "@/lib/server";
-import { SalesPage } from "@/views/SalesPage";
+import { SalesPage } from "@/features/sales/SalesPage";
 
 export const dynamic = "force-dynamic";
 
