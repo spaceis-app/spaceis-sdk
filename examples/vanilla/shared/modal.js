@@ -124,12 +124,14 @@ export function renderModalContent(product) {
     variantsHtml +
     '<div class="modal-qty-row">' +
     (showQtySelector
-      ? "<div>" +
+      ? '<div>' +
         '<div class="modal-label" style="margin-bottom:6px">Quantity</div>' +
+        '<div class="qty-row">' +
         '<div class="qty-stepper">' +
         '<button class="qty-step-btn" id="modal-qty-minus" aria-label="Decrease"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
         `<input class="qty-step-input" id="modal-qty-val" type="number" min="${minQty}" max="${maxQty}" step="${step}" value="${qty}">` +
         '<button class="qty-step-btn" id="modal-qty-plus" aria-label="Increase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+        "</div>" +
         `<span class="qty-unit">${esc(product.unit || "szt")}</span>` +
         "</div>" +
         "</div>"
