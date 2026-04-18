@@ -130,6 +130,9 @@ window.ShopUI = {
   clearCart,
   applyDiscountCode,
   removeDiscountCode,
+  renderCartBadge,
+  renderCartItems,
+  renderCartDrawer,
   renderCartSummary,
   renderDiscountSection,
   renderSkeletons,
@@ -164,15 +167,20 @@ window.toggleCart = toggleCart;
 window.clearCart = clearCart;
 window.openProductModal = openProductModal;
 window.closeModal = closeModal;
+window.renderCartBadge = renderCartBadge;
 window.renderCartSummary = renderCartSummary;
 window.renderDiscountSection = renderDiscountSection;
 window.renderSkeletons = renderSkeletons;
+window.renderCartItems = renderCartItems;
+window.renderCartDrawer = renderCartDrawer;
 window.handleQtyStepperClick = handleQtyStepperClick;
 window.handleQtyInputChange = handleQtyInputChange;
 window.applyDiscountCode = applyDiscountCode;
 window.removeDiscountCode = removeDiscountCode;
 window.getVariantLimits = getVariantLimits;
 window.loadCartRecommendations = loadCartRecommendations;
+window.renderRecsHtml = renderRecsHtml;
+window.attachRecsClickHandler = attachRecsClickHandler;
 
 // ── Signal that shared/main.js finished setting up globals ───────────────────
 // <script type="module"> is deferred, so per-page synchronous <script> blocks
