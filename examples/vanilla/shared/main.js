@@ -111,6 +111,7 @@ window.ShopUI = {
   // Core state (read-only references — per-page scripts use these directly)
   client,
   cartMgr,
+  SHOP_CONFIG,
 
   // Format helpers
   esc,
@@ -150,10 +151,12 @@ window.ShopUI = {
   attachRecsClickHandler,
 };
 
-// Also expose cartMgr and client directly on window for backward compatibility
-// with per-page scripts that reference them as globals (cart.html, checkout.html).
+// Also expose cartMgr, client, and SHOP_CONFIG directly on window for backward
+// compatibility with per-page scripts that reference them as globals
+// (cart.html, checkout.html — uses SHOP_CONFIG.returnUrl / cancelUrl).
 window.cartMgr = cartMgr;
 window.client = client;
+window.SHOP_CONFIG = SHOP_CONFIG;
 
 // Expose format helpers as globals for per-page scripts using them directly
 window.esc = esc;
