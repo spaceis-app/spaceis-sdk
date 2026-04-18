@@ -68,21 +68,26 @@
       const codeFromUrl = params.get("order") || params.get("code");
       if (codeFromUrl) {
         document.getElementById("order-code-input").value = codeFromUrl;
-        // Wait for shared/main.js to expose `client` before fetching the order.
-        window.addEventListener("spaceis:ready", () => loadOrder(codeFromUrl));
       }
 
-      document.getElementById("check-order-btn").addEventListener("click", () => {
-        const code = document.getElementById("order-code-input").value.trim();
-        if (!code) {
-          showToast("Enter order code", "error");
-          return;
-        }
-        loadOrder(code);
-      });
+      // shared/main.js is a deferred ES module — register every handler that
+      // uses the SDK globals inside `spaceis:ready`, so `client`, `fp`, `esc`,
+      // `showToast`, `getErrorMessage` are guaranteed to exist at call time.
+      window.addEventListener("spaceis:ready", () => {
+        document.getElementById("check-order-btn").addEventListener("click", () => {
+          const code = document.getElementById("order-code-input").value.trim();
+          if (!code) {
+            showToast("Enter order code", "error");
+            return;
+          }
+          loadOrder(code);
+        });
 
-      document.getElementById("order-code-input").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") document.getElementById("check-order-btn").click();
+        document.getElementById("order-code-input").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") document.getElementById("check-order-btn").click();
+        });
+
+        if (codeFromUrl) loadOrder(codeFromUrl);
       });
 
       async function loadOrder(code) {

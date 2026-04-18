@@ -9,11 +9,6 @@ import { renderHeader, SHOP_TABS, SHOP_KEYS, setToggleCartCallback } from "./hea
 import { renderFooter } from "./footer.js";
 import {
   initCart,
-  toggleCart,
-  clearCart,
-  renderCartDrawer,
-  renderCartItems,
-  renderCartBadge,
   renderCartSummary,
   renderDiscountSection,
   renderSkeletons,
@@ -24,10 +19,20 @@ import {
   getVariantLimits,
 } from "./cart.js";
 import {
+  initCartDrawer,
+  toggleCart,
+  clearCart,
+  renderCartDrawer,
+  renderCartItems,
+  renderCartBadge,
+  isCartOpen,
+} from "./cart-drawer.js";
+import {
   initRecommendations,
   renderRecsHtml,
   attachRecsClickHandler,
   loadCartRecommendations,
+  loadRecsForFirstCartItem,
 } from "./recommendations.js";
 import {
   initModal,
@@ -39,6 +44,11 @@ import {
   renderCommunitySection,
   loadCommunityData,
 } from "./community.js";
+import {
+  initCategories,
+  loadCategories,
+  selectCategory,
+} from "./categories.js";
 
 // ── SDK client + cart manager (created once, shared across all modules) ────────
 
@@ -49,7 +59,8 @@ const cartMgr = client.createCartManager();
 setToggleCartCallback(toggleCart);
 
 // Init modules with shared state
-initCart(client, cartMgr);
+initCart(client, cartMgr);          // state for shared primitives
+initCartDrawer(client, cartMgr);    // drawer state + onChange subscription + initial render
 initRecommendations(client, cartMgr);
 initModal(client, cartMgr);
 initCommunity(client);
@@ -92,7 +103,7 @@ const pageKey = PAGE_KEY_MAP[filename] || "products";
 
 renderHeader(pageKey);
 renderFooter();
-// renderCartDrawer is called inside initCart — already done above
+// renderCartDrawer is called inside initCartDrawer — already done above
 
 // Render community section on shop pages (products, packages, sales)
 if (SHOP_KEYS.includes(pageKey)) {
@@ -149,41 +160,18 @@ window.ShopUI = {
   // Recommendations
   renderRecsHtml,
   attachRecsClickHandler,
+  loadRecsForFirstCartItem,
+
+  // Categories
+  initCategories,
+  loadCategories,
+  selectCategory,
 };
 
-// Also expose cartMgr, client, and SHOP_CONFIG directly on window for backward
-// compatibility with per-page scripts that reference them as globals
-// (cart.html, checkout.html — uses SHOP_CONFIG.returnUrl / cancelUrl).
-window.cartMgr = cartMgr;
-window.client = client;
-window.SHOP_CONFIG = SHOP_CONFIG;
-
-// Expose format helpers as globals for per-page scripts using them directly
-window.esc = esc;
-window.fp = fp;
-window.getErrorMessage = getErrorMessage;
-window.PLACEHOLDER_SVG_SM = PLACEHOLDER_SVG_SM;
-window.PLACEHOLDER_SVG_MD = PLACEHOLDER_SVG_MD;
-window.PLACEHOLDER_SVG_LG = PLACEHOLDER_SVG_LG;
-window.showToast = showToast;
-window.toggleCart = toggleCart;
-window.clearCart = clearCart;
-window.openProductModal = openProductModal;
-window.closeModal = closeModal;
-window.renderCartBadge = renderCartBadge;
-window.renderCartSummary = renderCartSummary;
-window.renderDiscountSection = renderDiscountSection;
-window.renderSkeletons = renderSkeletons;
-window.renderCartItems = renderCartItems;
-window.renderCartDrawer = renderCartDrawer;
-window.handleQtyStepperClick = handleQtyStepperClick;
-window.handleQtyInputChange = handleQtyInputChange;
-window.applyDiscountCode = applyDiscountCode;
-window.removeDiscountCode = removeDiscountCode;
-window.getVariantLimits = getVariantLimits;
-window.loadCartRecommendations = loadCartRecommendations;
-window.renderRecsHtml = renderRecsHtml;
-window.attachRecsClickHandler = attachRecsClickHandler;
+// Also expose everything from ShopUI as flat globals — per-page scripts reference
+// them directly as `cartMgr`, `fp`, `showToast`, etc. Derived from the single
+// window.ShopUI source of truth above to avoid drift between the two lists.
+Object.assign(window, window.ShopUI);
 
 // ── Signal that shared/main.js finished setting up globals ───────────────────
 // <script type="module"> is deferred, so per-page synchronous <script> blocks

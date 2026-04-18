@@ -303,7 +303,7 @@
           renderPaymentMethods(paymentMethodsData);
           renderAgreements(agreements);
           renderOrderSummary();
-          loadCheckoutRecommendations();
+          loadRecsForFirstCartItem({ containerId: "checkout-recommendations", title: "Recommended products" });
           client.recaptcha.load().catch(() => {});
         } catch (err) {
           _checkoutInitialized = false;
@@ -402,7 +402,21 @@
             cancel_url: SHOP_CONFIG.cancelUrl || undefined,
           });
           if (result.redirect_url) {
-            window.location.href = result.redirect_url;
+            // Defence-in-depth: only follow http(s) redirects. A compromised
+            // API cannot redirect users to `javascript:` / `data:` / etc.
+            // For stricter hardening, allowlist specific payment-provider
+            // origins here (e.g. ["https://sandbox.payu.com", ...]).
+            let safeUrl = null;
+            try {
+              const u = new URL(result.redirect_url, window.location.origin);
+              if (u.protocol === "https:" || u.protocol === "http:") safeUrl = u.toString();
+            } catch { /* malformed URL — stay on page */ }
+            if (safeUrl) {
+              window.location.href = safeUrl;
+            } else {
+              showToast("Payment gateway returned an invalid redirect URL.", "error");
+              resetPlaceOrderBtn();
+            }
           } else {
             showOrderSuccess(result.code || "");
           }
@@ -425,24 +439,6 @@
         }
         document.getElementById("checkout-layout").style.display = "none";
         document.getElementById("order-success-state").style.display = "";
-      }
-
-      // ── Checkout recommendations ─────────────────────────
-
-      async function loadCheckoutRecommendations() {
-        const container = document.getElementById("checkout-recommendations");
-        if (!container || cartMgr.isEmpty) return;
-
-        const firstItem = cartMgr.items[0];
-        if (!firstItem?.shop_product) return;
-
-        try {
-          const recs = await client.products.recommendations(firstItem.shop_product.uuid);
-          if (!recs?.length) return;
-          const sliced = recs.slice(0, 4);
-          container.innerHTML = renderRecsHtml(sliced, "Recommended products");
-          attachRecsClickHandler(container, sliced);
-        } catch { /* ignore */ }
       }
 
       // ── Wait for shared/main.js, then subscribe + init ───────

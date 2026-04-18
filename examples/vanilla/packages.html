@@ -12,6 +12,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+      integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
+      crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="header" id="site-header"></header>
@@ -50,79 +53,6 @@
         currentCategory: null,
         categoriesLoaded: false,
       };
-
-      // ── Categories ────────────────────────────────────────────
-
-      async function loadCategories() {
-        if (state.categoriesLoaded) return;
-        state.categoriesLoaded = true;
-
-        try {
-          const categories = await client.categories.list();
-          const container = document.getElementById("categories");
-          categories.forEach((cat) => {
-            if (!cat.is_active) return;
-            const btn = document.createElement("button");
-            btn.className = "cat-btn";
-            btn.textContent = cat.name;
-            btn.dataset.uuid = cat.uuid;
-            btn.addEventListener("click", () => {
-              selectCategory(cat, btn);
-            });
-            container.appendChild(btn);
-          });
-        } catch { /* ignore */ }
-      }
-
-      function selectCategory(cat, btn) {
-        state.currentCategory = cat.uuid;
-        state.currentPage = 1;
-
-        document.querySelectorAll("#categories .cat-btn").forEach((b) => {
-          b.classList.remove("active");
-        });
-        if (btn) btn.classList.add("active");
-
-        // Subcategories
-        const subContainer = document.getElementById("subcategories");
-        subContainer.innerHTML = "";
-
-        const activeChildren = (cat.children || []).filter((c) => c.is_active);
-
-        if (activeChildren.length > 0) {
-          subContainer.style.display = "";
-
-          const allBtn = document.createElement("button");
-          allBtn.className = "cat-btn cat-child active";
-          allBtn.textContent = "All";
-          allBtn.addEventListener("click", () => {
-            state.currentCategory = cat.uuid;
-            state.currentPage = 1;
-            subContainer.querySelectorAll(".cat-btn").forEach((b) => { b.classList.remove("active"); });
-            allBtn.classList.add("active");
-            loadPackages();
-          });
-          subContainer.appendChild(allBtn);
-
-          activeChildren.forEach((child) => {
-            const subBtn = document.createElement("button");
-            subBtn.className = "cat-btn cat-child";
-            subBtn.textContent = child.name;
-            subBtn.addEventListener("click", () => {
-              state.currentCategory = child.uuid;
-              state.currentPage = 1;
-              subContainer.querySelectorAll(".cat-btn").forEach((b) => { b.classList.remove("active"); });
-              subBtn.classList.add("active");
-              loadPackages();
-            });
-            subContainer.appendChild(subBtn);
-          });
-        } else {
-          subContainer.style.display = "none";
-        }
-
-        loadPackages();
-      }
 
       document.getElementById("cat-all").addEventListener("click", function () {
         state.currentCategory = null;
@@ -224,7 +154,8 @@
 
       // ── Init (after shared/main.js exposes client / renderSkeletons) ─
       window.addEventListener("spaceis:ready", () => {
-        loadCategories();
+        initCategories(state, client);
+        loadCategories({ onSelect: () => loadPackages() });
         renderSkeletons("packages-container", 6);
         loadPackages();
       });

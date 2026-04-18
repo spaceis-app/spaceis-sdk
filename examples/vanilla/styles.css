@@ -690,6 +690,12 @@ textarea::placeholder {
   gap: 12px;
   margin-bottom: 12px;
 }
+.qty-unit {
+  font-size: 13px;
+  color: var(--txt-3);
+  font-weight: 500;
+  user-select: none;
+}
 
 .qty-stepper {
   display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px;

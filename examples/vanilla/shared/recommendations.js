@@ -85,14 +85,25 @@ export function attachRecsClickHandler(container, recs) {
   });
 }
 
-export async function loadCartRecommendations() {
-  let container = document.getElementById("cart-recommendations");
+/**
+ * Load recommendations based on the first item in the cart and render them
+ * into the specified container.
+ *
+ * @param {{ containerId?: string, title?: string, createIfMissing?: boolean }} opts
+ */
+export async function loadRecsForFirstCartItem({
+  containerId = "cart-recommendations",
+  title = "Recommended",
+  createIfMissing = false,
+} = {}) {
+  let container = document.getElementById(containerId);
   if (!container) {
+    if (!createIfMissing) return;
     // Create container in drawer body if it doesn't exist
     const body = document.getElementById("cart-items");
     if (!body) return;
     const div = document.createElement("div");
-    div.id = "cart-recommendations";
+    div.id = containerId;
     div.className = "cart-recs";
     body.parentNode.insertBefore(div, document.getElementById("cart-footer"));
     container = div;
@@ -116,9 +127,18 @@ export async function loadCartRecommendations() {
       return;
     }
     const sliced = recs.slice(0, 4);
-    container.innerHTML = renderRecsHtml(sliced, "You might also like");
+    container.innerHTML = renderRecsHtml(sliced, title);
     attachRecsClickHandler(container, sliced);
   } catch {
     container.innerHTML = "";
   }
+}
+
+/** Thin wrapper for backwards compatibility — cart drawer usage. */
+export async function loadCartRecommendations() {
+  return loadRecsForFirstCartItem({
+    containerId: "cart-recommendations",
+    title: "You might also like",
+    createIfMissing: true,
+  });
 }

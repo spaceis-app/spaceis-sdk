@@ -4,7 +4,7 @@
 import { esc, fp, getErrorMessage, PLACEHOLDER_SVG_SM } from "./format.js";
 import { showToast } from "./toast.js";
 import { renderRecsHtml, attachRecsClickHandler } from "./recommendations.js";
-import { isCartOpen } from "./cart.js";
+import { isCartOpen } from "./cart-drawer.js";
 
 let _client;
 let _cartMgr;
@@ -20,7 +20,7 @@ const productModalState = {
   quantity: 1,
 };
 
-export function renderModalShell() {
+function renderModalShell() {
   const existing = document.getElementById("modal-overlay");
   if (existing) return;
   const div = document.createElement("div");
@@ -73,11 +73,14 @@ export function renderModalContent(product) {
     ? `<img class="modal-img" src="${esc(product.image)}" alt="${esc(product.name)}">`
     : `<div class="modal-img-placeholder">${PLACEHOLDER_SVG_SM}</div>`;
 
-  // product.description is rich HTML from the CMS — backend sanitizes before saving.
-  // If using untrusted content, sanitize with DOMPurify before rendering.
-  const descHtml = product.description
-    ? `<div class="modal-desc">${product.description}</div>`
-    : "";
+  // product.description is rich HTML from the CMS — sanitise with DOMPurify before
+  // rendering to defend against a compromised admin panel or MITM'd API response.
+  // DOMPurify is loaded via CDN on the pages that open this modal (index.html, packages.html).
+  const safeDesc =
+    typeof window.DOMPurify !== "undefined"
+      ? window.DOMPurify.sanitize(product.description || "")
+      : esc(product.description || "");
+  const descHtml = safeDesc ? `<div class="modal-desc">${safeDesc}</div>` : "";
 
   const selectedVariant = getSelectedVariant(product);
   const currentPrice =
