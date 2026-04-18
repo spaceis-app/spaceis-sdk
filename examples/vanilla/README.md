@@ -60,8 +60,9 @@ client.products.list({ page: 1, category_uuid: "..." });
 
 // Get product details (by slug or UUID)
 client.products.get("product-slug");
-// Returns: { uuid, name, slug, description (HTML), image, base_price,
-//            percentage_discount, min_quantity, max_quantity, quantity_step,
+// Returns: { uuid, name, slug, description (raw HTML — sanitise before innerHTML), image,
+//            base_price, percentage_discount, min_quantity, max_quantity, quantity_step,
+//            unit (string — display unit label like "szt", "dni", "min"),
 //            variants: [{ uuid, name, image, base_price, price, lowest_price_last_30_days }],
 //            package }
 
@@ -124,11 +125,13 @@ cart.isLoading; // boolean
 ```js
 // Get payment methods
 client.checkout.paymentMethods();
-// Returns: [{ uuid, name, commission (percentage), method }]
+// Returns: [{ uuid, name, commission (multiplier — e.g. 1.2 = +20%), method }]
+
+> `commission` is a **price multiplier**, not a percentage. Final price = `base * commission`. Example: `commission = 1.2` on a 100 PLN order = 120 PLN (20% surcharge). To display as %: `(commission - 1) * 100`.
 
 // Get required agreements
 client.checkout.agreements();
-// Returns: [{ uuid, name, content }]
+// Returns: [{ uuid, name, content (raw HTML — sanitise with DOMPurify before innerHTML) }]
 
 // Place order (requires reCAPTCHA token)
 const token = await client.recaptcha.execute("checkout");
@@ -157,6 +160,8 @@ client.content.pages(); // All CMS pages
 client.content.page("slug"); // Single page by slug
 client.content.statute(); // Shop statute/terms
 ```
+
+> `page.content`, `statute.content`, `agreement.content` are **raw HTML from the API**. Always sanitise with DOMPurify (or escape if you only need text) before writing to `innerHTML`. See `page.html` in this example for the DOMPurify CDN pattern.
 
 ### Sales, Goals
 
@@ -322,6 +327,9 @@ You don't need to manage the token manually.
         });
       });
 
+      // NOTE: inline `onclick` is used for brevity in this minimal example.
+      // In production prefer addEventListener/event delegation (see shared/cart.js).
+
       // Open product, pick first variant, add to cart
       async function openProduct(slug) {
         const product = await client.products.get(slug);
@@ -359,42 +367,54 @@ You don't need to manage the token manually.
 
 ```
 examples/vanilla/
-├── shared.js          — SDK init, nav, cart drawer, product modal, shared helpers
-├── styles.css         — All styling (light theme, DM Sans/Mono)
+├── shared/            — ES modules (shared logic split from old shared.js)
+│   ├── main.js        — Entry point: SDK init, orchestration, window globals
+│   ├── config.js      — SHOP_CONFIG (baseUrl, shopUuid, lang, URLs)
+│   ├── format.js      — esc(), fp(), getErrorMessage(), placeholder SVGs
+│   ├── toast.js       — showToast() notifications
+│   ├── header.js      — Header + nav + mobile menu
+│   ├── footer.js      — renderFooter()
+│   ├── cart.js        — Cart drawer, items, qty steppers, discount, summary
+│   ├── modal.js       — Product detail modal
+│   ├── recommendations.js — Product recommendations
+│   └── community.js   — Top customers, latest orders, goals
+├── styles.css         — All styling
 ├── index.html         — Products with categories + subcategories
 ├── packages.html      — Package bundles
 ├── sales.html         — Active promotions with countdown
-├── cart.html           — Full cart page with qty controls + summary
-├── checkout.html      — Payment form + order summary sidebar
+├── cart.html          — Full cart page with qty controls
+├── checkout.html      — Payment form + order summary
 ├── voucher.html       — Voucher redemption
 ├── daily-reward.html  — Daily reward claim
 ├── order-summary.html — Order status after payment
-├── page.html          — CMS pages (dynamic by ?slug=)
+├── page.html          — CMS pages (?slug=)
 ├── statute.html       — Shop terms/statute
-└── README.md          — This file
+├── AGENTS.md          — Reference for AI coding agents
+├── CLAUDE.md          — Thin pointer to AGENTS.md
+└── README.md          — This file (consumer tutorial)
 ```
 
-Each HTML page includes `shared.js` which handles:
+Each HTML page loads shared logic via `<script type="module" src="shared/main.js">`.
+The entry point initialises the SDK client, creates the CartManager, wires up all
+modules, and exposes helpers on `window` for inline `<script>` blocks.
 
-- Navigation rendering (auto-detects active page)
-- Cart drawer (reactive, updates on every cart change)
-- Product detail modal (variants, quantity, recommendations)
-- Community section (top customers, latest orders, goals) on shop pages
-- Toast notifications
-- All SDK initialization
+Because module scripts are deferred, per-page inline scripts that touch `client`
+or `cartMgr` at top level MUST wrap that code in
+`window.addEventListener("spaceis:ready", ...)`. See [AGENTS.md](./AGENTS.md) for
+the full synchronisation pattern.
 
-### Shared helpers in `shared.js`
+### Module overview (shared/)
 
-These reusable functions prevent code duplication across pages:
-
-| Function | Purpose |
-|---|---|
-| `PLACEHOLDER_SVG_SM/MD/LG` | Image placeholder SVG constants (24/28/32px) |
-| `getVariantLimits(uuid)` | Cached product qty limits (min/max/step) |
-| `handleQtyStepperClick(e)` | Unified +/- button handler with limits |
-| `handleQtyInputChange(e)` | Unified manual qty input handler |
-| `renderDiscountSection(el, opts)` | Discount code apply/remove UI |
-| `renderCartSummary(el, opts)` | Subtotal + discount + total panel |
+| Module | Key exports | Purpose |
+|---|---|---|
+| `format.js` | `esc`, `fp`, `getErrorMessage`, `PLACEHOLDER_SVG_*` | Formatting, HTML escape (XSS), placeholders |
+| `toast.js` | `showToast` | Toast notification system |
+| `header.js` | `renderHeader`, `SHOP_TABS`, `setToggleCartCallback` | Nav + mobile menu |
+| `footer.js` | `renderFooter` | Footer |
+| `cart.js` | `initCart`, `toggleCart`, `renderCartBadge`, `renderCartItems`, `renderCartDrawer`, `renderCartSummary`, `renderDiscountSection`, `renderSkeletons`, `applyDiscountCode`, `removeDiscountCode`, `handleQtyStepperClick`, `handleQtyInputChange`, `getVariantLimits`, `clearCart` | Everything cart |
+| `modal.js` | `initModal`, `openProductModal`, `closeModal` | Product detail modal |
+| `recommendations.js` | `initRecommendations`, `renderRecsHtml`, `attachRecsClickHandler`, `loadCartRecommendations` | Recommendations |
+| `community.js` | `initCommunity`, `renderCommunitySection`, `loadCommunityData` | Top customers, latest orders, goals |
 
 Page-specific logic is in each HTML's `<script>` tag.
 
@@ -404,8 +424,8 @@ Page-specific logic is in each HTML's `<script>` tag.
 
 To adapt this example to your shop:
 
-1. **`shared.js` line 8**: Change `shopUuid` to your shop UUID
-2. **`shared.js` line 125**: Change `'SpaceIS'` to your shop name
-3. **`styles.css`**: Adjust CSS variables in `:root` for colors/fonts
-4. **All HTML files**: Update `<title>` tags
-5. **`checkout.html`**: reCAPTCHA works automatically (key from API)
+1. **`shared/config.js`**: Change `shopUuid` to your shop UUID (from the SpaceIS admin panel). Also set `baseUrl`, `lang`, `returnUrl`, `cancelUrl`.
+2. **`shared/header.js`**: Change the shop name in `renderHeader()` (search for the text "SpaceIS" near the logo).
+3. **`styles.css`**: Adjust CSS variables in `:root` for colours, fonts, radii.
+4. **All HTML files**: Update `<title>` tags (each has a page-specific title).
+5. **`checkout.html`**: reCAPTCHA works automatically — site key is fetched from the API.
