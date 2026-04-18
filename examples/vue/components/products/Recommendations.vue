@@ -69,7 +69,7 @@ async function handleAdd(rec: PackageRecommendation) {
               v-if="(rec.shop_product?.min_quantity ? fromApiQty(rec.shop_product.min_quantity) : 1) > 1"
               class="rec-qty-label"
             >
-              ({{ rec.shop_product?.min_quantity ? fromApiQty(rec.shop_product.min_quantity) : 1 }} pcs.)
+              ({{ rec.shop_product?.min_quantity ? fromApiQty(rec.shop_product.min_quantity) : 1 }} szt)
             </span>
           </div>
         </div>

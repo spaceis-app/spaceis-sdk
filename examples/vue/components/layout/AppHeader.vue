@@ -39,13 +39,22 @@ function isActive(link: typeof NAV_LINKS[number]) {
 
 function closeMobileMenu() {
   mobileMenuOpen.value = false;
-  document.body.style.overflow = '';
 }
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value;
-  document.body.style.overflow = mobileMenuOpen.value ? 'hidden' : '';
 }
+
+// Body-scroll lock lives in a watcher so the DOM access is client-only.
+// Nuxt evaluates <script setup> on the server; guarding keeps SSR clean.
+watch(mobileMenuOpen, (open) => {
+  if (!import.meta.client) return;
+  document.body.style.overflow = open ? 'hidden' : '';
+});
+
+onBeforeUnmount(() => {
+  if (import.meta.client) document.body.style.overflow = '';
+});
 </script>
 
 <template>

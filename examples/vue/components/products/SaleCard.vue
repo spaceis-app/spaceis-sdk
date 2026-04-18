@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { Sale } from '@spaceis/vue';
+
 const props = defineProps<{
-  sale: any;
+  sale: Sale;
   index: number;
 }>();
 
 const countdown = ref('');
-const endsAt = computed(() => props.sale.expires_at || props.sale.ends_at);
+const endsAt = computed(() => props.sale.expires_at);
 
 let interval: ReturnType<typeof setInterval> | null = null;
 

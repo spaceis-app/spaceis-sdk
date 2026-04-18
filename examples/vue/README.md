@@ -41,44 +41,69 @@ Open `http://localhost:3000`.
 
 ```
 examples/vue/
-├── nuxt.config.ts              — Nuxt config (runtimeConfig, CSS, fonts)
+├── nuxt.config.ts              — Nuxt config: runtimeConfig, CSS, fonts,
+│                                  nitro.routeRules with CSP + security headers,
+│                                  components: [{ pathPrefix: false }]
 ├── app.vue                     — Root (NuxtLayout + NuxtPage)
 ├── layouts/default.vue         — Header + main + CartDrawer + Footer + Toasts
-├── pages/
-│   ├── index.vue               — Products listing with categories
-│   ├── product/[slug].vue      — Product detail (SSR + SEO)
-│   ├── packages.vue            — Package bundles listing
+├── pages/                      — File-based routing (auto-registered)
+│   ├── index.vue               — Products listing + categories
+│   ├── product/[slug].vue      — Product detail (SSR + SEO + DOMPurify)
+│   ├── packages.vue            — Package bundles
 │   ├── sales.vue               — Active sales with countdown timers
-│   ├── cart.vue                — Full cart page (client-only)
+│   ├── cart.vue                — Full cart (client-only)
 │   ├── checkout.vue            — Checkout form (client-only)
 │   ├── voucher.vue             — Voucher redemption (reCAPTCHA)
 │   ├── daily-reward.vue        — Daily reward (reCAPTCHA)
-│   ├── order/[code].vue        — Order lookup
+│   ├── order/index.vue         — Order lookup
 │   ├── page/index.vue          — CMS pages list
-│   ├── page/[slug].vue         — Single CMS page
-│   └── statute.vue             — Shop terms
-├── components/                 — Auto-imported components
-│   ├── AppHeader.vue           — Navigation + cart badge
-│   ├── AppFooter.vue           — Footer
-│   ├── CartDrawer.vue          — Slide-in cart drawer
-│   ├── ProductCard.vue         — Product card
-│   ├── SaleCard.vue            — Sale card with timer
-│   ├── QtyInput.vue            — Quantity input with limits
-│   ├── Recommendations.vue     — Product recommendations
-│   ├── CommunitySection.vue    — Rankings + goals
-│   └── ToastContainer.vue      — Toast notification renderer
+│   ├── page/[slug].vue         — Single CMS page (DOMPurify)
+│   └── statute.vue             — Shop terms (DOMPurify)
+├── components/                 — Feature-based; Nuxt pathPrefix:false keeps names flat
+│   ├── cart/                   — CartDrawer, CartContent, CartItemRow,
+│   │                              DiscountSection, QtyInput
+│   ├── checkout/               — CheckoutContent
+│   ├── products/               — ProductCard, ProductGridSkeleton,
+│   │                              Recommendations, SaleCard
+│   ├── community/              — CommunitySection
+│   ├── layout/                 — AppHeader, AppFooter, AppPagination,
+│   │                              ToastContainer
+│   ├── order/                  — OrderContent
+│   ├── voucher/                — VoucherContent
+│   ├── daily-reward/           — DailyRewardContent
+│   └── PlaceholderSvg.vue      — Shared SVG placeholder
 ├── composables/
-│   ├── useCartDrawer.ts        — Cart drawer state
-│   └── useToast.ts             — Toast notifications
-├── plugins/spaceis.ts   — SpaceIS plugin (client-only)
-├── server/utils/spaceis.ts     — Server-side client
-├── utils/helpers.ts            — Formatting + error helpers
+│   ├── useCartDrawer.ts        — Drawer open/close state (SSR-safe)
+│   ├── useToast.ts             — Toast notifications
+│   └── useFocusTrap.ts         — Dialog focus-trap (Tab/Shift+Tab cycling,
+│                                  returns focus to trigger on close)
+├── utils/
+│   ├── helpers.ts              — fp(), esc(), getErrorMessage()
+│   ├── checkout-utils.ts       — calcPaymentFee, commissionPercent, isSafeRedirect
+│   └── unit-utils.ts           — formatUnitLabel(step, unit)
+├── plugins/spaceis.ts          — SpaceIS plugin (SSR + client, Cart client-only)
+├── server/utils/spaceis.ts     — Server-side client for SSR prefetch
 ├── assets/styles.css           — Stylesheet
+├── __tests__/                  — vitest + happy-dom + @vue/test-utils
+│   ├── helpers.test.ts
+│   ├── components.test.ts
+│   ├── checkout-utils.test.ts  — 24 tests
+│   ├── unit-utils.test.ts      — 8 tests
+│   ├── CartItemRow.test.ts     — 11 tests (3 layouts, remove aria, prices)
+│   └── useFocusTrap.test.ts    — 4 tests (Tab cycling + return focus)
 ├── error.vue                   — Error/404 page
-├── package.json
+├── package.json                — `@vitejs/plugin-vue` pinned to ^5.2 (plugin-vue 6 is
+│                                  ESM-only and fails under vitest 2 / Vite 5)
 ├── .env.example
 └── README.md                   — This file
 ```
+
+**79 unit tests total**, all passing. Run with `pnpm test`.
+
+**Folder rationale.** `components/` is grouped by domain; Nuxt `pathPrefix:false`
+keeps auto-imported names short (`<CartDrawer>`, not `<CartCartDrawer>`).
+Cart-item markup is de-duplicated via the shared `<CartItemRow layout>`
+component; discount apply/remove lives in `<DiscountSection>`.
 
 ---
 

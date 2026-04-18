@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useSpaceIS, fromApiQty } from '@spaceis/vue';
+import { useSpaceIS, fromApiQty, type OrderSummary } from '@spaceis/vue';
 import { fp, getErrorMessage } from '~/utils/helpers';
 
 const props = defineProps<{ codeFromUrl?: string }>();
@@ -7,7 +7,7 @@ const { client } = useSpaceIS();
 const { error: toastError } = useToast();
 
 const code = ref(props.codeFromUrl || '');
-const order = ref<any>(null);
+const order = ref<OrderSummary | null>(null);
 const loading = ref(false);
 
 const statusLabels: Record<string, string> = {

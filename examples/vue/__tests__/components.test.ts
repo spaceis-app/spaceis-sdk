@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { computed } from "vue";
 import PlaceholderSvg from "../components/PlaceholderSvg.vue";
-import AppPagination from "../components/AppPagination.vue";
-import ProductCard from "../components/ProductCard.vue";
+import AppPagination from "../components/layout/AppPagination.vue";
+import ProductCard from "../components/products/ProductCard.vue";
 
 // Stub Nuxt auto-imports
 vi.stubGlobal("computed", computed);

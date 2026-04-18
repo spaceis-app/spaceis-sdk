@@ -868,6 +868,7 @@ textarea::placeholder {
 }
 
 /* Qty stepper */
+.qty-unit { font-size: 13px; color: var(--txt-3); font-weight: 500; user-select: none; margin-left: 8px; }
 .qty-stepper {
   display: inline-flex;
   align-items: stretch;

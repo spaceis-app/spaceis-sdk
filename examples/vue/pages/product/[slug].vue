@@ -8,6 +8,7 @@ import {
   type ShowShopProductVariant,
 } from '@spaceis/vue';
 import { fp, getErrorMessage } from '~/utils/helpers';
+import { formatUnitLabel } from '~/utils/unit-utils';
 
 const route = useRoute();
 const slug = computed(() => route.params.slug as string);
@@ -145,7 +146,7 @@ function commitQty() {
           </div>
 
           <div class="pdp-unit-price">
-            ({{ fp(unitPrice) }}/{{ limits.step > 1 ? `${limits.step} pcs.` : '1 pcs.' }})
+            ({{ fp(unitPrice) }} / {{ formatUnitLabel(limits.step, (product as any)?.unit) }})
           </div>
 
           <!-- Variants -->
@@ -191,6 +192,7 @@ function commitQty() {
                   +
                 </button>
               </div>
+              <span class="qty-unit">{{ (product as any)?.unit || 'szt' }}</span>
             </div>
           </div>
 
