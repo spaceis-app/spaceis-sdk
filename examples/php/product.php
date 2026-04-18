@@ -16,14 +16,20 @@ if (!$slug) {
 }
 
 $product = $api->getProduct($slug);
-$recommendations = $api->getProductRecommendations($slug);
+$apiFailed = $api->isLastFailed();
+$recommendations = $apiFailed ? [] : $api->getProductRecommendations($slug);
 
 if (empty($product)) {
-    $pageTitle = 'Product not found — SpaceIS Shop';
-    $metaDesc = 'Product not found.';
+    $pageTitle = ($apiFailed ? 'Service unavailable' : 'Product not found') . ' — SpaceIS Shop';
+    $metaDesc = $apiFailed ? 'Service temporarily unavailable.' : 'Product not found.';
     $isShopPage = false;
     require __DIR__ . '/includes/header.php';
-    echo '<div class="container pdp-container"><div class="empty-state"><p>Product not found.</p><a href="/index.php" class="back-link">&larr; Back to shop</a></div></div>';
+    if ($apiFailed) {
+        http_response_code(503);
+        echo '<div class="container pdp-container"><div class="empty-state"><p>Service temporarily unavailable. Please refresh in a moment.</p><a href="/index.php" class="back-link">&larr; Back to shop</a></div></div>';
+    } else {
+        echo '<div class="container pdp-container"><div class="empty-state"><p>Product not found.</p><a href="/index.php" class="back-link">&larr; Back to shop</a></div></div>';
+    }
     require __DIR__ . '/includes/footer.php';
     exit;
 }
@@ -39,9 +45,13 @@ if ($minQty < 1) $minQty = 1;
 if ($stepQty < 1) $stepQty = 1;
 if ($maxQty < $minQty) $maxQty = 99;
 
+// Display unit: API may return "szt", "dni", "min", etc. Fall back to "szt".
+$unit = $product['unit'] ?? 'szt';
+
 $pageTitle = e($product['name']) . ' — SpaceIS Shop';
 $metaDesc = 'Buy ' . e($product['name']) . ' in our store.';
 $isShopPage = false;
+$loadDOMPurify = !empty($product['description']);
 require __DIR__ . '/includes/header.php';
 ?>
 
@@ -77,7 +87,7 @@ require __DIR__ . '/includes/header.php';
             </div>
 
             <div class="pdp-unit-price" id="pdp-unit-price">
-                (<?= $firstVariant ? fp($firstVariant['price']) : '' ?>/<?= $stepQty > 1 ? $stepQty . ' pcs.' : '1 pcs.' ?>)
+                (<?= $firstVariant ? fp($firstVariant['price']) : '' ?>/<?= $stepQty > 1 ? $stepQty . ' ' . e($unit) : '1 ' . e($unit) ?>)
             </div>
 
             <!-- Variants -->
@@ -110,6 +120,7 @@ require __DIR__ . '/includes/header.php';
                         >
                         <button class="qty-step-btn" id="qty-inc" onclick="changeQty(1)">+</button>
                     </div>
+                    <span class="qty-unit"><?= e($unit) ?></span>
                 </div>
             </div>
 
@@ -133,6 +144,7 @@ require __DIR__ . '/includes/header.php';
                                 $recHasDiscount = ($rec['base_price'] ?? 0) !== ($rec['price'] ?? 0);
                                 $recMinQty = ($recProduct && isset($recProduct['min_quantity'])) ? fromApiQty($recProduct['min_quantity']) : 1;
                                 if ($recMinQty < 1) $recMinQty = 1;
+                                $recUnit = ($recProduct['unit'] ?? null) ?: 'szt';
                             ?>
                             <div class="rec-card">
                                 <?php if ($recImg): ?>
@@ -148,7 +160,7 @@ require __DIR__ . '/includes/header.php';
                                             <span class="rec-old-price"><?= fp(($rec['base_price'] ?? 0) * $recMinQty) ?></span>
                                         <?php endif; ?>
                                         <?php if ($recMinQty > 1): ?>
-                                            <span class="rec-qty-label">(<?= $recMinQty ?> pcs.)</span>
+                                            <span class="rec-qty-label">(<?= $recMinQty ?> <?= e($recUnit) ?>)</span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -166,10 +178,23 @@ require __DIR__ . '/includes/header.php';
             <?php if (!empty($product['description'])): ?>
                 <div class="pdp-description">
                     <div class="pdp-label">Description</div>
-                    <div class="pdp-desc-body">
-                        <?= $product['description'] ?? '' ?>
-                    </div>
+                    <!--
+                        product.description is raw HTML from the admin panel.
+                        Rendered in an inert <template>, then DOMPurify-sanitised
+                        into the visible #pdp-desc-body to defend against a
+                        compromised admin account or MITM'd API response.
+                    -->
+                    <template id="product-desc-raw"><?= $product['description'] ?></template>
+                    <div class="pdp-desc-body" id="pdp-desc-body"></div>
                 </div>
+                <script>
+                    (() => {
+                        const tpl = document.getElementById('product-desc-raw');
+                        const dst = document.getElementById('pdp-desc-body');
+                        if (!tpl || !dst) return;
+                        dst.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(tpl.innerHTML) : '';
+                    })();
+                </script>
             <?php endif; ?>
         </div>
     </div>
@@ -183,6 +208,7 @@ require __DIR__ . '/includes/header.php';
     const minQty = <?= (int) $minQty ?>;
     const maxQty = <?= (int) $maxQty ?>;
     const stepQty = <?= (int) $stepQty ?>;
+    const unit = <?= json_encode($unit) ?>;
 
     const getSelectedVariant = () => {
         return variants.find((v) => v.uuid === selectedVariantUuid) ?? variants[0] ?? null;
@@ -206,7 +232,7 @@ require __DIR__ . '/includes/header.php';
             oldEl.style.display = 'none';
         }
         document.getElementById('pdp-unit-price').textContent =
-            `(${fp(v.price)}/${stepQty > 1 ? `${stepQty} pcs.` : '1 pcs.'})`;
+            `(${fp(v.price)}/${stepQty > 1 ? `${stepQty} ${unit}` : `1 ${unit}`})`;
         document.getElementById('qty-val').value = quantity;
         document.getElementById('qty-dec').disabled = quantity <= minQty;
         document.getElementById('qty-inc').disabled = quantity >= maxQty;

@@ -2251,6 +2251,12 @@ input.qty-input::-webkit-inner-spin-button {
   align-items: center;
   gap: 16px;
 }
+.qty-unit {
+  font-size: 13px;
+  color: var(--txt-3);
+  font-weight: 500;
+  user-select: none;
+}
 .pdp-qty-stepper {
   display: flex;
   align-items: center;

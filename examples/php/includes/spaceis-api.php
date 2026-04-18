@@ -10,10 +10,28 @@ class SpaceISApi
     private string $baseUrl;
     private string $shopUuid;
 
+    /**
+     * Set to true by {@see get()} when the last request failed (both retries
+     * exhausted or JSON decode error). Lets templates distinguish "service
+     * unavailable" from "empty result" and render an appropriate banner.
+     */
+    private bool $lastFailed = false;
+
+    public function isLastFailed(): bool
+    {
+        return $this->lastFailed;
+    }
+
     public function __construct()
     {
         $this->loadEnv();
-        $this->baseUrl = rtrim(getenv('SPACEIS_API_URL') ?: 'https://storefront-api.spaceis.app', '/');
+        $url = rtrim(getenv('SPACEIS_API_URL') ?: 'https://storefront-api.spaceis.app', '/');
+        // Reject anything that is not http/https — prevents SSRF via file:// or ftp://
+        // if an operator misconfigures the env (e.g. file:///etc/passwd).
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://storefront-api.spaceis.app';
+        }
+        $this->baseUrl = $url;
         $this->shopUuid = getenv('SPACEIS_SHOP_UUID') ?: '';
     }
 
@@ -179,11 +197,16 @@ class SpaceISApi
 
         if ($response === false) {
             error_log("SpaceIS API failed: GET $endpoint");
+            $this->lastFailed = true;
             return [];
         }
 
         $decoded = json_decode($response, true);
-        return is_array($decoded) ? $decoded : [];
+        if (!is_array($decoded)) {
+            $this->lastFailed = true;
+            return [];
+        }
+        return $decoded;
     }
 
     // ── Env loader ──

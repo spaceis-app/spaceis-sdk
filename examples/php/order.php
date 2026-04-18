@@ -125,10 +125,12 @@ require __DIR__ . '/includes/header.php';
 
     window.lookupOrder = lookupOrder;
 
-    // Auto-lookup if code in URL (wait for footer/SDK to load)
-    const urlCode = '<?= e($codeFromUrl) ?>';
+    // Auto-lookup if code in URL — wait for SpaceISApp (module deferred, so use spaceis:ready).
+    // json_encode produces a JS-string-safe literal (escapes backslashes, unicode, quotes);
+    // htmlspecialchars/e() does not, so prefer this for JS string contexts.
+    const urlCode = <?= json_encode($codeFromUrl) ?>;
     if (urlCode) {
-        window.addEventListener('DOMContentLoaded', () => lookupOrder(), { once: true });
+        window.addEventListener('spaceis:ready', () => lookupOrder(), { once: true });
     }
 })();
 </script>
