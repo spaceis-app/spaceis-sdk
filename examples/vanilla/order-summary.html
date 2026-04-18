@@ -68,7 +68,8 @@
       const codeFromUrl = params.get("order") || params.get("code");
       if (codeFromUrl) {
         document.getElementById("order-code-input").value = codeFromUrl;
-        loadOrder(codeFromUrl);
+        // Wait for shared/main.js to expose `client` before fetching the order.
+        window.addEventListener("spaceis:ready", () => loadOrder(codeFromUrl));
       }
 
       document.getElementById("check-order-btn").addEventListener("click", () => {

@@ -222,11 +222,12 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
 
-      // ── Init ─────────────────────────────────────────────────
-
-      loadCategories();
-      renderSkeletons("packages-container", 6);
-      loadPackages();
+      // ── Init (after shared/main.js exposes client / renderSkeletons) ─
+      window.addEventListener("spaceis:ready", () => {
+        loadCategories();
+        renderSkeletons("packages-container", 6);
+        loadPackages();
+      });
     </script>
   </body>
 </html>

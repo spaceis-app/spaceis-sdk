@@ -128,7 +128,10 @@
         }
       }
 
-      loadSales();
+      // Wait for shared/main.js to expose `client` before hitting the API.
+      window.addEventListener("spaceis:ready", () => {
+        loadSales();
+      });
     </script>
   </body>
 </html>

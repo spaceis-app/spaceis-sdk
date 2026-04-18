@@ -258,11 +258,12 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      // ── Init ─────────────────────────────────────────────────
-
-      renderSkeletons("products-container", 8);
-      loadCategories();
-      loadProducts();
+      // ── Init (after shared/main.js exposes client / renderSkeletons) ─
+      window.addEventListener("spaceis:ready", () => {
+        renderSkeletons("products-container", 8);
+        loadCategories();
+        loadProducts();
+      });
     </script>
   </body>
 </html>

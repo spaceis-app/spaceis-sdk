@@ -39,11 +39,14 @@
       const params = new URLSearchParams(window.location.search);
       const slug = params.get("slug");
 
-      if (slug) {
-        loadPage(slug);
-      } else {
-        loadPagesList();
-      }
+      // Wait for shared/main.js to expose `client` before hitting the API.
+      window.addEventListener("spaceis:ready", () => {
+        if (slug) {
+          loadPage(slug);
+        } else {
+          loadPagesList();
+        }
+      });
 
       async function loadPage(slug) {
         try {
