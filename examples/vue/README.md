@@ -1,8 +1,12 @@
 # SpaceIS SDK — Vue / Nuxt 4 Integration Guide
 
-## For AI Agents (ChatGPT, Claude, etc.)
+Getting started with `@spaceis/vue` — copy this example as a template
+or follow the steps below to integrate SpaceIS into an existing Nuxt 4 project.
 
-This document explains how to integrate SpaceIS shop into a Nuxt 4 project using `@spaceis/vue`.
+> This file is both a human tutorial and reference for AI coding agents
+> (Claude Code, Cursor, Codex, Copilot). Agents working in this folder
+> should also consult [AGENTS.md in @spaceis/vue](../../packages/vue/AGENTS.md)
+> which documents runtime gotchas and module internals.
 
 ---
 
@@ -73,7 +77,7 @@ examples/vue/
 ├── error.vue                   — Error/404 page
 ├── package.json
 ├── .env.example
-└── INSTRUCTIONS.md             — This file
+└── README.md                   — This file
 ```
 
 ---

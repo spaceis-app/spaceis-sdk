@@ -1,5 +1,14 @@
 # SpaceIS SDK — PHP SSR Example
 
+Getting started with `@spaceis/sdk` (IIFE) and PHP server-side rendering — copy this example as a template
+or follow the steps below to integrate SpaceIS into an existing PHP project.
+
+> This file is both a human tutorial and reference for AI coding agents
+> (Claude Code, Cursor, Codex, Copilot). Agents working in this folder
+> should also consult the SDK-level agent guidance in `packages/sdk/AGENTS.md`.
+
+---
+
 A complete shop storefront built with PHP server-side rendering and the SpaceIS SDK IIFE for client-side interactivity.
 
 ## Requirements

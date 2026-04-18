@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [examples 0.2.0] - 2026-04-18
+
+### Changed
+- Renamed each example's `INSTRUCTIONS.md` → `README.md`. Same content,
+  now the standard first-read file in each example folder (php, react,
+  vanilla, vue). The old "For AI Agents" framing is replaced with a
+  unified banner that serves both humans following the tutorial and
+  AI coding agents collaborating on integration.
+- Bumped pinned SDK version references (`0.1.x` → `0.2.0`) in the
+  integration code samples (vanilla example, 2 occurrences).
+
 ## [@spaceis/sdk 0.2.0] - 2026-04-17
 
 Audit-driven release hardening the public API, fixing two edge-case runtime

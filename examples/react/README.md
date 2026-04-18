@@ -1,8 +1,12 @@
 # SpaceIS SDK — React / Next.js Integration Guide
 
-## For AI Agents (ChatGPT, Claude, etc.)
+Getting started with `@spaceis/react` — copy this example as a template
+or follow the steps below to integrate SpaceIS into an existing Next.js App Router project.
 
-This document explains how to integrate SpaceIS shop into a Next.js App Router project using `@spaceis/react`.
+> This file is both a human tutorial and reference for AI coding agents
+> (Claude Code, Cursor, Codex, Copilot). Agents working in this folder
+> should also consult [AGENTS.md in @spaceis/react](../../packages/react/AGENTS.md)
+> which documents runtime gotchas and module internals.
 
 ---
 
@@ -85,7 +89,7 @@ examples/react/
 ├── package.json
 ├── next.config.ts
 ├── tsconfig.json
-└── INSTRUCTIONS.md                — This file
+└── README.md                      — This file
 ```
 
 ---

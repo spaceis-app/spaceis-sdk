@@ -1,8 +1,12 @@
 # SpaceIS SDK — Vanilla JS Integration Guide
 
-## For AI Agents (ChatGPT, Claude, etc.)
+Getting started with `@spaceis/sdk` (IIFE via CDN) — copy this example as a template
+or follow the steps below to integrate SpaceIS into any HTML website.
 
-This document explains how to integrate SpaceIS shop into any HTML website using the vanilla JS SDK.
+> This file is both a human tutorial and reference for AI coding agents
+> (Claude Code, Cursor, Codex, Copilot). Agents working in this folder
+> should also consult [AGENTS.md](./AGENTS.md) which documents runtime
+> gotchas, module internals, and the `spaceis:ready` synchronisation pattern.
 
 ---
 
@@ -11,7 +15,7 @@ This document explains how to integrate SpaceIS shop into any HTML website using
 ### Step 1: Add SDK script
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"></script>
 ```
 
 ### Step 2: Initialize client
@@ -292,7 +296,7 @@ You don't need to manage the token manually.
     <h2>Cart (<span id="count">0</span> items) — <span id="total">0,00 zl</span></h2>
     <div id="cart-items"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"></script>
     <script>
       const client = SpaceIS.createSpaceIS({
         baseUrl: "https://storefront-api.spaceis.app",
@@ -367,7 +371,7 @@ examples/vanilla/
 ├── order-summary.html — Order status after payment
 ├── page.html          — CMS pages (dynamic by ?slug=)
 ├── statute.html       — Shop terms/statute
-└── INSTRUCTIONS.md    — This file
+└── README.md          — This file
 ```
 
 Each HTML page includes `shared.js` which handles:

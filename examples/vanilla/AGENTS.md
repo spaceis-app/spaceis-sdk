@@ -178,6 +178,8 @@ UUID to this repository.
 
 ## Consumer integration
 
+For a step-by-step tutorial for consumers building from scratch, see the example's [README.md](./README.md).
+
 After downloading via `create-spaceis`:
 
 1. Start HTTP server: `python -m http.server 3333` (or `npx serve .`)
