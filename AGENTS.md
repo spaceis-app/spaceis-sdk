@@ -25,8 +25,8 @@ examples that double as integration tests and documentation.
 ├── examples/                      — NOT in pnpm workspace (standalone installs)
 │   ├── vanilla/      AGENTS.md   — HTML + JS modules + SDK IIFE
 │   ├── php/          AGENTS.md   — PHP SSR + client-side SDK via IIFE
-│   ├── react/                    — Next.js 16 App Router
-│   └── vue/                      — Nuxt 4
+│   ├── react/        AGENTS.md   — Next.js 16 App Router
+│   └── vue/          AGENTS.md   — Nuxt 4
 ├── .github/workflows/            — ci.yml (build + typecheck + test),
 │                                    publish.yml (GitHub Release → npm)
 ├── CHANGELOG.md
@@ -132,9 +132,13 @@ before assigning to `window.location.href`. Helpers:
   surfaces in IDEs.
 - All type definitions live in `packages/<pkg>/src/types/`, re-exported via
   a barrel `index.ts`.
-- Commits: conventional (`feat:`, `fix:`, `chore:`, `docs:`) or `TASK-NN | …`
-  where tracked in an internal board. Scope in parens when multiple examples
-  change: `feat(examples/react):`, `fix(packages/sdk):`.
+- Commits: [Conventional Commits](https://www.conventionalcommits.org/)
+  (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `perf:`, `ci:`).
+  Scope in parens for package/example: `feat(sdk):`, `fix(examples/react):`,
+  `docs(react,vue):`. Enforced locally via Husky + commitlint
+  (`@commitlint/config-conventional`) on `commit-msg`.
+- Pre-commit hook runs `lint-staged` (ESLint `--fix` + Prettier) on staged
+  files only — no full-repo build/test (that's CI).
 
 ## Where to read next
 
