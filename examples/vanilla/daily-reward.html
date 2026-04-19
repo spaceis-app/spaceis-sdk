@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Daily Reward</title>
+    <meta name="description" content="SpaceIS storefront — claim your daily reward.">
+    <meta property="og:title" content="SpaceIS SDK — Daily Reward">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -37,38 +40,43 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
-      client.recaptcha.load().catch(() => {});
+      // shared/main.js is a deferred ES module — register all handlers that
+      // touch the SDK globals inside `spaceis:ready` so they're attached only
+      // after `client`, `showToast`, `getErrorMessage` are available.
+      window.addEventListener("spaceis:ready", () => {
+        client.recaptcha.load().catch(() => {});
 
-      document.getElementById("daily-submit-btn").addEventListener("click", async () => {
-        const nick = document.getElementById("daily-nick").value.trim();
-        if (!nick) { showToast("Player nickname is required", "error"); return; }
+        document.getElementById("daily-submit-btn").addEventListener("click", async () => {
+          const nick = document.getElementById("daily-nick").value.trim();
+          if (!nick) { showToast("Player nickname is required", "error"); return; }
 
-        hideResult("daily-result");
-        const btn = document.getElementById("daily-submit-btn");
-        btn.disabled = true;
-        btn.textContent = "Claiming...";
+          hideResult("daily-result");
+          const btn = document.getElementById("daily-submit-btn");
+          btn.disabled = true;
+          btn.textContent = "Claiming...";
 
-        try {
-          const token = await client.recaptcha.execute("daily_reward");
-          const result = await client.dailyRewards.claim({ nick, "g-recaptcha-response": token });
-          showResult("daily-result", result.message || "Daily reward claimed!", "success");
-          showToast(result.message || "Reward claimed!", "success");
-        } catch (err) {
-          const msg = getErrorMessage(err);
-          showResult("daily-result", msg, "error");
-          showToast(msg, "error");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Claim reward";
-        }
-      });
+          try {
+            const token = await client.recaptcha.execute("daily_reward");
+            const result = await client.dailyRewards.claim({ nick, "g-recaptcha-response": token });
+            showResult("daily-result", result.message || "Daily reward claimed!", "success");
+            showToast(result.message || "Reward claimed!", "success");
+          } catch (err) {
+            const msg = getErrorMessage(err);
+            showResult("daily-result", msg, "error");
+            showToast(msg, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Claim reward";
+          }
+        });
 
-      document.getElementById("daily-nick").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") document.getElementById("daily-submit-btn").click();
+        document.getElementById("daily-nick").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") document.getElementById("daily-submit-btn").click();
+        });
       });
 
       function showResult(id, message, type) {

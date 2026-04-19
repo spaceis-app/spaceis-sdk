@@ -64,7 +64,14 @@ export interface ShowShopProduct {
   name: string;
   /** URL-friendly slug */
   slug: string;
-  /** HTML product description, or `null` */
+  /**
+   * Product description (raw HTML from API), or `null`.
+   *
+   * @remarks
+   * Sanitize before injecting into the DOM (e.g. with DOMPurify) or render
+   * as escaped text via {@link escapeHtml}. Do NOT assign directly to
+   * `innerHTML` on untrusted content — risk of stored XSS.
+   */
   description: string | null;
   /** Product image URL, or `null` */
   image: string | null;
@@ -78,6 +85,12 @@ export interface ShowShopProduct {
   min_quantity: number | null;
   /** Maximum quantity in API thousandths, or `null` for default */
   max_quantity: number | null;
+  /**
+   * Human-readable unit label for the product's quantity — e.g. `"szt"`
+   * (pieces), `"dni"` (days), `"min"` (minutes), `"godz"` (hours). Used
+   * for display only; the SDK does not interpret the value.
+   */
+  unit: string;
   /** Available variants with pricing */
   variants: ShowShopProductVariant[];
   /** Parent package if product belongs to one, or `null` */
@@ -107,6 +120,10 @@ export interface GetProductsParams {
   sale_uuid?: string;
   /** Filter by sale slug */
   sale_slug?: string;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }

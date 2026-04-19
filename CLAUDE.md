@@ -1,99 +1,19 @@
-# CLAUDE.md — SpaceIS SDK Monorepo
+# Claude Code configuration for SpaceIS SDK Monorepo
 
-## Overview
+This repo uses **[AGENTS.md](./AGENTS.md)** as the canonical agent
+instruction file — the same content applies to Claude Code.
 
-Monorepo for the SpaceIS shop platform SDK. Provides a JavaScript client library and React bindings for building storefronts.
+Look there for:
+- Repository layout (packages/ vs examples/, pnpm workspace scope)
+- Package-manager conventions (pnpm only, `--ignore-workspace` for examples)
+- Root commands (`pnpm build` / `typecheck` / `test` / `dev`)
+- Domain invariants (prices in cents, quantities in thousandths, commission
+  as multiplier, `product.unit` scope, cart token lifecycle)
+- Raw-HTML field handling (DOMPurify / SafeHtml / sanitized computed)
+- Open-redirect guards
+- Package boundaries and publishing
+- Where to drill down — each package and example has its own `AGENTS.md`
 
-- **API docs**: https://docs.spaceis.app/api#/
-- **npm**: [`@spaceis/sdk`](https://www.npmjs.com/package/@spaceis/sdk), [`@spaceis/react`](https://www.npmjs.com/package/@spaceis/react)
-
-## Monorepo Structure
-
-```
-├── examples/
-│   ├── vanilla/          — Complete store using HTML + vanilla JS + SDK IIFE
-│   ├── react/            — Next.js App Router store using @spaceis/react hooks + SSR
-│   ├── vue/              — Nuxt 4 store using @spaceis/vue composables + SSR
-│   └── php/              — PHP SSR store with client-side SDK for cart
-├── packages/
-│   ├── sdk/              — Core JS SDK (zero dependencies)
-│   │   ├── src/          — TypeScript source
-│   │   └── CLAUDE.md     — SDK-specific AI context
-│   ├── react/            — React hooks + Provider + SSR helpers for Next.js
-│   └── vue/              — Vue 3 composables + Plugin + SSR helpers for Nuxt
-├── .github/
-│   ├── workflows/ci.yml      — CI: build + typecheck + test (Node 20/22)
-│   ├── workflows/publish.yml — Publish to npm on GitHub Release
-│   └── ISSUE_TEMPLATE/       — Bug report + feature request forms
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-└── pnpm-workspace.yaml
-```
-
-## Commands
-
-Run from root — applies to all packages:
-
-```bash
-pnpm install     # install deps
-pnpm build       # build all packages (tsup → ESM + CJS + IIFE + types)
-pnpm typecheck   # tsc --noEmit
-pnpm test        # vitest run (sdk + react)
-pnpm dev         # watch mode
-```
-
-## Key Domain Concepts
-
-- **Prices** are always in **cents** (grosze). 1299 = 12.99 PLN
-- **Quantities** use **thousandths** in API. 1000 = 1 item, 2500 = 2.5 items
-- **Cart token** — UUID stored in localStorage, identifies a cart session
-- **Shop UUID** — identifies which shop the SDK connects to
-
-## Package Details
-
-### `@spaceis/sdk` (packages/sdk/)
-
-Zero-dependency client for the SpaceIS storefront API. See `packages/sdk/CLAUDE.md` for architecture details.
-
-Entry point: `createSpaceIS({ baseUrl, shopUuid })` → `SpaceISClient`
-
-14 API modules: products, categories, cart, checkout, orders, content, sales, goals, packages, vouchers, dailyRewards, rankings, shop, recaptcha
-
-Key classes:
-- `SpaceISClient` — main client, holds all modules
-- `CartManager` — reactive cart with localStorage persistence and onChange subscriptions
-- `SpaceISError` — API errors with field-level validation
-
-3 build outputs: ESM (`index.js`), CJS (`index.cjs`), IIFE (`spaceis.global.js` → `window.SpaceIS`)
-
-### `@spaceis/react` (packages/react/)
-
-React bindings using TanStack Query.
-
-- `SpaceISProvider` — context provider with built-in QueryClient
-- `useCart()` — reactive cart via `useSyncExternalStore`
-- Data hooks: `useProducts`, `useProduct`, `useCategories`, `useCheckout`, etc.
-- `@spaceis/react/server` — SSR prefetch helpers for Next.js
-
-### `@spaceis/vue` (packages/vue/)
-
-Vue 3 bindings using TanStack Vue Query.
-
-- `SpaceISPlugin` — Vue plugin with provide/inject
-- `useCart()` — reactive cart via `shallowRef` + `CartManager.onChange`
-- Data composables: `useProducts`, `useProduct`, `useCategories`, `useCheckout`, etc.
-- `@spaceis/vue/server` — SSR prefetch helpers for Nuxt
-
-## Publishing
-
-- Manual: `cd packages/sdk && pnpm publish --access public`
-- Automatic: create a GitHub Release → `publish.yml` workflow runs
-- Requires `NPM_TOKEN` secret in GitHub repo settings
-
-## Conventions
-
-- TypeScript strict mode
-- JSDoc on all public APIs with `@example` blocks
-- No runtime dependencies in `@spaceis/sdk`
-- Vanilla examples use IIFE build (`window.SpaceIS`)
-- All type definitions in `src/types/` directory, re-exported via barrel
+Kept as a thin pointer so Claude Code's hierarchical CLAUDE.md loading still
+works at the repo root even on versions that don't yet read AGENTS.md
+natively.

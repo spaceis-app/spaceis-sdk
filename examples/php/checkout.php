@@ -24,6 +24,8 @@ require __DIR__ . '/includes/header.php';
 
 <script>
 (() => {
+    const returnUrl = <?= json_encode(filter_var(getenv("RETURN_URL") ?: "", FILTER_VALIDATE_URL) ?: "") ?>;
+    const cancelUrl = <?= json_encode(filter_var(getenv("CANCEL_URL") ?: "", FILTER_VALIDATE_URL) ?: "") ?>;
     const paymentMethods = <?= json_encode($paymentMethods, JSON_UNESCAPED_UNICODE) ?>;
     const agreements = <?= json_encode($agreements, JSON_UNESCAPED_UNICODE) ?>;
     let selectedMethodUuid = paymentMethods.length > 0 ? paymentMethods[0].uuid : null;
@@ -40,7 +42,6 @@ require __DIR__ . '/includes/header.php';
         const cart = SpaceISApp.cart;
         const fp = SpaceISApp.fp;
         const esc = SpaceISApp.esc;
-        const placeholderSvg = SpaceISApp.placeholderSvg;
         const items = cart.items;
         const totalQuantity = cart.totalQuantity;
         const finalPrice = cart.finalPrice;
@@ -64,7 +65,8 @@ require __DIR__ . '/includes/header.php';
             }
         }
         const commission = selectedMethod?.commission || 0;
-        const commissionAmount = commission > 0 ? Math.round((finalPrice * commission) / 100) : 0;
+        // commission is a multiplier (e.g. 1.2 = 20% surcharge), not a percentage integer
+        const commissionAmount = commission > 1 ? Math.round(finalPrice * commission - finalPrice) : 0;
         const totalWithCommission = finalPrice + commissionAmount;
 
         let html = '<div class="checkout-layout">';
@@ -75,50 +77,7 @@ require __DIR__ . '/includes/header.php';
 
         // Cart items
         html += '<div>';
-        items.forEach((item) => {
-            const variantUuid = item.variant?.uuid ?? '';
-            const imgSrc = SpaceIS.getCartItemImage(item);
-            const qty = SpaceIS.getItemQty(item);
-            const showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
-
-            html += '<div class="checkout-item">';
-            if (imgSrc) {
-                html += `<img class="checkout-item-img" src="${esc(imgSrc)}" alt="">`;
-            } else {
-                html += `<div class="checkout-item-img-placeholder">${placeholderSvg(18)}</div>`;
-            }
-            html += '<div class="checkout-item-details">';
-            html += '<div class="checkout-item-top">';
-            html += '<div class="checkout-item-info">';
-            html += `<div class="checkout-item-name">${esc(item.shop_product?.name ?? '')}</div>`;
-            if (showVariant) {
-                html += `<div class="checkout-item-variant">${esc(item.variant.name)}</div>`;
-            }
-            if (item.package) {
-                html += `<div class="checkout-item-package">Package: ${esc(item.package.name)}</div>`;
-            }
-            html += '</div>';
-            html += `<button class="checkout-item-remove" aria-label="Remove" onclick="SpaceISApp.removeItem('${esc(variantUuid)}')">`;
-            html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-            html += '</button>';
-            html += '</div>';
-
-            html += '<div class="checkout-item-bottom">';
-            html += '<div class="checkout-item-prices">';
-            html += `<span class="checkout-item-price">${fp(item.final_price_value)}</span>`;
-            if (item.regular_price_value !== item.final_price_value) {
-                html += `<span class="checkout-item-old-price">${fp(item.regular_price_value)}</span>`;
-            }
-            html += '</div>';
-            html += '<div class="qty-stepper">';
-            html += `<button class="qty-step-btn" onclick="SpaceISApp.decrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
-            html += `<input class="qty-input" type="text" inputmode="numeric" value="${qty}" onblur="SpaceISApp.setItemQty('${esc(variantUuid)}',this.value,this)" onkeydown="if(event.key==='Enter')this.blur()">`;
-            html += `<button class="qty-step-btn" onclick="SpaceISApp.incrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-        });
+        html += items.map((item) => SpaceISApp.renderCartItemHtml(item, 'checkout')).join('');
         html += '</div>';
 
         // Discount
@@ -169,8 +128,9 @@ require __DIR__ . '/includes/header.php';
                 html += `<label class="payment-method ${sel ? 'selected' : ''}" onclick="checkoutState.selectMethod('${esc(m.uuid)}')">`;
                 html += `<input type="radio" name="payment_method" value="${esc(m.uuid)}"${sel ? ' checked' : ''}>`;
                 html += `<span class="payment-method-name">${esc(m.name)}</span>`;
-                if (m.commission) {
-                    html += `<span class="payment-commission">(+${m.commission}%)</span>`;
+                if (m.commission > 1) {
+                    const pct = Math.round((m.commission - 1) * 100);
+                    html += `<span class="payment-commission">(+${pct}%)</span>`;
                 }
                 html += '</label>';
             });
@@ -200,8 +160,9 @@ require __DIR__ . '/includes/header.php';
             if (hasDiscount && discount) html += ` (${discount.percentage_discount}%)`;
             html += `</span><span>-${fp(discountAmount)}</span></div>`;
         }
-        if (commission > 0 && selectedMethod) {
-            html += `<div class="cart-summary-row"><span>Fee (${esc(selectedMethod.name)} +${commission}%)</span><span>+${fp(commissionAmount)}</span></div>`;
+        if (commission > 1 && selectedMethod) {
+            const pct = Math.round((commission - 1) * 100);
+            html += `<div class="cart-summary-row"><span>Fee (${esc(selectedMethod.name)} +${pct}%)</span><span>+${fp(commissionAmount)}</span></div>`;
         }
         html += `<div class="cart-summary-total"><span>Total</span><span>${fp(totalWithCommission)}</span></div>`;
         html += '</div>';
@@ -272,8 +233,8 @@ require __DIR__ . '/includes/header.php';
                     payment_method_uuid: selectedMethodUuid,
                     'g-recaptcha-response': token || '',
                     agreements: agreementUuids,
-                    return_url: '<?= e(getenv("RETURN_URL") ?: "") ?>' || undefined,
-                    cancel_url: '<?= e(getenv("CANCEL_URL") ?: "") ?>' || undefined,
+                    return_url: returnUrl || undefined,
+                    cancel_url: cancelUrl || undefined,
                 });
 
                 if (result.redirect_url) {

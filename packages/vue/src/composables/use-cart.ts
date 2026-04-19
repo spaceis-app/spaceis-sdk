@@ -39,6 +39,16 @@ const ssrNoop = (): Promise<never> =>
  *
  * All state is derived from Vue refs that update when CartManager notifies.
  * Subscription starts on mount to avoid hydration mismatches.
+ *
+ * @remarks
+ * Must be called inside a component's `setup()` function (or in a
+ * composable called from `setup()`). Calling it outside a Vue instance
+ * (e.g. from a Pinia store or a bare module-level function) will read
+ * the current cart state once but the reactive subscription will never
+ * start — `cart`, `items`, and `isEmpty` refs will not update.
+ *
+ * For non-component contexts use `cartManager` directly via
+ * `useSpaceIS()` and wire your own `onChange` subscription.
  */
 export function useCart(): UseCartReturn {
   const { cartManager } = useSpaceIS();

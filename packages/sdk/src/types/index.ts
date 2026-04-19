@@ -42,7 +42,7 @@ export type {
   CheckoutResponse,
 } from "./checkout";
 
-export type { OrderSummary, RawOrderSummary, OrderSummaryItem, OrderDiscountInfo, OrderStatus } from "./order";
+export type { OrderSummary, OrderSummaryItem, OrderDiscountInfo, OrderStatus } from "./order";
 
 export type { Sale, GetSalesParams } from "./sale";
 export type { Goal, GetGoalsParams } from "./goal";

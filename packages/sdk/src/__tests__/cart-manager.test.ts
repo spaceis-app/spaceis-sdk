@@ -25,7 +25,7 @@ function makeCart(overrides: Partial<Cart> = {}): Cart {
 
 function makeCartItem(variantUuid: string, quantity = 1000, price = 500) {
   return {
-    shop_product: { uuid: "prod-1", name: "Product", image: null, price },
+    shop_product: { uuid: "prod-1", name: "Product", slug: "product", image: null, price },
     variant: { uuid: variantUuid, name: "Variant", image: null, price },
     package: null,
     from_package: null,
@@ -48,10 +48,18 @@ function createMockStorage(): Storage {
   const store = new Map<string, string>();
   return {
     getItem: vi.fn((key: string) => store.get(key) ?? null),
-    setItem: vi.fn((key: string, value: string) => { store.set(key, value); }),
-    removeItem: vi.fn((key: string) => { store.delete(key); }),
-    clear: vi.fn(() => { store.clear(); }),
-    get length() { return store.size; },
+    setItem: vi.fn((key: string, value: string) => {
+      store.set(key, value);
+    }),
+    removeItem: vi.fn((key: string) => {
+      store.delete(key);
+    }),
+    clear: vi.fn(() => {
+      store.clear();
+    }),
+    get length() {
+      return store.size;
+    },
     key: vi.fn(() => null),
   };
 }
@@ -139,9 +147,16 @@ describe("CartManager", () => {
 
     it("generates and persists a UUID token on first mutation", async () => {
       const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart({
-          items: [makeCartItem("v-1")],
-        }))), { status: 200 })
+        new Response(
+          JSON.stringify(
+            makeMutationResponse(
+              makeCart({
+                items: [makeCartItem("v-1")],
+              }),
+            ),
+          ),
+          { status: 200 },
+        ),
       );
       vi.stubGlobal("fetch", fetchMock);
 
@@ -152,19 +167,14 @@ describe("CartManager", () => {
       await manager.add("v-1");
 
       expect(client.cartToken).toBeDefined();
-      expect(client.cartToken).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
-      );
-      expect(mockStorage.setItem).toHaveBeenCalledWith(
-        "spaceis_cart_shop-uuid-abc",
-        client.cartToken
-      );
+      expect(client.cartToken).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(mockStorage.setItem).toHaveBeenCalledWith("spaceis_cart_shop-uuid-abc", client.cartToken);
     });
 
     it("does not generate a new token when one already exists", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "existing-token" });
@@ -194,9 +204,7 @@ describe("CartManager", () => {
         regular_price: 2000,
         final_price: 2000,
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "my-token" });
@@ -212,7 +220,9 @@ describe("CartManager", () => {
     it("sets isLoading to true during fetch", async () => {
       let resolvePromise: (v: Response) => void;
       const fetchMock = vi.fn().mockReturnValue(
-        new Promise<Response>((resolve) => { resolvePromise = resolve; })
+        new Promise<Response>((resolve) => {
+          resolvePromise = resolve;
+        }),
       );
       vi.stubGlobal("fetch", fetchMock);
 
@@ -242,9 +252,7 @@ describe("CartManager", () => {
 
     it("notifies listeners on successful load", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "my-token" });
@@ -261,14 +269,44 @@ describe("CartManager", () => {
       // Fires twice: once for isLoading=true, once for completion
       expect(listener).toHaveBeenCalledTimes(2);
     });
+
+    it("notifies exactly twice on load error (start + error)", async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error("boom"));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = makeClient({ cartToken: "my-token" });
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await expect(manager.load()).rejects.toThrow("boom");
+
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(manager.isLoading).toBe(false);
+      expect(manager.error).toBeInstanceOf(Error);
+    });
+
+    it("notifies exactly once when no token (empty-cart shortcut, no _mutate)", async () => {
+      const client = makeClient();
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await manager.load();
+
+      // Empty-cart shortcut does not enter _mutate — single notify with empty cart
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("add()", () => {
     it("adds variant to cart and updates state", async () => {
       const cartAfter = makeCart({ items: [makeCartItem("v-1", 1000)] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(cartAfter)), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(cartAfter)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient();
@@ -281,9 +319,9 @@ describe("CartManager", () => {
     });
 
     it("converts quantity to API format (multiplied by 1000)", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient();
@@ -296,9 +334,9 @@ describe("CartManager", () => {
     });
 
     it("defaults quantity to 1 (1000 in API format)", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient();
@@ -321,14 +359,40 @@ describe("CartManager", () => {
       expect(manager.error).toBeInstanceOf(Error);
       expect(manager.isLoading).toBe(false);
     });
+
+    it("notifies exactly twice on add success (start + end)", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify(
+            makeMutationResponse(
+              makeCart({
+                items: [makeCartItem("v-1", 1000)],
+              }),
+            ),
+          ),
+          { status: 200 },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const client = makeClient();
+      const manager = new CartManager(client);
+      const listener = vi.fn();
+      manager.onChange(listener);
+      listener.mockClear();
+
+      await manager.add("v-1");
+
+      expect(listener).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("remove()", () => {
     it("removes variant from cart", async () => {
       const emptyCart = makeCart();
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(emptyCart)), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(emptyCart)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -340,9 +404,9 @@ describe("CartManager", () => {
     });
 
     it("sends quantity in API format when provided", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -355,9 +419,9 @@ describe("CartManager", () => {
     });
 
     it("omits quantity when not provided (removes all)", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -385,9 +449,16 @@ describe("CartManager", () => {
   describe("increment()", () => {
     it("adds one step (default 1000) to a variant", async () => {
       const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart({
-          items: [makeCartItem("v-1", 2000)],
-        }))), { status: 200 })
+        new Response(
+          JSON.stringify(
+            makeMutationResponse(
+              makeCart({
+                items: [makeCartItem("v-1", 2000)],
+              }),
+            ),
+          ),
+          { status: 200 },
+        ),
       );
       vi.stubGlobal("fetch", fetchMock);
 
@@ -406,13 +477,10 @@ describe("CartManager", () => {
       const cartAfterAdd = makeCart({ items: [makeCartItem("v-1", 2000)] });
       const cartAfterIncrement = makeCart({ items: [makeCartItem("v-1", 4000)] });
 
-      const fetchMock = vi.fn()
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(makeMutationResponse(cartAfterAdd)), { status: 200 })
-        )
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(makeMutationResponse(cartAfterIncrement)), { status: 200 })
-        );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(makeMutationResponse(cartAfterAdd)), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(makeMutationResponse(cartAfterIncrement)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient();
@@ -441,9 +509,9 @@ describe("CartManager", () => {
 
   describe("decrement()", () => {
     it("removes item entirely when item not found in cart", async () => {
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(makeCart())), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -461,13 +529,10 @@ describe("CartManager", () => {
       const cartWithItem = makeCart({ items: [makeCartItem("v-1", 1000)] });
       const emptyCart = makeCart();
 
-      const fetchMock = vi.fn()
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ data: cartWithItem }), { status: 200 })
-        )
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(makeMutationResponse(emptyCart)), { status: 200 })
-        );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ data: cartWithItem }), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(makeMutationResponse(emptyCart)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -483,22 +548,20 @@ describe("CartManager", () => {
     it("decrements by step when item quantity exceeds step", async () => {
       // Item has quantity 3000, learned step is 1000
       const cartWithItem = makeCart({ items: [makeCartItem("v-1", 3000)] });
-      const cartAfterAdd = makeCart({ items: [makeCartItem("v-1", 1000)] });
       const cartAfterDecrement = makeCart({ items: [makeCartItem("v-1", 2000)] });
 
-      const fetchMock = vi.fn()
+      const fetchMock = vi
+        .fn()
         // First: add() to learn step
         .mockResolvedValueOnce(
-          new Response(JSON.stringify(makeMutationResponse(makeCart({ items: [makeCartItem("v-1", 1000)] }))), { status: 200 })
+          new Response(JSON.stringify(makeMutationResponse(makeCart({ items: [makeCartItem("v-1", 1000)] }))), {
+            status: 200,
+          }),
         )
         // Second: load() to set quantity to 3000
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ data: cartWithItem }), { status: 200 })
-        )
+        .mockResolvedValueOnce(new Response(JSON.stringify({ data: cartWithItem }), { status: 200 }))
         // Third: decrement call
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(makeMutationResponse(cartAfterDecrement)), { status: 200 })
-        );
+        .mockResolvedValueOnce(new Response(JSON.stringify(makeMutationResponse(cartAfterDecrement)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient();
@@ -518,10 +581,9 @@ describe("CartManager", () => {
 
     it("sets error on failure", async () => {
       const cartWithItem = makeCart({ items: [makeCartItem("v-1", 3000)] });
-      const fetchMock = vi.fn()
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ data: cartWithItem }), { status: 200 })
-        )
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ data: cartWithItem }), { status: 200 }))
         .mockRejectedValueOnce(new Error("Fail"));
       vi.stubGlobal("fetch", fetchMock);
 
@@ -538,9 +600,16 @@ describe("CartManager", () => {
   describe("setQuantity()", () => {
     it("sends exact quantity in API format", async () => {
       const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(makeCart({
-          items: [makeCartItem("v-1", 5000)],
-        }))), { status: 200 })
+        new Response(
+          JSON.stringify(
+            makeMutationResponse(
+              makeCart({
+                items: [makeCartItem("v-1", 5000)],
+              }),
+            ),
+          ),
+          { status: 200 },
+        ),
       );
       vi.stubGlobal("fetch", fetchMock);
 
@@ -560,9 +629,9 @@ describe("CartManager", () => {
         regular_price: 1500,
         final_price: 1500,
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(updatedCart)), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(updatedCart)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -592,9 +661,9 @@ describe("CartManager", () => {
         regular_price: 1000,
         final_price: 900,
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(discountedCart)), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(discountedCart)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -629,9 +698,9 @@ describe("CartManager", () => {
         regular_price: 1000,
         final_price: 1000,
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(makeMutationResponse(cartWithoutDiscount)), { status: 200 })
-      );
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(makeMutationResponse(cartWithoutDiscount)), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -657,9 +726,7 @@ describe("CartManager", () => {
   describe("clear()", () => {
     it("resets cart to null", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -731,9 +798,7 @@ describe("CartManager", () => {
 
     it("supports multiple listeners", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -754,9 +819,7 @@ describe("CartManager", () => {
 
     it("does not break notify chain if a listener throws", async () => {
       const cartData = makeCart();
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -768,8 +831,14 @@ describe("CartManager", () => {
       normalListener.mockClear();
 
       // Register throwing listener — catch immediate call
-      const throwingListener = vi.fn(() => { throw new Error("listener error"); });
-      try { manager.onChange(throwingListener); } catch {}
+      const throwingListener = vi.fn(() => {
+        throw new Error("listener error");
+      });
+      try {
+        manager.onChange(throwingListener);
+      } catch {
+        // Intentionally swallowed — verifying notify() isolation.
+      }
       throwingListener.mockClear();
 
       await manager.load();
@@ -782,14 +851,9 @@ describe("CartManager", () => {
   describe("computed properties", () => {
     it("itemCount returns number of unique items", async () => {
       const cartData = makeCart({
-        items: [
-          makeCartItem("v-1", 2000),
-          makeCartItem("v-2", 3000),
-        ],
+        items: [makeCartItem("v-1", 2000), makeCartItem("v-2", 3000)],
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -802,13 +866,11 @@ describe("CartManager", () => {
     it("totalQuantity converts from API format", async () => {
       const cartData = makeCart({
         items: [
-          makeCartItem("v-1", 2000),  // 2 items
-          makeCartItem("v-2", 3000),  // 3 items
+          makeCartItem("v-1", 2000), // 2 items
+          makeCartItem("v-2", 3000), // 3 items
         ],
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -820,9 +882,7 @@ describe("CartManager", () => {
 
     it("finalPrice returns cart final_price", async () => {
       const cartData = makeCart({ final_price: 2500 });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -834,9 +894,7 @@ describe("CartManager", () => {
 
     it("regularPrice returns cart regular_price", async () => {
       const cartData = makeCart({ regular_price: 3000 });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -850,9 +908,7 @@ describe("CartManager", () => {
       const cartData = makeCart({
         discount: { code: "SAVE", percentage_discount: 15, source: "discount_codes" },
       });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -864,9 +920,7 @@ describe("CartManager", () => {
 
     it("hasDiscount returns false when no discount", async () => {
       const cartData = makeCart({ discount: null });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -878,9 +932,7 @@ describe("CartManager", () => {
 
     it("isEmpty returns false when cart has items", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -892,9 +944,7 @@ describe("CartManager", () => {
 
     it("isEmpty returns true when cart has no items", async () => {
       const cartData = makeCart({ items: [] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -907,9 +957,7 @@ describe("CartManager", () => {
     it("findItem returns the matching cart item", async () => {
       const item = makeCartItem("v-1", 2000);
       const cartData = makeCart({ items: [item] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -922,9 +970,7 @@ describe("CartManager", () => {
 
     it("hasItem checks if variant exists in cart", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -937,9 +983,7 @@ describe("CartManager", () => {
 
     it("getQuantity returns human-readable quantity", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1", 2500)] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });
@@ -954,9 +998,7 @@ describe("CartManager", () => {
   describe("autoLoad option", () => {
     it("calls load() automatically when autoLoad is true", async () => {
       const cartData = makeCart({ items: [makeCartItem("v-1")] });
-      const fetchMock = vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ data: cartData }), { status: 200 })
-      );
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: cartData }), { status: 200 }));
       vi.stubGlobal("fetch", fetchMock);
 
       const client = makeClient({ cartToken: "token" });

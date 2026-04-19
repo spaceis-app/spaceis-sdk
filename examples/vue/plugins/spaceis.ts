@@ -22,7 +22,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   // CartManager only on client (needs localStorage)
   const cartManager = import.meta.client
     ? client.createCartManager({ autoLoad: true })
-    : (null as any);
+    : null;
 
-  nuxtApp.vueApp.provide(SpaceISKey, { client, cartManager } as SpaceISContext);
+  nuxtApp.vueApp.provide(SpaceISKey, { client, cartManager });
 });

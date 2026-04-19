@@ -5,7 +5,7 @@ import {
   HydrationBoundary,
 } from "@spaceis/react/server";
 import { getServerClient } from "@/lib/server";
-import { SinglePageContent } from "@/views/ContentPage";
+import { SinglePageContent } from "@/features/content/ContentPage";
 
 export default async function Page({
   params,

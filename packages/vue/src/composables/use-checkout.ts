@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/vue-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { useSpaceIS } from "./use-spaceis";
 import type { CheckoutRequest } from "@spaceis/sdk";
 
@@ -31,6 +31,12 @@ export function useAgreements() {
 /**
  * Mutation for placing an order.
  *
+ * @remarks
+ * On success the cart is automatically cleared and the `['spaceis', 'cart']` query is
+ * invalidated. Provide your own `onSuccess` via the mutation call
+ * (`mutate(input, { onSuccess })`) to react after that.
+ * When `cartManager` is `null` (SSR context), the clear step is safely skipped.
+ *
  * @example
  * ```vue
  * <script setup>
@@ -50,10 +56,15 @@ export function useAgreements() {
  * ```
  */
 export function usePlaceOrder() {
-  const { client } = useSpaceIS();
+  const { client, cartManager } = useSpaceIS();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CheckoutRequest) => client.checkout.placeOrder(data),
+    onSuccess: () => {
+      cartManager?.clear();
+      queryClient.invalidateQueries({ queryKey: ["spaceis", "cart"] });
+    },
   });
 }
 

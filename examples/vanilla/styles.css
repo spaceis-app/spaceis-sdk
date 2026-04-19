@@ -684,6 +684,19 @@ textarea::placeholder {
 .cart-item-price-old { font-size: 11px; color: var(--txt-3); text-decoration: line-through; }
 
 /* Qty stepper */
+.qty-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.qty-unit {
+  font-size: 13px;
+  color: var(--txt-3);
+  font-weight: 500;
+  user-select: none;
+}
+
 .qty-stepper {
   display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px;
 }

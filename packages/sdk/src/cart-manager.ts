@@ -233,20 +233,28 @@ export class CartManager {
 
   // ── Mutation helpers ──
 
-  private applyMutation(res: CartMutationResponse): CartMutationResponse {
+  private applyCart(res: CartMutationResponse): CartMutationResponse {
     this._cart = res.data.cart;
-    this._error = null;
-    this._loading = false;
-    this.notify();
     return res;
   }
 
-  /** Wraps a cart mutation with loading/error state management */
+  /**
+   * Wraps a cart mutation with loading/error state management.
+   *
+   * Emits exactly two notifications: one when entering (`isLoading=true`)
+   * and one when leaving (success: `isLoading=false`, `error=null`; error:
+   * `isLoading=false`, `error` set). The inner `fn` is responsible only
+   * for mutating `_cart` if the API call succeeded.
+   */
   private async _mutate<T>(fn: () => Promise<T>): Promise<T> {
     this._loading = true;
     this.notify();
     try {
-      return await fn();
+      const result = await fn();
+      this._loading = false;
+      this._error = null;
+      this.notify();
+      return result;
     } catch (e) {
       this._error = toError(e);
       this._loading = false;
@@ -269,9 +277,6 @@ export class CartManager {
     return this._mutate(async () => {
       const cart = await this.client.cart.get();
       this._cart = cart;
-      this._loading = false;
-      this._error = null;
-      this.notify();
       return cart;
     });
   }
@@ -290,7 +295,7 @@ export class CartManager {
         quantity: toApiQty(quantity),
       });
       this.saveToken();
-      this.applyMutation(res);
+      this.applyCart(res);
 
       // Learn step from the quantity that was actually added
       const qtyAfter = this.findItem(variantUuid)?.quantity ?? 0;
@@ -314,7 +319,7 @@ export class CartManager {
         variant_uuid: variantUuid,
         ...(quantity != null ? { quantity: toApiQty(quantity) } : {}),
       });
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 
@@ -332,7 +337,7 @@ export class CartManager {
         quantity: rawStep,
       });
       this.saveToken();
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 
@@ -359,7 +364,7 @@ export class CartManager {
         variant_uuid: variantUuid,
         quantity: rawStep,
       });
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 
@@ -375,7 +380,7 @@ export class CartManager {
         variant_uuid: variantUuid,
         quantity: toApiQty(quantity),
       });
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 
@@ -384,7 +389,7 @@ export class CartManager {
     this.ensureToken();
     return this._mutate(async () => {
       const res = await this.client.cart.applyDiscount(code);
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 
@@ -393,7 +398,7 @@ export class CartManager {
     this.ensureToken();
     return this._mutate(async () => {
       const res = await this.client.cart.removeDiscount();
-      return this.applyMutation(res);
+      return this.applyCart(res);
     });
   }
 

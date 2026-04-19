@@ -1,6 +1,6 @@
 {
   "name": "@spaceis/sdk",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "Official JavaScript SDK for SpaceIS shop platform. Zero dependencies, works everywhere.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -23,6 +23,7 @@
   "jsdelivr": "./dist/spaceis.global.js",
   "files": [
     "dist",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
@@ -36,8 +37,9 @@
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
+    "jsdom": "^25",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.0",
+    "typescript": "^6.0.3",
     "vitest": "^3.0.0"
   },
   "engines": {
@@ -45,7 +47,6 @@
   },
   "keywords": [
     "spaceis",
-    "shop",
     "shop",
     "sdk",
     "api-client",

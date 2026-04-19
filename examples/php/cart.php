@@ -26,7 +26,6 @@ window.renderCartPage = () => {
     const cart = SpaceISApp.cart;
     const fp = SpaceISApp.fp;
     const esc = SpaceISApp.esc;
-    const placeholderSvg = SpaceISApp.placeholderSvg;
     const items = cart.items;
     const totalQuantity = cart.totalQuantity;
     const finalPrice = cart.finalPrice;
@@ -97,52 +96,7 @@ window.renderCartPage = () => {
 
     // Left: items
     html += '<div>';
-    items.forEach((item) => {
-        const variantUuid = item.variant?.uuid ?? '';
-        const imgSrc = SpaceIS.getCartItemImage(item);
-        const displayQty = SpaceIS.getItemQty(item);
-        const showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product.name;
-
-        html += `<div class="cp-item" data-uuid="${esc(variantUuid)}">`;
-        html += '<div class="cp-item-img-wrap">';
-        if (imgSrc) {
-            html += `<img class="cp-item-img" src="${esc(imgSrc)}" alt="">`;
-        } else {
-            html += `<div class="cp-item-img cp-item-img-ph">${placeholderSvg(28)}</div>`;
-        }
-        html += '</div>';
-        html += '<div class="cp-item-body">';
-        html += '<div class="cp-item-top">';
-        html += '<div class="cp-item-info">';
-        html += `<div class="cp-item-name">${esc(item.shop_product?.name ?? '')}</div>`;
-        if (showVariant) {
-            html += `<div class="cp-item-variant">${esc(item.variant.name)}</div>`;
-        }
-        if (item.package) {
-            html += `<div class="cp-item-package">Package: ${esc(item.package.name)}</div>`;
-        }
-        html += '<div class="cp-item-prices">';
-        html += `<span class="cp-item-price">${fp(item.final_price_value)}</span>`;
-        if (item.regular_price_value !== item.final_price_value) {
-            html += `<span class="cp-item-price-old">${fp(item.regular_price_value)}</span>`;
-        }
-        html += '</div>';
-        html += '</div>';
-        html += `<button class="cp-item-remove" aria-label="Remove" onclick="SpaceISApp.removeItem('${esc(variantUuid)}')">`;
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-        html += '</button>';
-        html += '</div>';
-
-        html += '<div class="cp-item-bottom">';
-        html += '<div class="qty-stepper">';
-        html += `<button class="qty-step-btn" onclick="SpaceISApp.decrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
-        html += `<input class="qty-input" type="text" inputmode="numeric" value="${displayQty}" onblur="SpaceISApp.setItemQty('${esc(variantUuid)}',this.value,this)" onkeydown="if(event.key==='Enter')this.blur()">`;
-        html += `<button class="qty-step-btn" onclick="SpaceISApp.incrementItem('${esc(variantUuid)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-    });
+    html += items.map((item) => SpaceISApp.renderCartItemHtml(item, 'cart-page')).join('');
     html += '</div>';
 
     // Right: sidebar

@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Cart</title>
+    <meta name="description" content="SpaceIS storefront — review your cart and proceed to checkout.">
+    <meta property="og:title" content="SpaceIS SDK — Cart">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -62,7 +65,7 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
@@ -216,13 +219,14 @@
         }
       });
 
-      // ── Listen for cart changes ──
-      cartMgr.onChange(() => {
+      // ── Wait for shared/main.js to initialise cartMgr, then subscribe ──
+      // (module scripts are deferred; this inline script runs before them.)
+      window.addEventListener("spaceis:ready", () => {
+        cartMgr.onChange(() => {
+          renderCartPage();
+        });
         renderCartPage();
       });
-
-      // ── Init ──
-      renderCartPage();
     </script>
   </body>
 </html>

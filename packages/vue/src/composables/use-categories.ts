@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { computed, toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetCategoriesParams } from "@spaceis/sdk";
 
@@ -22,7 +22,7 @@ import type { GetCategoriesParams } from "@spaceis/sdk";
  * </template>
  * ```
  */
-export function useCategories(params?: MaybeRef<GetCategoriesParams | undefined>) {
+export function useCategories(params?: MaybeRefOrGetter<GetCategoriesParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({

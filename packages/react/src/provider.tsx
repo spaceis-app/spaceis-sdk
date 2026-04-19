@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createSpaceIS,
@@ -73,28 +73,23 @@ export function SpaceISProvider({
     cartRef.current = clientRef.current.createCartManager(cartOptions);
   }
 
-  // Warn if config identity changes after mount
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Warn if config identity changes after mount (dev-only — tree-shaken in production).
+  // process.env.NODE_ENV is replaced statically by bundlers (Next.js/Vite/webpack).
   useEffect(() => {
     if (configRef.current !== config) {
-      console.error(
-        "[SpaceISProvider] The `config` prop changed after mount. " +
-          "Config must be stable — declare it outside the component or wrap with useMemo."
-      );
+      if (process.env.NODE_ENV !== "production") {
+        console.error(
+          "[SpaceISProvider] The `config` prop changed after mount. " +
+            "Config must be stable — declare it outside the component or wrap with useMemo."
+        );
+      }
     }
   }, [config]);
 
-  const contextValue = useMemo<SpaceISContextValue>(
-    () => ({
-      client: clientRef.current!,
-      cartManager: cartRef.current!,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  const qc = useMemo(
-    () =>
+  // Fix 1: lazy ref pattern — stable across re-renders, immune to React's useMemo eviction
+  const qcRef = useRef<QueryClient | null>(null);
+  if (!qcRef.current) {
+    qcRef.current =
       queryClient ??
       new QueryClient({
         defaultOptions: {
@@ -103,14 +98,21 @@ export function SpaceISProvider({
             retry: 1,
           },
         },
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queryClient]
-  );
+      });
+  }
+  const qc = qcRef.current;
+
+  const contextValue = useRef<SpaceISContextValue | null>(null);
+  if (!contextValue.current) {
+    contextValue.current = {
+      client: clientRef.current!,
+      cartManager: cartRef.current!,
+    };
+  }
 
   return (
     <QueryClientProvider client={qc}>
-      <SpaceISContext.Provider value={contextValue}>{children}</SpaceISContext.Provider>
+      <SpaceISContext.Provider value={contextValue.current}>{children}</SpaceISContext.Provider>
     </QueryClientProvider>
   );
 }

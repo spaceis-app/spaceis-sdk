@@ -7,22 +7,10 @@ import { downloadTemplate } from "giget";
 const REPO = "spaceis-app/spaceis-sdk";
 
 const EXAMPLES = {
-  react: {
-    label: "React    — Next.js App Router + SSR + hooks",
-    dir: "examples/react",
-  },
-  vue: {
-    label: "Vue      — Nuxt 4 + SSR + composables",
-    dir: "examples/vue",
-  },
-  vanilla: {
-    label: "Vanilla  — HTML + vanilla JS + SDK IIFE",
-    dir: "examples/vanilla",
-  },
-  php: {
-    label: "PHP      — PHP SSR + client-side SDK",
-    dir: "examples/php",
-  },
+  react:   { label: "React",   hint: "Next.js App Router + SSR + hooks", dir: "examples/react"   },
+  vue:     { label: "Vue",     hint: "Nuxt 4 + SSR + composables",       dir: "examples/vue"     },
+  vanilla: { label: "Vanilla", hint: "HTML + vanilla JS + SDK IIFE",     dir: "examples/vanilla" },
+  php:     { label: "PHP",     hint: "PHP SSR + client-side SDK",        dir: "examples/php"     },
 } as const;
 
 type ExampleKey = keyof typeof EXAMPLES;
@@ -45,31 +33,116 @@ const PACKAGES = [
   },
 ];
 
-function run(cmd: string, cwd?: string): Promise<string> {
+/** How long to wait for the npm registry before giving up, per request. */
+const REGISTRY_TIMEOUT_MS = 10_000;
+
+/**
+ * Fetch the `latest` tag version of a package from the npm registry.
+ * Uses Node's built-in fetch (Node ≥ 18) with a 10s timeout so a slow
+ * or unresponsive registry can't hang the CLI indefinitely.
+ */
+/** @internal */
+export async function getLatestVersion(pkg: string): Promise<string> {
+  const url = `https://registry.npmjs.org/${encodeURIComponent(pkg).replace("%40", "@")}/latest`;
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`npm registry returned ${res.status} for ${pkg}`);
+  const data = (await res.json()) as { version?: unknown };
+  if (typeof data.version !== "string") throw new Error(`Invalid registry payload for ${pkg}`);
+  return data.version;
+}
+
+/**
+ * Rewrite all `@spaceis/*` dependencies in a package.json to the latest
+ * version published on npm. Keeps non-spaceis deps untouched. Writes the
+ * file in-place and returns a list of human-readable change descriptions.
+ */
+/** @internal */
+export async function resolveSpaceisDepsToLatest(pkgJsonPath: string): Promise<string[]> {
+  const raw = fs.readFileSync(pkgJsonPath, "utf8");
+  let pkg: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  try {
+    pkg = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(
+      `Invalid JSON in ${pkgJsonPath}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+  const changed: string[] = [];
+  const cache = new Map<string, string>();
+
+  for (const field of ["dependencies", "devDependencies"] as const) {
+    const deps = pkg[field];
+    if (!deps) continue;
+    for (const name of Object.keys(deps)) {
+      if (!name.startsWith("@spaceis/")) continue;
+      let latest = cache.get(name);
+      if (!latest) {
+        latest = await getLatestVersion(name);
+        cache.set(name, latest);
+      }
+      const newRange = `^${latest}`;
+      if (deps[name] !== newRange) {
+        changed.push(`${name}: ${deps[name]} → ${newRange}`);
+        deps[name] = newRange;
+      }
+    }
+  }
+
+  if (changed.length > 0) {
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + "\n");
+  }
+  return changed;
+}
+
+/**
+ * Spawn a subprocess with explicit argv — never via a shell. That way even
+ * if a dependency name or CLI path ever contained special characters, we
+ * don't risk shell metacharacter interpretation.
+ *
+ * Captures both stdout and stderr so that on failure the caller has the
+ * full context of what the child printed, not just stderr.
+ */
+function run(file: string, args: string[], cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let stderr = "";
-    const child = spawn(cmd, {
+    let stdout = "";
+    const child = spawn(file, args, {
       cwd,
       stdio: "pipe",
-      shell: true,
+      shell: false,
       env: { ...process.env, CI: "1" },
     });
     child.stdin?.end();
-    child.stdout?.resume();
+    child.stdout?.on("data", (d: Buffer) => {
+      stdout += d.toString();
+    });
     child.stderr?.on("data", (d: Buffer) => {
       stderr += d.toString();
     });
-    child.on("close", (code) => (code === 0 ? resolve(stderr) : reject(new Error(stderr || `Exit code ${code}`))));
+    child.on("close", (code) => {
+      if (code === 0) return resolve(stdout + stderr);
+      const detail = [stderr.trim(), stdout.trim()].filter(Boolean).join("\n").trim();
+      reject(new Error(detail || `${file} exited with code ${code}`));
+    });
     child.on("error", reject);
   });
 }
 
+/**
+ * Abort the CLI with a cancel message. Exits with code 130 — the SIGINT
+ * convention — so CI/automation can tell "user cancelled" apart from
+ * "succeeded" (0) and "errored" (1).
+ */
 function cancel(): never {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(130);
 }
 
-function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
+/** @internal */
+export function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
   const ua = process.env.npm_config_user_agent ?? "";
   if (ua.startsWith("pnpm")) return "pnpm";
   if (ua.startsWith("yarn")) return "yarn";
@@ -81,18 +154,28 @@ function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
   return "npm";
 }
 
-function installCommand(pm: string, packages: string[]): string {
-  const pkgs = packages.join(" ");
+/**
+ * Build the argv for an install command — `{ file, args }`. The verb differs
+ * between npm (`install`) and the rest (`add`). Returned as a tuple so it
+ * can be fed straight into `run()` without shell interpolation.
+ */
+/** @internal */
+export function installArgs(pm: string, packages: string[]): { file: string; args: string[] } {
   switch (pm) {
-    case "pnpm":
-      return `pnpm add ${pkgs}`;
-    case "yarn":
-      return `yarn add ${pkgs}`;
-    case "bun":
-      return `bun add ${pkgs}`;
-    default:
-      return `npm install ${pkgs}`;
+    case "pnpm": return { file: "pnpm", args: ["add", ...packages] };
+    case "yarn": return { file: "yarn", args: ["add", ...packages] };
+    case "bun":  return { file: "bun",  args: ["add", ...packages] };
+    default:     return { file: "npm",  args: ["install", ...packages] };
   }
+}
+
+/**
+ * Human-readable rendering of an install command (for prompts and "run manually" hints).
+ * @internal
+ */
+export function formatInstallCommand(pm: string, packages: string[]): string {
+  const { file, args } = installArgs(pm, packages);
+  return `${file} ${args.join(" ")}`;
 }
 
 async function main() {
@@ -139,12 +222,11 @@ async function main() {
 async function handleExample() {
   const example = await p.select({
     message: "Choose an example:",
-    options: [
-      { value: "react" as const, label: "React", hint: "Next.js App Router + SSR + hooks" },
-      { value: "vue" as const, label: "Vue", hint: "Nuxt 4 + SSR + composables" },
-      { value: "vanilla" as const, label: "Vanilla", hint: "HTML + vanilla JS + SDK IIFE" },
-      { value: "php" as const, label: "PHP", hint: "PHP SSR + client-side SDK" },
-    ],
+    options: (Object.keys(EXAMPLES) as ExampleKey[]).map((key) => ({
+      value: key,
+      label: EXAMPLES[key].label,
+      hint: EXAMPLES[key].hint,
+    })),
   });
 
   if (p.isCancel(example)) cancel();
@@ -175,13 +257,41 @@ async function handleExample() {
     s.stop(`${example} example downloaded.`);
   } catch (err) {
     s.stop("Download failed.");
-    p.log.error(String(err));
+    const msg = err instanceof Error ? err.message : String(err);
+    p.log.error(msg);
+    // GitHub's public API caps unauthenticated requests at 60/hour/IP — surface that clearly.
+    if (/403|429|rate[ _-]?limit|api rate/i.test(msg)) {
+      p.log.info(
+        "Hint: GitHub rate-limited this request. Set GITHUB_TOKEN to a personal access token " +
+          "(scope: public_repo) and rerun — authenticated requests have a much higher quota.",
+      );
+    }
     process.exit(1);
   }
 
   const pm = detectPackageManager();
-  const hasPackageJson = fs.existsSync(path.join(targetDir, "package.json"));
+  const pkgJsonPath = path.join(targetDir, "package.json");
+  const hasPackageJson = fs.existsSync(pkgJsonPath);
   let depsInstalled = false;
+
+  // Resolve @spaceis/* versions to latest published on npm, so the example
+  // always installs fresh regardless of what's committed in the repo.
+  if (hasPackageJson) {
+    const sr = p.spinner();
+    sr.start("Resolving @spaceis/* versions to latest on npm...");
+    try {
+      const changed = await resolveSpaceisDepsToLatest(pkgJsonPath);
+      if (changed.length > 0) {
+        sr.stop(`Updated ${changed.length} @spaceis/* dependency${changed.length === 1 ? "" : "ies"} to latest.`);
+        for (const line of changed) p.log.info(`  ${line}`);
+      } else {
+        sr.stop("No @spaceis/* dependencies to update.");
+      }
+    } catch (err) {
+      sr.stop("Could not reach npm registry — keeping versions from the example.");
+      p.log.warning(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   if (hasPackageJson) {
     const shouldInstall = await p.confirm({
@@ -190,7 +300,8 @@ async function handleExample() {
     });
 
     if (!p.isCancel(shouldInstall) && shouldInstall) {
-      // Remove foreign lockfiles so the detected package manager doesn't conflict
+      // Remove foreign lockfiles so the detected package manager doesn't conflict,
+      // and drop the monorepo lockfile whose workspace-resolved refs no longer apply.
       for (const lockfile of ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"]) {
         const lf = path.join(targetDir, lockfile);
         if (fs.existsSync(lf)) fs.unlinkSync(lf);
@@ -199,7 +310,7 @@ async function handleExample() {
       const si = p.spinner();
       si.start(`Installing dependencies in ${projectName}/ ...`);
       try {
-        await run(`${pm} install`, targetDir);
+        await run(pm, ["install"], targetDir);
         si.stop("Dependencies installed.");
         depsInstalled = true;
       } catch (err) {
@@ -261,7 +372,7 @@ async function handleBlank() {
     const s = p.spinner();
     s.start("Initializing project...");
     try {
-      await run(`${pm} init -y`, targetDir);
+      await run(pm, ["init", "-y"], targetDir);
       s.stop(`Project initialized in ${projectName}/`);
     } catch {
       s.stop("Failed to initialize project.");
@@ -296,15 +407,16 @@ async function handleBlank() {
   }
 
   const pm = detectPackageManager();
-  const cmd = installCommand(pm, packages);
+  const display = formatInstallCommand(pm, packages);
+  const { file, args } = installArgs(pm, packages);
 
   const shouldRun = await p.confirm({
-    message: `Run: ${cmd} ?`,
+    message: `Run: ${display} ?`,
     initialValue: true,
   });
 
   if (p.isCancel(shouldRun) || !shouldRun) {
-    p.note(cmd, "Run manually:");
+    p.note(display, "Run manually:");
     p.outro("Done!");
     return;
   }
@@ -313,11 +425,12 @@ async function handleBlank() {
   s.start("Installing packages...");
 
   try {
-    await run(cmd);
+    await run(file, args);
     s.stop("Packages installed.");
-  } catch {
+  } catch (err) {
     s.stop("Failed to install packages.");
-    p.note(cmd, "Run manually:");
+    if (err instanceof Error && err.message) p.log.error(err.message);
+    p.note(display, "Run manually:");
   }
 
   p.note(

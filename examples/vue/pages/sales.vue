@@ -4,7 +4,7 @@ import { useSales } from '@spaceis/vue';
 useHead({ title: 'Sales' });
 
 const { data, isLoading } = useSales({ sort: 'expires_at' });
-const sales = computed(() => (data.value as any)?.data ?? []);
+const sales = computed(() => data.value?.data ?? []);
 </script>
 
 <template>

@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Products</title>
+    <meta name="description" content="SpaceIS storefront — browse and buy products from our shop.">
+    <meta property="og:title" content="SpaceIS SDK — Products">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+      integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
+      crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="header" id="site-header"></header>
@@ -38,7 +44,7 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
@@ -50,91 +56,6 @@
         currentCategory: null,
         categoriesLoaded: false,
       };
-
-      let allCategories = [];
-
-      // ── Categories ────────────────────────────────────────────
-
-      async function loadCategories() {
-        if (state.categoriesLoaded) return;
-        state.categoriesLoaded = true;
-
-        try {
-          const categories = await client.categories.list();
-          allCategories = categories;
-          const container = document.getElementById("categories");
-          categories.forEach((cat) => {
-            if (!cat.is_active) return;
-            const btn = document.createElement("button");
-            btn.className = "cat-btn";
-            btn.textContent = cat.name;
-            btn.dataset.uuid = cat.uuid;
-            btn.addEventListener("click", () => {
-              selectCategory(cat, btn);
-            });
-            container.appendChild(btn);
-          });
-        } catch { /* ignore */ }
-      }
-
-      // Select a parent category — shows its children below
-      function selectCategory(cat, btn) {
-        state.currentCategory = cat.uuid;
-        state.currentPage = 1;
-
-        // Highlight active parent
-        document.querySelectorAll("#categories .cat-btn").forEach((b) => {
-          b.classList.remove("active");
-        });
-        if (btn) btn.classList.add("active");
-
-        // Render subcategories (if any)
-        const subContainer = document.getElementById("subcategories");
-        subContainer.innerHTML = "";
-
-        const activeChildren = (cat.children || []).filter((c) => c.is_active);
-
-        if (activeChildren.length > 0) {
-          subContainer.style.display = "";
-
-          // "All in category" option
-          const allBtn = document.createElement("button");
-          allBtn.className = "cat-btn cat-child active";
-          allBtn.textContent = "All";
-          allBtn.addEventListener("click", () => {
-            state.currentCategory = cat.uuid;
-            state.currentPage = 1;
-            subContainer.querySelectorAll(".cat-btn").forEach((b) => {
-              b.classList.remove("active");
-            });
-            allBtn.classList.add("active");
-            loadProducts();
-          });
-          subContainer.appendChild(allBtn);
-
-          // Child categories
-          activeChildren.forEach((child) => {
-            const subBtn = document.createElement("button");
-            subBtn.className = "cat-btn cat-child";
-            subBtn.textContent = child.name;
-            subBtn.dataset.uuid = child.uuid;
-            subBtn.addEventListener("click", () => {
-              state.currentCategory = child.uuid;
-              state.currentPage = 1;
-              subContainer.querySelectorAll(".cat-btn").forEach((b) => {
-                b.classList.remove("active");
-              });
-              subBtn.classList.add("active");
-              loadProducts();
-            });
-            subContainer.appendChild(subBtn);
-          });
-        } else {
-          subContainer.style.display = "none";
-        }
-
-        loadProducts();
-      }
 
       // "All products" — reset everything
       document.getElementById("cat-all").addEventListener("click", function () {
@@ -255,11 +176,13 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      // ── Init ─────────────────────────────────────────────────
-
-      renderSkeletons("products-container", 8);
-      loadCategories();
-      loadProducts();
+      // ── Init (after shared/main.js exposes client / renderSkeletons) ─
+      window.addEventListener("spaceis:ready", () => {
+        initCategories(state, client);
+        renderSkeletons("products-container", 8);
+        loadCategories({ onSelect: () => loadProducts() });
+        loadProducts();
+      });
     </script>
   </body>
 </html>

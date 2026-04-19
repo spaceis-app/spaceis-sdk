@@ -120,22 +120,71 @@ export class SpaceISClient {
 
   // ── Config helpers ──
 
-  /** Current cart token */
+  /**
+   * Current cart token, or `undefined` if no cart session is active.
+   *
+   * @returns UUID string identifying the cart session, or `undefined`
+   *
+   * @example
+   * ```js
+   * // Restore a previous cart session from your own storage
+   * const savedToken = myStore.get('cart_token');
+   * if (savedToken) client.setCartToken(savedToken);
+   *
+   * // Read current token (e.g. to persist it yourself)
+   * const token = client.cartToken;
+   * ```
+   */
   get cartToken(): string | undefined {
     return this._config.cartToken;
   }
 
-  /** Set or clear cart token */
+  /**
+   * Set or clear the cart token used for subsequent API requests.
+   *
+   * Pass a UUID to restore an existing cart session, or `undefined` to
+   * clear the token (e.g. after logout). The next cart mutation will
+   * receive a new token from the API.
+   *
+   * @param token - Cart session UUID, or `undefined` to clear
+   *
+   * @example
+   * ```js
+   * // Restore session
+   * client.setCartToken('b9a3f4c2-1234-5678-90ab-cdef01234567');
+   *
+   * // Clear session
+   * client.setCartToken(undefined);
+   * ```
+   */
   setCartToken(token: string | undefined) {
     this._config.cartToken = token;
   }
 
-  /** Current language code */
+  /**
+   * Current language code used for API requests, or `undefined` if not set.
+   *
+   * @returns BCP-47 language code (e.g. `"pl"`, `"en"`), or `undefined`
+   */
   get lang(): string | undefined {
     return this._config.lang;
   }
 
-  /** Set language for API requests */
+  /**
+   * Set the language code sent with API requests.
+   *
+   * Affects translatable fields in API responses (product names, descriptions,
+   * agreement text, etc.). The change applies to the next request — in-flight
+   * requests retain their original language.
+   *
+   * @param lang - BCP-47 language code (e.g. `"pl"`, `"en"`, `"de"`)
+   *
+   * @example
+   * ```js
+   * client.setLang('en');
+   * const products = await client.products.list(); // response in English
+   * ```
+   */
   setLang(lang: string) {
     this._config.lang = lang;
   }

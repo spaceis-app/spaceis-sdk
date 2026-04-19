@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'isomorphic-dompurify';
 import {
   useProduct,
   useCart,
@@ -7,11 +8,14 @@ import {
   type ShowShopProductVariant,
 } from '@spaceis/vue';
 import { fp, getErrorMessage } from '~/utils/helpers';
+import { formatUnitLabel } from '~/utils/unit-utils';
 
 const route = useRoute();
 const slug = computed(() => route.params.slug as string);
 
 const { data: product, isLoading } = useProduct(slug);
+
+const sanitizedDescription = computed(() => DOMPurify.sanitize(product.value?.description ?? ''));
 
 useSeoMeta({
   title: () => product.value?.name || 'Product',
@@ -142,7 +146,7 @@ function commitQty() {
           </div>
 
           <div class="pdp-unit-price">
-            ({{ fp(unitPrice) }}/{{ limits.step > 1 ? `${limits.step} pcs.` : '1 pcs.' }})
+            ({{ fp(unitPrice) }} / {{ formatUnitLabel(limits.step, (product as any)?.unit) }})
           </div>
 
           <!-- Variants -->
@@ -188,6 +192,7 @@ function commitQty() {
                   +
                 </button>
               </div>
+              <span class="qty-unit">{{ (product as any)?.unit || 'szt' }}</span>
             </div>
           </div>
 
@@ -211,7 +216,7 @@ function commitQty() {
           <div v-if="product.description" class="pdp-description">
             <div class="pdp-label">Description</div>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="pdp-desc-body" v-html="product.description" />
+            <div class="pdp-desc-body" v-html="sanitizedDescription" />
           </div>
         </div>
       </div>

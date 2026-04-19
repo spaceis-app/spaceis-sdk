@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Terms</title>
+    <meta name="description" content="SpaceIS storefront — shop terms and conditions.">
+    <meta property="og:title" content="SpaceIS SDK — Terms">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+      integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
+      crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="header" id="site-header"></header>
@@ -24,19 +30,21 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
       const mainEl = document.getElementById("main-content");
 
-      (async () => {
+      // Wait for shared/main.js to expose `client` before hitting the API.
+      window.addEventListener("spaceis:ready", async () => {
         try {
           const statute = await client.content.statute();
           const title = statute.title || "Terms";
           document.title = `${title} — SpaceIS SDK`;
 
-          const safeContent = statute.content || "";
+          // Raw HTML from API — sanitise defense-in-depth even if backend escapes at save time.
+          const safeContent = DOMPurify.sanitize(statute.content || "");
 
           let metaHtml = "";
           if (statute.created_at || statute.updated_at) {
@@ -68,7 +76,7 @@
             `<p>${esc(getErrorMessage(err))}</p>` +
             "</div>";
         }
-      })();
+      });
     </script>
   </body>
 </html>

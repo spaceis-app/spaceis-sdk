@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DailyRewardPage } from "@/views/DailyRewardPage";
+import { DailyRewardPage } from "@/features/daily-reward/DailyRewardPage";
 
 export const metadata: Metadata = {
   title: "Daily Reward",

@@ -8,7 +8,14 @@ export interface ShopPage {
   title: string;
   /** URL-friendly slug (e.g. `"about-us"`) */
   slug: string;
-  /** Page body content (HTML) */
+  /**
+   * Page body content (raw HTML from API).
+   *
+   * @remarks
+   * Sanitize before injecting into the DOM (e.g. with DOMPurify) or render
+   * as escaped text via {@link escapeHtml}. Do NOT assign directly to
+   * `innerHTML` on untrusted content — risk of stored XSS.
+   */
   content: string;
   /** SEO meta tags for this page */
   meta: {
@@ -40,7 +47,14 @@ export interface ShopPage {
 export interface Statute {
   /** Statute title, or `null` */
   title: string | null;
-  /** Statute body content (HTML) */
+  /**
+   * Statute body content (raw HTML from API).
+   *
+   * @remarks
+   * Sanitize before injecting into the DOM (e.g. with DOMPurify) or render
+   * as escaped text via {@link escapeHtml}. Do NOT assign directly to
+   * `innerHTML` on untrusted content — risk of stored XSS.
+   */
   content: string;
   /** Creation date (ISO 8601) */
   created_at: string;
@@ -54,6 +68,10 @@ export interface GetPagesParams {
   visible?: boolean;
   /** Filter by menu visibility */
   visible_in_menu?: boolean;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }

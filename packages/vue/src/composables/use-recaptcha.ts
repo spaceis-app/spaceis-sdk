@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { shallowRef } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 
 export interface UseRecaptchaReturn {
@@ -32,7 +32,7 @@ export interface UseRecaptchaReturn {
  */
 export function useRecaptcha(): UseRecaptchaReturn {
   const { client } = useSpaceIS();
-  const loaded = ref(false);
+  const loaded = shallowRef(false);
 
   async function execute(action: string): Promise<string> {
     if (typeof window === 'undefined') {

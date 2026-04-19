@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { computed, toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 
 /**
@@ -21,7 +21,7 @@ import { useSpaceIS } from "./use-spaceis";
  * </template>
  * ```
  */
-export function useProduct(slug: MaybeRef<string | null>) {
+export function useProduct(slug: MaybeRefOrGetter<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({
@@ -38,7 +38,7 @@ export function useProduct(slug: MaybeRef<string | null>) {
  * Fetch package recommendations for a product.
  * The query is disabled when `slug` is `null`.
  */
-export function useProductRecommendations(slug: MaybeRef<string | null>) {
+export function useProductRecommendations(slug: MaybeRefOrGetter<string | null>) {
   const { client } = useSpaceIS();
 
   return useQuery({

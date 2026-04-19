@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
-import { ProductCard, ProductGridSkeleton } from "@/components/ProductCard";
+import { ProductCard, ProductGridSkeleton } from "@/features/products/ProductCard";
 import { Pagination } from "@/components/Pagination";
-import { PlaceholderSVG } from "@/helpers";
-import { Footer } from "@/components/Footer";
+import { PlaceholderSVG } from "@/lib/helpers";
+import { Footer } from "@/components/layout/Footer";
 
 // Mock next/link
 vi.mock("next/link", () => ({

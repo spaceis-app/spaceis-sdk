@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Page</title>
+    <meta name="description" content="SpaceIS storefront — CMS content pages from the shop.">
+    <meta property="og:title" content="SpaceIS SDK — Page">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+      integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
+      crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="header" id="site-header"></header>
@@ -24,7 +30,7 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
@@ -33,18 +39,22 @@
       const params = new URLSearchParams(window.location.search);
       const slug = params.get("slug");
 
-      if (slug) {
-        loadPage(slug);
-      } else {
-        loadPagesList();
-      }
+      // Wait for shared/main.js to expose `client` before hitting the API.
+      window.addEventListener("spaceis:ready", () => {
+        if (slug) {
+          loadPage(slug);
+        } else {
+          loadPagesList();
+        }
+      });
 
       async function loadPage(slug) {
         try {
           const page = await client.content.page(slug);
           document.title = `${page.title || "Page"} — SpaceIS SDK`;
 
-          const safeContent = page.content || "";
+          // Raw HTML from API — sanitise defense-in-depth even if backend escapes at save time.
+          const safeContent = DOMPurify.sanitize(page.content || "");
 
           mainEl.innerHTML =
             '<div class="page-content">' +

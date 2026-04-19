@@ -28,8 +28,12 @@ export interface GetTopCustomersParams {
   page?: number;
   /** Sort field */
   sort?: string;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }
 
 /** Query parameters for the latest orders endpoint */
@@ -38,6 +42,10 @@ export interface GetLatestOrdersParams {
   limit?: number;
   /** Sort field */
   sort?: string;
-  /** Additional query parameters */
-  [key: string]: unknown;
+  /**
+   * Additional query parameters forwarded to the API. Top-level keys take
+   * precedence on name collision. Use for forward-compat with API fields
+   * not yet reflected in the SDK types.
+   */
+  extraParams?: Record<string, unknown>;
 }

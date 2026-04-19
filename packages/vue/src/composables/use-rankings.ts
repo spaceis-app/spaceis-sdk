@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import { computed, toValue, type MaybeRef } from "vue";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { useSpaceIS } from "./use-spaceis";
 import type { GetTopCustomersParams, GetLatestOrdersParams } from "@spaceis/sdk";
 
@@ -21,7 +21,7 @@ import type { GetTopCustomersParams, GetLatestOrdersParams } from "@spaceis/sdk"
  * </template>
  * ```
  */
-export function useTopCustomers(params?: MaybeRef<GetTopCustomersParams | undefined>) {
+export function useTopCustomers(params?: MaybeRefOrGetter<GetTopCustomersParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({
@@ -48,7 +48,7 @@ export function useTopCustomers(params?: MaybeRef<GetTopCustomersParams | undefi
  * </template>
  * ```
  */
-export function useLatestOrders(params?: MaybeRef<GetLatestOrdersParams | undefined>) {
+export function useLatestOrders(params?: MaybeRefOrGetter<GetLatestOrdersParams | undefined>) {
   const { client } = useSpaceIS();
 
   return useQuery({

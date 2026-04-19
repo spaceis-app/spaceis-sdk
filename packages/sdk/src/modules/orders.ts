@@ -1,5 +1,6 @@
 import type { RequestFn } from "../http";
-import type { OrderSummary, RawOrderSummary } from "../types";
+import type { OrderSummary } from "../types";
+import type { RawOrderSummary } from "../types/order";
 
 /**
  * Orders API module.

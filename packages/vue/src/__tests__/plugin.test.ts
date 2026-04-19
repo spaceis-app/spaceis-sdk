@@ -88,4 +88,48 @@ describe("SpaceISPlugin", () => {
     app.mount(root);
     app.unmount();
   });
+
+  it("accepts cartManager: null in context (SSR scenario)", () => {
+    // Test C — SpaceISContext.cartManager is CartManager | null (type-correct)
+    let injected: SpaceISContext | undefined;
+
+    const Child = defineComponent({
+      setup() {
+        injected = inject(SpaceISKey);
+        return () => h("div");
+      },
+    });
+
+    const app = createApp(Child);
+
+    // Manually provide context with null cartManager (SSR path)
+    app.provide(SpaceISKey, {
+      client: {
+        products: {},
+        categories: {},
+        cart: {},
+        checkout: {},
+        orders: {},
+        content: {},
+        sales: {},
+        goals: {},
+        packages: {},
+        vouchers: {},
+        dailyRewards: {},
+        rankings: {},
+        shop: {},
+        recaptcha: {},
+      } as unknown as SpaceISContext["client"],
+      cartManager: null,
+    });
+
+    const root = document.createElement("div");
+    app.mount(root);
+
+    // Context must be defined and cartManager must be null — no throw
+    expect(injected).toBeDefined();
+    expect(injected!.cartManager).toBeNull();
+
+    app.unmount();
+  });
 });

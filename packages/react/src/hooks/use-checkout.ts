@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSpaceIS } from "../provider";
 import type { CheckoutRequest } from "@spaceis/sdk";
 
@@ -33,6 +33,11 @@ export function useAgreements() {
 /**
  * Mutation for placing an order.
  *
+ * @remarks
+ * On success the cart is automatically cleared and the `['spaceis', 'cart']` query is
+ * invalidated. Provide your own `onSuccess` via the mutation call
+ * (`mutate(input, { onSuccess })`) to react after that.
+ *
  * @example
  * ```tsx
  * function CheckoutButton() {
@@ -50,10 +55,15 @@ export function useAgreements() {
  * ```
  */
 export function usePlaceOrder() {
-  const { client } = useSpaceIS();
+  const { client, cartManager } = useSpaceIS();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CheckoutRequest) => client.checkout.placeOrder(data),
+    onSuccess: () => {
+      cartManager.clear();
+      queryClient.invalidateQueries({ queryKey: ["spaceis", "cart"] });
+    },
   });
 }
 

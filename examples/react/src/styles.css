@@ -2287,6 +2287,7 @@ input.qty-input::-webkit-inner-spin-button {
   outline: none;
   box-shadow: none;
 }
+.qty-unit { font-size: 13px; color: var(--txt-3); font-weight: 500; user-select: none; margin-left: 8px; }
 
 .pdp-add-btn {
   width: 100%;

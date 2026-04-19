@@ -72,6 +72,18 @@ If you select `@spaceis/react` or `@spaceis/vue` without `@spaceis/sdk`, the CLI
 
 The CLI auto-detects your package manager (`npm` / `pnpm` / `yarn` / `bun`) and runs the appropriate install command.
 
+## Always installs the latest SDK versions
+
+After downloading the example template, the CLI fetches the `latest` tag
+for every `@spaceis/*` dependency from the npm registry and rewrites the
+ranges in the example's `package.json` before running `install`. That way
+a fresh `npx create-spaceis` always lands on the current release, even if
+the committed example references an older version. If the registry is
+unreachable, the CLI warns and continues with the versions from the example.
+
+Only `@spaceis/*` dependencies are touched — framework versions
+(`next`, `nuxt`, `react`, `vue`, …) are left as they are.
+
 ## Quick start after installation
 
 ```ts
@@ -83,11 +95,13 @@ const spaceis = createSpaceIS({
 });
 
 // Fetch products
-const products = await spaceis.products.list();
+const products = await spaceis.products.list({ page: 1 });
+const product  = await spaceis.products.get("vip-rank");
 
 // Reactive cart
 const cart = spaceis.createCartManager();
-await cart.addItem({ productId: 1, quantity: 1 });
+cart.onChange((data) => console.log("cart updated:", data));
+await cart.add("variant-uuid", 1);
 ```
 
 ## Related packages

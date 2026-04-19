@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
-import { QueryClient } from "@tanstack/react-query";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { SpaceISProvider, useSpaceIS } from "../provider";
 import type { ReactNode } from "react";
 
@@ -89,5 +89,87 @@ describe("SpaceISProvider", () => {
 
     const { result } = renderHook(() => useSpaceIS(), { wrapper: Wrapper });
     expect(result.current.client).toBeDefined();
+  });
+
+  // Fix 1 — lazy useRef pattern for QueryClient
+  it("returns stable QueryClient identity across re-renders (no useMemo drift)", () => {
+    const { result, rerender } = renderHook(() => useQueryClient(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <SpaceISProvider
+          config={{ baseUrl: "https://api.example.com", shopUuid: "test-shop-uuid" }}
+        >
+          {children}
+        </SpaceISProvider>
+      ),
+    });
+
+    const first = result.current;
+    rerender();
+    rerender();
+    expect(result.current).toBe(first);
+  });
+
+  it("uses the provided QueryClient instance (not a new one)", () => {
+    const customQc = new QueryClient();
+
+    const { result } = renderHook(() => useQueryClient(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <SpaceISProvider
+          config={{ baseUrl: "https://api.example.com", shopUuid: "test-shop-uuid" }}
+          queryClient={customQc}
+        >
+          {children}
+        </SpaceISProvider>
+      ),
+    });
+
+    expect(result.current).toBe(customQc);
+  });
+
+  // Fix 2 — NODE_ENV guard on console.error
+  describe("console.error NODE_ENV guard", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("emits console.error in development when config prop changes", () => {
+      let currentConfig = { baseUrl: "https://api.example.com", shopUuid: "shop-1" };
+
+      const { rerender } = renderHook(() => useSpaceIS(), {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <SpaceISProvider config={currentConfig}>{children}</SpaceISProvider>
+        ),
+      });
+
+      currentConfig = { baseUrl: "https://api.example.com", shopUuid: "shop-2" };
+      rerender();
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("[SpaceISProvider]")
+      );
+    });
+
+    it("does NOT emit console.error in production when config prop changes", () => {
+      vi.stubEnv("NODE_ENV", "production");
+
+      let currentConfig = { baseUrl: "https://api.example.com", shopUuid: "shop-1" };
+
+      const { rerender } = renderHook(() => useSpaceIS(), {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <SpaceISProvider config={currentConfig}>{children}</SpaceISProvider>
+        ),
+      });
+
+      currentConfig = { baseUrl: "https://api.example.com", shopUuid: "shop-2" };
+      rerender();
+
+      expect(console.error).not.toHaveBeenCalled();
+
+      vi.unstubAllEnvs();
+    });
   });
 });

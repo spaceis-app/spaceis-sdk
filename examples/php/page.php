@@ -36,6 +36,7 @@ if ($slug) {
     $pageTitle = e($page['title'] ?? 'Page') . ' — SpaceIS Shop';
     $metaDesc = strip_tags(mb_substr($page['content'] ?? '', 0, 160));
     $isShopPage = false;
+    $loadDOMPurify = true;
     require __DIR__ . '/includes/header.php';
     ?>
     <div class="page-content">
@@ -43,14 +44,27 @@ if ($slug) {
             <?php if (!empty($page['title'])): ?>
                 <h1 class="page-title"><?= e($page['title']) ?></h1>
             <?php endif; ?>
-            <div class="page-body">
-                <?= $page['content'] ?? '' ?>
-            </div>
+            <!--
+                page.content is raw HTML from the API. We render it inside a
+                <template> so scripts/inline handlers do NOT execute during
+                parsing, then DOMPurify-sanitise and hydrate #page-body.
+            -->
+            <template id="page-content-raw"><?= $page['content'] ?? '' ?></template>
+            <div class="page-body" id="page-body"></div>
             <div class="page-meta">
                 <span>Last updated: <?= formatDate($page['updated_at'] ?? '') ?></span>
             </div>
         </div>
     </div>
+    <script>
+        (() => {
+            const tpl = document.getElementById('page-content-raw');
+            const dst = document.getElementById('page-body');
+            if (!tpl || !dst) return;
+            const raw = tpl.innerHTML;
+            dst.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(raw) : '';
+        })();
+    </script>
     <?php
     require __DIR__ . '/includes/footer.php';
     exit;

@@ -9,9 +9,13 @@
  *   $api         — SpaceISApi instance (for shop UUID/baseUrl)
  */
 
-$pageTitle  = $pageTitle  ?? 'SpaceIS Shop';
-$metaDesc   = $metaDesc   ?? 'shop powered by SpaceIS SDK';
-$isShopPage = $isShopPage ?? false;
+$pageTitle     = $pageTitle     ?? 'SpaceIS Shop';
+$metaDesc      = $metaDesc      ?? 'shop powered by SpaceIS SDK';
+$isShopPage    = $isShopPage    ?? false;
+// Pages rendering raw HTML from the API (page.content / statute.content /
+// product.description) set this to true before requiring header.php so
+// DOMPurify is loaded and content can be sanitised client-side.
+$loadDOMPurify = $loadDOMPurify ?? false;
 
 $navLinks = [
     ['href' => '/index.php', 'label' => 'Shop', 'matchPaths' => ['/index.php', '/', '/packages.php', '/sales.php']],
@@ -38,6 +42,11 @@ $shopTabs = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <?php if ($loadDOMPurify): ?>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+        integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
+        crossorigin="anonymous"></script>
+    <?php endif; ?>
 </head>
 <body>
     <header class="header">

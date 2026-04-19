@@ -1,6 +1,6 @@
 {
   "name": "@spaceis/vue",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Vue 3 composables, Plugin, and Nuxt SSR helpers for the SpaceIS SDK.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -30,6 +30,7 @@
   },
   "files": [
     "dist",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
@@ -43,7 +44,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@spaceis/sdk": ">=0.1.0",
+    "@spaceis/sdk": ">=0.2.0",
     "@tanstack/vue-query": ">=5.0.0",
     "vue": ">=3.3.0"
   },
@@ -51,10 +52,10 @@
     "@spaceis/sdk": "workspace:*",
     "@tanstack/vue-query": "^5.0.0",
     "@vue/test-utils": "^2.0.0",
-    "vue": "^3.5.0",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.0",
-    "vitest": "^2.0.0"
+    "typescript": "^6.0.3",
+    "vitest": "^2.0.0",
+    "vue": "^3.5.0"
   },
   "engines": {
     "node": ">=20.0.0"

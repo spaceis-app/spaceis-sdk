@@ -14,7 +14,7 @@ const selectedParent = ref<ShopCategory | null>(null);
 const activeCategoryUuid = computed(() => subCategoryUuid.value ?? categoryUuid.value ?? undefined);
 
 const { data: categoriesData } = useCategories();
-const categories = computed(() => (categoriesData.value ?? []).filter((c: any) => c.is_active));
+const categories = computed(() => (categoriesData.value ?? []).filter((c: ShopCategory) => c.is_active));
 
 const { data: productsData, isLoading } = useProducts(
   computed(() => ({
@@ -43,7 +43,7 @@ function selectSubCategory(uuid: string | null) {
 }
 
 const activeChildren = computed(() =>
-  (selectedParent.value?.children ?? []).filter((c: any) => c.is_active),
+  (selectedParent.value?.children ?? []).filter((c: ShopCategory) => c.is_active),
 );
 </script>
 

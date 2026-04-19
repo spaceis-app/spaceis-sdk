@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Checkout</title>
+    <meta name="description" content="SpaceIS storefront — complete your purchase securely.">
+    <meta property="og:title" content="SpaceIS SDK — Checkout">
+    <meta property="og:type" content="website">
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -106,7 +109,7 @@
     <footer id="site-footer"></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
-    <script src="shared.js"></script>
+    <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
@@ -227,7 +230,8 @@
 
         const commission = getSelectedCommission();
         const basePrice = cartMgr.finalPrice;
-        const commissionAmount = commission > 0 ? Math.round((basePrice * commission) / 100) : 0;
+        // commission is a multiplier (e.g. 1.2 = 20% surcharge), not a percentage integer
+        const commissionAmount = commission > 0 ? Math.round(basePrice * commission - basePrice) : 0;
         const totalWithCommission = basePrice + commissionAmount;
 
         let html = '<div class="cart-page-summary">';
@@ -253,7 +257,8 @@
             const m = paymentMethodsData.find((m) => m.uuid === selectedMethodUuid);
             return m ? m.name : "Commission";
           })();
-          html += `<div class="cart-summary-row"><span>Fee (${esc(methodName)} +${commission}%)</span><span>+${fp(commissionAmount)}</span></div>`;
+          const commissionPct = Math.round((commission - 1) * 100);
+          html += `<div class="cart-summary-row"><span>Fee (${esc(methodName)} +${commissionPct}%)</span><span>+${fp(commissionAmount)}</span></div>`;
         }
 
         // Total
@@ -298,7 +303,7 @@
           renderPaymentMethods(paymentMethodsData);
           renderAgreements(agreements);
           renderOrderSummary();
-          loadCheckoutRecommendations();
+          loadRecsForFirstCartItem({ containerId: "checkout-recommendations", title: "Recommended products" });
           client.recaptcha.load().catch(() => {});
         } catch (err) {
           _checkoutInitialized = false;
@@ -316,7 +321,8 @@
 
         let html = "";
         methods.forEach((m) => {
-          const commissionText = m.commission ? ` (+${m.commission}%)` : "";
+          // commission is a multiplier (e.g. 1.2 = 20% surcharge) — convert for display
+          const commissionText = m.commission > 1 ? ` (+${Math.round((m.commission - 1) * 100)}%)` : "";
           html +=
             `<label class="payment-method" data-uuid="${esc(m.uuid)}">` +
             `<input type="radio" name="payment_method" value="${esc(m.uuid)}">` +
@@ -396,7 +402,21 @@
             cancel_url: SHOP_CONFIG.cancelUrl || undefined,
           });
           if (result.redirect_url) {
-            window.location.href = result.redirect_url;
+            // Defence-in-depth: only follow http(s) redirects. A compromised
+            // API cannot redirect users to `javascript:` / `data:` / etc.
+            // For stricter hardening, allowlist specific payment-provider
+            // origins here (e.g. ["https://sandbox.payu.com", ...]).
+            let safeUrl = null;
+            try {
+              const u = new URL(result.redirect_url, window.location.origin);
+              if (u.protocol === "https:" || u.protocol === "http:") safeUrl = u.toString();
+            } catch { /* malformed URL — stay on page */ }
+            if (safeUrl) {
+              window.location.href = safeUrl;
+            } else {
+              showToast("Payment gateway returned an invalid redirect URL.", "error");
+              resetPlaceOrderBtn();
+            }
           } else {
             showOrderSuccess(result.code || "");
           }
@@ -421,43 +441,24 @@
         document.getElementById("order-success-state").style.display = "";
       }
 
-      // ── Checkout recommendations ─────────────────────────
-
-      async function loadCheckoutRecommendations() {
-        const container = document.getElementById("checkout-recommendations");
-        if (!container || cartMgr.isEmpty) return;
-
-        const firstItem = cartMgr.items[0];
-        if (!firstItem?.shop_product) return;
-
-        try {
-          const recs = await client.products.recommendations(firstItem.shop_product.uuid);
-          if (!recs?.length) return;
-          const sliced = recs.slice(0, 4);
-          container.innerHTML = renderRecsHtml(sliced, "Recommended products");
-          attachRecsClickHandler(container, sliced);
-        } catch { /* ignore */ }
-      }
-
-      // ── Cart change: refresh ─────────────────────────────────
-
-      cartMgr.onChange(() => {
-        renderCartBadge();
-        if (!_checkoutInitialized) {
-          initCheckout();
-          return;
-        }
-        const layout = document.getElementById("checkout-layout");
-        if (layout && layout.style.display !== "none") {
-          renderCheckoutItems();
-          renderDiscountState();
-          renderOrderSummary();
-        }
+      // ── Wait for shared/main.js, then subscribe + init ───────
+      // (module scripts are deferred; this inline script runs before them.)
+      window.addEventListener("spaceis:ready", () => {
+        cartMgr.onChange(() => {
+          renderCartBadge();
+          if (!_checkoutInitialized) {
+            initCheckout();
+            return;
+          }
+          const layout = document.getElementById("checkout-layout");
+          if (layout && layout.style.display !== "none") {
+            renderCheckoutItems();
+            renderDiscountState();
+            renderOrderSummary();
+          }
+        });
+        initCheckout();
       });
-
-      // ── Init ─────────────────────────────────────────────────
-
-      initCheckout();
     </script>
   </body>
 </html>

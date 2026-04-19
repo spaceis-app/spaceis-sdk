@@ -102,6 +102,84 @@ describe("createHttpClient", () => {
       expect(calledUrl).not.toContain("page=");
       expect(calledUrl).not.toContain("category=");
     });
+
+    describe("extraParams", () => {
+      it("flattens extraParams keys into the query string", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse([]));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const request = createHttpClient(() => makeConfig());
+        await request("products", {
+          params: { page: 1, extraParams: { foo: "1", bar: "baz" } },
+        });
+
+        const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(calledUrl).toContain("page=1");
+        expect(calledUrl).toContain("foo=1");
+        expect(calledUrl).toContain("bar=baz");
+        // Literal "extraParams" should NEVER appear as a query key
+        expect(calledUrl).not.toContain("extraParams=");
+      });
+
+      it("top-level params override extraParams on key collision", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse([]));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const request = createHttpClient(() => makeConfig());
+        await request("products", {
+          params: { category: "vip", extraParams: { category: "free" } },
+        });
+
+        const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+        const url = new URL(calledUrl);
+        expect(url.searchParams.get("category")).toBe("vip");
+        expect(url.searchParams.getAll("category")).toEqual(["vip"]);
+      });
+
+      it("skips null and empty values inside extraParams", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse([]));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const request = createHttpClient(() => makeConfig());
+        await request("products", {
+          params: {
+            extraParams: { keep: "1", drop_null: null, drop_empty: "", drop_undef: undefined },
+          },
+        });
+
+        const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(calledUrl).toContain("keep=1");
+        expect(calledUrl).not.toContain("drop_null=");
+        expect(calledUrl).not.toContain("drop_empty=");
+        expect(calledUrl).not.toContain("drop_undef=");
+      });
+
+      it("omits extraParams cleanly when absent (no regression on existing callers)", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse([]));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const request = createHttpClient(() => makeConfig());
+        await request("products", { params: { page: 2, category: "vip" } });
+
+        const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(calledUrl).toContain("page=2");
+        expect(calledUrl).toContain("category=vip");
+      });
+
+      it("ignores a non-object extraParams value (defensive)", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse([]));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const request = createHttpClient(() => makeConfig());
+        // A consumer ignoring TS types could pass a string — must not crash or leak
+        await request("products", {
+          params: { extraParams: "bogus" as unknown as Record<string, unknown> },
+        });
+
+        const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(calledUrl).not.toContain("extraParams=");
+      });
+    });
   });
 
   describe("headers", () => {

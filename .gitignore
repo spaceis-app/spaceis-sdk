@@ -1,8 +1,18 @@
 node_modules/
 dist/
 .next/
+.nuxt/
+.output/
 *.tsbuildinfo
+# Examples install standalone (--ignore-workspace). Their lockfiles are
+# regenerated locally; keep them out of the repo to avoid churn.
+examples/*/pnpm-lock.yaml
+examples/*/package-lock.json
+examples/*/bun.lockb
+.env
 .env.local
+.env.*
+!.env.example
 .DS_Store
 .idea/
 .claude/
