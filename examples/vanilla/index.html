@@ -4,17 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Products</title>
-    <meta name="description" content="SpaceIS storefront — browse and buy products from our shop.">
-    <meta property="og:title" content="SpaceIS SDK — Products">
-    <meta property="og:type" content="website">
+    <meta name="description" content="SpaceIS storefront — browse and buy products from our shop." />
+    <meta property="og:title" content="SpaceIS SDK — Products" />
+    <meta property="og:type" content="website" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
+    <script
+      src="https://cdn.jsdelivr.net/npm/dompurify@3.2.0/dist/purify.min.js"
       integrity="sha384-S/hEiU9V48awIFrhtOYkLWEqSLw7EvRFdJy3fVABLPNP0xU2gavrud66pkpp3f7m"
-      crossorigin="anonymous"></script>
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
     <header class="header" id="site-header"></header>
@@ -35,7 +37,6 @@
             <button class="page-btn" id="next-btn">Next &#8594;</button>
           </div>
         </section>
-
       </div>
     </main>
 
@@ -43,7 +44,11 @@
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"
+      integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
@@ -92,8 +97,7 @@
       function renderProductGrid(products) {
         const container = document.getElementById("products-container");
         if (products.length === 0) {
-          container.innerHTML =
-            '<div class="empty-state"><p>No products in this category.</p></div>';
+          container.innerHTML = '<div class="empty-state"><p>No products in this category.</p></div>';
           return;
         }
         const grid = document.createElement("div");
@@ -120,10 +124,8 @@
           ? `<div class="product-discount-badge">-${esc(product.percentage_discount)}%</div>`
           : "";
 
-        const priceField =
-          product.minimal_price != null ? product.minimal_price : product.base_price;
-        const basePriceField =
-          product.minimal_base_price != null ? product.minimal_base_price : null;
+        const priceField = product.minimal_price != null ? product.minimal_price : product.base_price;
+        const basePriceField = product.minimal_base_price != null ? product.minimal_base_price : null;
         const oldPriceHtml =
           basePriceField && basePriceField !== priceField
             ? `<span class="product-price-old">${fp(basePriceField)}</span>`
@@ -157,8 +159,7 @@
           return;
         }
         pag.style.display = "flex";
-        document.getElementById("page-info").textContent =
-          `${meta.current_page} / ${meta.last_page}`;
+        document.getElementById("page-info").textContent = `${meta.current_page} / ${meta.last_page}`;
         document.getElementById("prev-btn").disabled = meta.current_page <= 1;
         document.getElementById("next-btn").disabled = meta.current_page >= meta.last_page;
       }

@@ -6,7 +6,7 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.5/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js" integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0" crossorigin="anonymous"></script>
     <script type="application/json" id="spaceis-config"><?= json_encode([
         'baseUrl' => $api->getBaseUrl(),
         'shopUuid' => $api->getShopUuid(),

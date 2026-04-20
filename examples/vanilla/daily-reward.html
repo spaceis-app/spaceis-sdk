@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Daily Reward</title>
-    <meta name="description" content="SpaceIS storefront — claim your daily reward.">
-    <meta property="og:title" content="SpaceIS SDK — Daily Reward">
-    <meta property="og:type" content="website">
+    <meta name="description" content="SpaceIS storefront — claim your daily reward." />
+    <meta property="og:title" content="SpaceIS SDK — Daily Reward" />
+    <meta property="og:type" content="website" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -17,29 +17,33 @@
     <header class="header" id="site-header"></header>
 
     <main>
-        <div class="voucher-layout container">
-          <div class="voucher-card">
-            <div class="voucher-card-title">Daily reward</div>
-            <div class="voucher-card-desc">Claim a free reward — resets every 24 hours.</div>
+      <div class="voucher-layout container">
+        <div class="voucher-card">
+          <div class="voucher-card-title">Daily reward</div>
+          <div class="voucher-card-desc">Claim a free reward — resets every 24 hours.</div>
 
-            <div class="voucher-form" id="daily-form">
-              <div class="form-field">
-                <label class="form-label" for="daily-nick">Player nickname *</label>
-                <input type="text" id="daily-nick" placeholder="Steve" autocomplete="off" />
-              </div>
-              <button class="voucher-submit success-btn" id="daily-submit-btn">Claim reward</button>
+          <div class="voucher-form" id="daily-form">
+            <div class="form-field">
+              <label class="form-label" for="daily-nick">Player nickname *</label>
+              <input type="text" id="daily-nick" placeholder="Steve" autocomplete="off" />
             </div>
-
-            <div class="result-box" id="daily-result"></div>
+            <button class="voucher-submit success-btn" id="daily-submit-btn">Claim reward</button>
           </div>
+
+          <div class="result-box" id="daily-result"></div>
         </div>
+      </div>
     </main>
 
     <div id="site-cart-drawer"></div>
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"
+      integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
@@ -52,7 +56,10 @@
 
         document.getElementById("daily-submit-btn").addEventListener("click", async () => {
           const nick = document.getElementById("daily-nick").value.trim();
-          if (!nick) { showToast("Player nickname is required", "error"); return; }
+          if (!nick) {
+            showToast("Player nickname is required", "error");
+            return;
+          }
 
           hideResult("daily-result");
           const btn = document.getElementById("daily-submit-btn");

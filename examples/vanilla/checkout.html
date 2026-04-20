@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Checkout</title>
-    <meta name="description" content="SpaceIS storefront — complete your purchase securely.">
-    <meta property="og:title" content="SpaceIS SDK — Checkout">
-    <meta property="og:type" content="website">
+    <meta name="description" content="SpaceIS storefront — complete your purchase securely." />
+    <meta property="og:title" content="SpaceIS SDK — Checkout" />
+    <meta property="og:type" content="website" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -46,7 +46,6 @@
 
         <!-- Checkout layout: LEFT = summary, RIGHT = form -->
         <div class="checkout-layout" id="checkout-layout" style="display: none">
-
           <!-- LEFT: Order summary (items + discount + recommendations) -->
           <div class="checkout-summary-col">
             <h1 class="section-title">Order summary</h1>
@@ -108,7 +107,11 @@
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"
+      integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
@@ -139,8 +142,7 @@
 
           const qty = SpaceIS.getItemQty(item);
           const variantUuid = item.variant?.uuid ?? "";
-          const showVariant =
-            item.variant && item.shop_product && item.variant.name !== item.shop_product?.name;
+          const showVariant = item.variant && item.shop_product && item.variant.name !== item.shop_product?.name;
 
           let priceHtml = `<span class="checkout-item-price">${fp(item.final_price_value)}</span>`;
           if (item.regular_price_value !== item.final_price_value) {
@@ -152,28 +154,28 @@
 
           html +=
             `<div class="checkout-item" data-variant-uuid="${esc(variantUuid)}">` +
-              imgHtml +
-              '<div class="checkout-item-details">' +
-                '<div class="checkout-item-top">' +
-                  '<div class="checkout-item-info">' +
-                    `<div class="checkout-item-name">${esc(item.shop_product?.name ?? "")}</div>` +
-                    (showVariant ? `<div class="checkout-item-variant">${esc(item.variant.name)}</div>` : '') +
-                    (item.package ? `<div class="checkout-item-package">${esc(`Package: ${item.package.name}`)}</div>` : '') +
-                  '</div>' +
-                  `<button class="checkout-item-remove" data-variant="${esc(variantUuid)}" title="Remove" aria-label="Remove">` +
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
-                  '</button>' +
-                '</div>' +
-                '<div class="checkout-item-bottom">' +
-                  `<div class="checkout-item-prices">${priceHtml}</div>` +
-                  `<div class="qty-stepper" data-variant="${esc(variantUuid)}">` +
-                    '<button class="qty-step-btn" data-action="dec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-                    `<input type="text" inputmode="numeric" value="${qty}" class="qty-input">` +
-                    '<button class="qty-step-btn" data-action="inc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
-                  '</div>' +
-                '</div>' +
-              '</div>' +
-            '</div>';
+            imgHtml +
+            '<div class="checkout-item-details">' +
+            '<div class="checkout-item-top">' +
+            '<div class="checkout-item-info">' +
+            `<div class="checkout-item-name">${esc(item.shop_product?.name ?? "")}</div>` +
+            (showVariant ? `<div class="checkout-item-variant">${esc(item.variant.name)}</div>` : "") +
+            (item.package ? `<div class="checkout-item-package">${esc(`Package: ${item.package.name}`)}</div>` : "") +
+            "</div>" +
+            `<button class="checkout-item-remove" data-variant="${esc(variantUuid)}" title="Remove" aria-label="Remove">` +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+            "</button>" +
+            "</div>" +
+            '<div class="checkout-item-bottom">' +
+            `<div class="checkout-item-prices">${priceHtml}</div>` +
+            `<div class="qty-stepper" data-variant="${esc(variantUuid)}">` +
+            '<button class="qty-step-btn" data-action="dec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+            `<input type="text" inputmode="numeric" value="${qty}" class="qty-input">` +
+            '<button class="qty-step-btn" data-action="inc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+            "</div>" +
+            "</div>" +
+            "</div>" +
+            "</div>";
         });
         container.innerHTML = html;
       }
@@ -245,9 +247,10 @@
         // Discount
         const discountAmount = cartMgr.regularPrice - cartMgr.finalPrice;
         if (discountAmount > 0) {
-          const discountLabel = cartMgr.hasDiscount && cartMgr.discount
-            ? `Discount (${cartMgr.discount.percentage_discount}%)`
-            : 'Discount';
+          const discountLabel =
+            cartMgr.hasDiscount && cartMgr.discount
+              ? `Discount (${cartMgr.discount.percentage_discount}%)`
+              : "Discount";
           html += `<div class="cart-summary-row cart-summary-discount"><span>${discountLabel}</span><span>-${fp(discountAmount)}</span></div>`;
         }
 
@@ -264,7 +267,7 @@
         // Total
         html += `<div class="cart-summary-total"><span>Total</span><span>${fp(totalWithCommission)}</span></div>`;
 
-        html += '</div>';
+        html += "</div>";
         totalsEl.innerHTML = html;
 
         // Update button with price
@@ -335,7 +338,9 @@
         container.addEventListener("click", (e) => {
           const label = e.target.closest(".payment-method");
           if (!label) return;
-          container.querySelectorAll(".payment-method").forEach((l) => { l.classList.remove("selected"); });
+          container.querySelectorAll(".payment-method").forEach((l) => {
+            l.classList.remove("selected");
+          });
           label.classList.add("selected");
           const radio = label.querySelector('input[type="radio"]');
           if (radio) {
@@ -376,7 +381,9 @@
         if (!paymentRadio) errors.push("Choose payment method");
 
         if (errors.length > 0) {
-          errors.forEach((e) => { showToast(e, "error"); });
+          errors.forEach((e) => {
+            showToast(e, "error");
+          });
           return;
         }
 
@@ -387,7 +394,7 @@
         const paymentMethodUuid = paymentRadio.value;
         const agreementUuids = Array.from(
           document.querySelectorAll('#agreements-list input[type="checkbox"]:checked'),
-          (cb) => cb.value
+          (cb) => cb.value,
         );
 
         try {
@@ -410,7 +417,9 @@
             try {
               const u = new URL(result.redirect_url, window.location.origin);
               if (u.protocol === "https:" || u.protocol === "http:") safeUrl = u.toString();
-            } catch { /* malformed URL — stay on page */ }
+            } catch {
+              /* malformed URL — stay on page */
+            }
             if (safeUrl) {
               window.location.href = safeUrl;
             } else {
@@ -428,7 +437,10 @@
 
       function resetPlaceOrderBtn() {
         const btn = document.getElementById("place-order-btn");
-        if (btn) { btn.disabled = false; btn.textContent = "Place order"; }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Place order";
+        }
       }
 
       function showOrderSuccess(code) {

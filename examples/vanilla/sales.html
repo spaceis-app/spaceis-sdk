@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Sales</title>
-    <meta name="description" content="SpaceIS storefront — check out current sales and limited-time offers.">
-    <meta property="og:title" content="SpaceIS SDK — Sales">
-    <meta property="og:type" content="website">
+    <meta name="description" content="SpaceIS storefront — check out current sales and limited-time offers." />
+    <meta property="og:title" content="SpaceIS SDK — Sales" />
+    <meta property="og:type" content="website" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -28,20 +28,28 @@
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"
+      integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
 
       let countdownTimers = [];
 
-      function pad(n) { return n < 10 ? `0${n}` : `${n}`; }
+      function pad(n) {
+        return n < 10 ? `0${n}` : `${n}`;
+      }
 
       async function loadSales() {
         const container = document.getElementById("sales-container");
         renderSkeletons("sales-container", 6);
 
-        countdownTimers.forEach((t) => { clearInterval(t); });
+        countdownTimers.forEach((t) => {
+          clearInterval(t);
+        });
         countdownTimers = [];
 
         try {
@@ -68,27 +76,25 @@
 
             const discountHtml = sale.percentage_discount
               ? `<div class="product-discount-badge">-${esc(sale.percentage_discount)}%</div>`
-              : '';
+              : "";
 
             const endsAt = sale.expires_at || sale.ends_at;
-            const countdownHtml = endsAt
-              ? `<div class="sale-timer" id="sale-timer-${idx}"></div>`
-              : '';
+            const countdownHtml = endsAt ? `<div class="sale-timer" id="sale-timer-${idx}"></div>` : "";
 
             card.innerHTML =
               `<div class="product-img-wrap">${imgHtml}${discountHtml}</div>` +
               '<div class="product-body">' +
-                `<div class="product-name">${esc(sale.name)}</div>` +
-                '<div class="product-footer">' +
-                  '<div>' +
-                    (sale.percentage_discount
-                      ? `<span class="product-price" style="color:var(--red)">-${esc(sale.percentage_discount)}%</span>`
-                      : '') +
-                  '</div>' +
-                  '<button class="view-btn">View</button>' +
-                '</div>' +
-                countdownHtml +
-              '</div>';
+              `<div class="product-name">${esc(sale.name)}</div>` +
+              '<div class="product-footer">' +
+              "<div>" +
+              (sale.percentage_discount
+                ? `<span class="product-price" style="color:var(--red)">-${esc(sale.percentage_discount)}%</span>`
+                : "") +
+              "</div>" +
+              '<button class="view-btn">View</button>' +
+              "</div>" +
+              countdownHtml +
+              "</div>";
 
             card.addEventListener("click", () => {
               window.location.href = `index.html?sale=${encodeURIComponent(sale.slug || sale.uuid)}`;
@@ -109,7 +115,11 @@
 
             function update() {
               const diff = new Date(endsAt).getTime() - Date.now();
-              if (diff <= 0) { el.textContent = "Ended"; el.style.color = "var(--txt-3)"; return; }
+              if (diff <= 0) {
+                el.textContent = "Ended";
+                el.style.color = "var(--txt-3)";
+                return;
+              }
               const d = Math.floor(diff / 86400000);
               const h = Math.floor((diff % 86400000) / 3600000);
               const m = Math.floor((diff % 3600000) / 60000);

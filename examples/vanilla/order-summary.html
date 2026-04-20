@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpaceIS SDK — Order Summary</title>
-    <meta name="description" content="SpaceIS storefront — check the status of your order.">
-    <meta property="og:title" content="SpaceIS SDK — Order Summary">
-    <meta property="og:type" content="website">
+    <meta name="description" content="SpaceIS storefront — check the status of your order." />
+    <meta property="og:title" content="SpaceIS SDK — Order Summary" />
+    <meta property="og:type" content="website" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -26,12 +26,7 @@
               Enter an order code to view its status and details.
             </p>
             <div class="order-input-row">
-              <input
-                type="text"
-                id="order-code-input"
-                placeholder="e.g. ABC123DEF"
-                autocomplete="off"
-              />
+              <input type="text" id="order-code-input" placeholder="e.g. ABC123DEF" autocomplete="off" />
               <button id="check-order-btn">Check</button>
             </div>
           </div>
@@ -46,7 +41,11 @@
     <div class="toast-container" id="toast-container"></div>
     <footer id="site-footer"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.1.4/dist/spaceis.global.js" integrity="sha384-DJRxH7IjY+WUtTa16M0CizszmJHmweQTCNXnI6OfFN5q/Vi9ejyqQ7oZ8V1Ouokq" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@spaceis/sdk@0.2.0/dist/spaceis.global.js"
+      integrity="sha384-3aWl3Yi8pLHXKgJeSS5Q7kyF0jiu6UCBHqsyY8PFjBfpXKMePEK84jVOFxWxCLI0"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="shared/main.js"></script>
     <script>
       "use strict";
@@ -120,19 +119,17 @@
         // Status alert + code
         let html =
           `<div class="order-alert order-alert-${esc(status)}">` +
-            '<div class="order-alert-top">' +
-              `<span class="order-alert-label">${esc(statusLabel)}</span>` +
-              (order.code ? `<span class="order-alert-code">${esc(order.code)}</span>` : '') +
-            '</div>' +
-          '</div>';
+          '<div class="order-alert-top">' +
+          `<span class="order-alert-label">${esc(statusLabel)}</span>` +
+          (order.code ? `<span class="order-alert-code">${esc(order.code)}</span>` : "") +
+          "</div>" +
+          "</div>";
 
         // Items
         html += '<div class="order-card"><div class="order-card-title">Order items</div>';
 
         items.forEach((item) => {
-          const imgHtml = item.image
-            ? `<img class="order-item-img" src="${esc(item.image)}" alt="">`
-            : "";
+          const imgHtml = item.image ? `<img class="order-item-img" src="${esc(item.image)}" alt="">` : "";
 
           html +=
             '<div class="order-item">' +
