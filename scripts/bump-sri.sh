@@ -82,9 +82,12 @@ echo "Rewriting ${#FILES[@]} files..."
   "s|@spaceis/sdk@[0-9]+\.[0-9]+\.[0-9]+/dist/spaceis\.global\.js|@spaceis/sdk@${VERSION}/dist/spaceis.global.js|g" \
   "${FILES[@]}"
 
-# 2) integrity attribute — any prior sha384-... → new HASH
+# 2) integrity attribute — ONLY on the line that pins @spaceis/sdk@VERSION.
+# Address-scoped substitution prevents clobbering other SRI hashes in the file
+# (DOMPurify, etc.). `\|ADDR|` is POSIX alternative-delimiter syntax and
+# works on both GNU and BSD sed.
 "${SED_INPLACE[@]}" \
-  "s|integrity=\"sha384-[A-Za-z0-9+/=]+\"|integrity=\"${HASH}\"|g" \
+  "\\|@spaceis/sdk@${VERSION}/dist/spaceis\\.global\\.js| s|integrity=\"sha384-[A-Za-z0-9+/=]+\"|integrity=\"${HASH}\"|" \
   "${FILES[@]}"
 
 echo
